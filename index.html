@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>otolab — hear it, play it, name it</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>otolab</h1>
+    <p class="tagline">loop a song · play what you hear · the app names the chord &amp; its function</p>
+    <div class="theme-picker">
+      <button class="theme-dot" data-theme="yoru" title="yoru 夜 — night indigo"></button>
+      <button class="theme-dot" data-theme="sumi" title="sumi 墨 — ink &amp; vermillion"></button>
+      <button class="theme-dot" data-theme="washi" title="washi 和紙 — paper &amp; indigo"></button>
+      <button class="theme-dot" data-theme="kissa" title="kissa 喫茶 — jazz-café amber"></button>
+    </div>
+  </header>
+
+  <section class="load-row">
+    <input id="video-url" type="text" placeholder="paste a YouTube link or video id…">
+    <button id="load-btn">load</button>
+    <div id="recent" class="recent"></div>
+  </section>
+
+  <main>
+    <section class="video-col">
+      <div class="video-frame"><div id="yt-player"></div></div>
+      <div class="transport">
+        <button id="playpause" title="space">▶︎/❚❚</button>
+        <button id="back5" title="←">−5s</button>
+        <button id="fwd5" title="→">+5s</button>
+        <select id="speed" title="playback speed">
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1.25×</option>
+        </select>
+        <span class="loop-group">
+          <button id="loop-a" title="[">A</button>
+          <button id="loop-b" title="]">B</button>
+          <button id="loop-toggle" title="\">loop</button>
+          <button id="loop-clear">✕</button>
+          <span id="loop-status"></span>
+        </span>
+        <span id="time-display" class="time-display"></span>
+      </div>
+    </section>
+
+    <section class="work-col">
+      <div class="key-row">
+        <label>key</label>
+        <select id="key-tonic"></select>
+        <select id="key-mode">
+          <option value="major">major</option>
+          <option value="minor">minor</option>
+        </select>
+        <button id="guess-key" title="guess the key from the chords you've logged">guess from chords</button>
+      </div>
+
+      <div class="detected-box">
+        <div id="detected">—</div>
+        <div id="function-line"></div>
+        <div class="capture-row">
+          <button id="capture-btn" title="Enter">log chord @ current time ⏎</button>
+          <button id="practice-toggle">practice: off</button>
+          <button id="reveal-btn" style="display:none">reveal</button>
+          <span id="quiz-score"></span>
+        </div>
+      </div>
+
+      <div class="palette">
+        <div class="pal-label">diatonic</div>
+        <div id="palette-diatonic" class="pal-row"></div>
+        <div class="pal-label">common outside — secondary dominants · tritone subs · borrowed</div>
+        <div id="palette-outside" class="pal-row"></div>
+      </div>
+    </section>
+  </main>
+
+  <section class="piano-section">
+    <div class="piano-bar">
+      <button id="midi-btn">connect midi</button>
+      <span id="midi-status">computer keys: A–' play notes · Z/X octave (<span id="kb-octave">C4</span>)</span>
+      <span class="io-right">
+        <button id="export-btn">export json</button>
+        <label class="import-label">import<input id="import-input" type="file" accept=".json"></label>
+      </span>
+    </div>
+    <div id="piano" class="piano"></div>
+  </section>
+
+  <section class="timeline-section">
+    <h2>progression</h2>
+    <div id="timeline" class="timeline"></div>
+  </section>
+
+  <footer>
+    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>⏎</kbd> log chord</p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
