@@ -289,7 +289,58 @@ function guessKey(chords) {
   return best;
 }
 
+// ---- voicings & voice leading ----
+
+// A playable root-position voicing near middle C, bass root an octave down.
+function chordVoicing(root, quality) {
+  const sig = {
+    '': [0,4,7], m: [0,3,7], dim: [0,3,6], aug: [0,4,8], sus2: [0,2,7], sus4: [0,5,7],
+    '7': [0,4,7,10], maj7: [0,4,7,11], m7: [0,3,7,10], m7b5: [0,3,6,10], dim7: [0,3,6,9],
+    '6': [0,4,7,9], m6: [0,3,7,9], mMaj7: [0,3,7,11], '7sus4': [0,5,7,10],
+    '9': [0,4,7,10,14], maj9: [0,4,7,11,14], m9: [0,3,7,10,14],
+  }[quality] || [0,4,7];
+  const r = 60 + ((root % 12) + 12) % 12;
+  const anchor = r > 66 ? r - 12 : r;
+  return [anchor - 12, ...sig.map(iv => anchor + iv)];
+}
+
+function qualityIntervals(quality) {
+  const q = QUALITIES.find(x => x.name === (quality || ''));
+  return q ? q.pcs : [0, 4, 7];
+}
+
+// The guide tones (3rd and 7th — the notes that define a chord's color and
+// carry the motion in jazz voice leading). 6th chords use the 6th; sus
+// chords use the suspension.
+function guideTones(root, quality) {
+  const ivs = qualityIntervals(quality);
+  const tones = [];
+  const third = ivs.includes(4) ? 4 : ivs.includes(3) ? 3 : ivs.includes(5) ? 5 : ivs.includes(2) ? 2 : null;
+  if (third != null) tones.push({ deg: '3', pc: (root + third) % 12 });
+  const seventh = ivs.includes(11) ? 11 : ivs.includes(10) ? 10
+    : (ivs.includes(9) && !ivs.includes(10) && !ivs.includes(11)) ? 9 : null;
+  if (seventh != null) tones.push({ deg: seventh === 9 ? '6' : '7', pc: (root + seventh) % 12 });
+  return tones;
+}
+
+// How each guide tone of `prev` moves to the nearest tone of `cur`.
+// Returns [{ deg, from, to, d }] with d in signed semitones (0 = common tone).
+function voiceLeading(prev, cur) {
+  const curPcs = qualityIntervals(cur.quality).map(iv => ((cur.root + iv) % 12 + 12) % 12);
+  const moves = [];
+  for (const gt of guideTones(prev.root, prev.quality)) {
+    let best = null;
+    for (const pc of curPcs) {
+      const d = ((pc - gt.pc + 6) % 12 + 12) % 12 - 6;
+      if (!best || Math.abs(d) < Math.abs(best.d)) best = { pc, d };
+    }
+    if (best) moves.push({ deg: gt.deg, from: gt.pc, to: best.pc, d: best.d });
+  }
+  return moves;
+}
+
 export {
   NOTE_NAMES_SHARP, NOTE_NAMES_FLAT, useFlats, pcName, midiName,
   detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey,
+  qualityFamily, chordVoicing, qualityIntervals, guideTones, voiceLeading,
 };

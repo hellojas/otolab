@@ -28,6 +28,7 @@
   <main>
     <section class="video-col">
       <div class="video-frame"><div id="yt-player"></div></div>
+      <div id="video-error" class="video-error" role="alert"></div>
       <div class="transport">
         <button id="playpause" title="space">▶︎/❚❚</button>
         <button id="back5" title="←">−5s</button>
@@ -86,6 +87,7 @@
       <button id="midi-btn">connect midi</button>
       <span id="midi-status">computer keys: A–' play notes · Z/X octave (<span id="kb-octave">C4</span>)</span>
       <span class="io-right">
+        <button id="share-btn" title="copy a link that carries this transcription — chords, key & beat grid">share link</button>
         <button id="export-btn">export json</button>
         <label class="import-label">import<input id="import-input" type="file" accept=".json"></label>
       </span>
@@ -94,12 +96,76 @@
   </section>
 
   <section class="timeline-section">
-    <h2>progression</h2>
+    <div class="section-head">
+      <h2>progression</h2>
+      <button id="play-prog" title="audition the logged chords in order (no video)">▶ play progression</button>
+      <button id="play-along" title="synth sounds each logged chord as the video plays — hear it against the record to check your transcription">play along: off</button>
+      <label class="vol-label" title="play-along synth volume — keep it under the record">
+        synth vol <input id="along-vol" type="range" min="5" max="100" value="45">
+      </label>
+      <button id="vl-toggle" title="show guide-tone motion (3rds &amp; 7ths) between chords">voice leading: off</button>
+      <span class="grid-group">
+        <button id="tap-tempo" title="b — tap along on the beat to set the tempo">tap</button>
+        <button id="set-one" title="mark the bar-1 downbeat at the playhead">set 1</button>
+        <select id="bpb" title="beats per bar">
+          <option value="4">4/4</option>
+          <option value="3">3/4</option>
+          <option value="6">6/8</option>
+        </select>
+        <button id="snap-toggle" title="snap newly logged chords to the nearest beat">snap: off</button>
+        <button id="snap-all" style="display:none" title="snap every logged chord to the grid">snap all</button>
+        <span id="grid-status"></span>
+      </span>
+    </div>
     <div id="timeline" class="timeline"></div>
   </section>
 
+  <section class="lyrics-section">
+    <div class="section-head">
+      <h2>lyrics</h2>
+      <input id="lyr-artist" type="text" placeholder="artist">
+      <input id="lyr-track" type="text" placeholder="track">
+      <button id="lyr-fetch" title="search LRCLIB for synced lyrics">grab lyrics</button>
+      <label class="offset-label" title="shift lyric timestamps to match this video (music-video intros etc.)">
+        offset <input id="lyr-offset" type="number" step="0.5" value="0"> s
+      </label>
+      <span id="lyr-status"></span>
+    </div>
+    <div id="lyrics" class="lyrics"></div>
+  </section>
+
+  <section class="check-section">
+    <div class="section-head">
+      <h2>check</h2>
+      <button id="grade-btn" title="align your logged progression against the reference and score it">grade me</button>
+      <button id="listen-btn" title="capture this tab's audio (Chrome screen-share) and suggest chords heard in the song">🎙 suggest chords from audio</button>
+      <span id="listen-status"></span>
+    </div>
+    <textarea id="ref-input" rows="2" spellcheck="false"
+      placeholder="paste a reference progression from anywhere — e.g.  Fmaj7 | Dm7 G7 | Em7b5 A7 | Dm  (bars optional)"></textarea>
+    <div id="suggestions" class="suggestions"></div>
+    <div id="grade-result" class="grade-result"></div>
+  </section>
+
+  <section class="drill-section">
+    <div class="section-head">
+      <h2>drill</h2>
+      <button id="drill-start">start</button>
+      <select id="drill-pool" title="which chords can come up">
+        <option value="diatonic">diatonic 7ths</option>
+        <option value="outside">+ common outside</option>
+      </select>
+      <button id="drill-replay" title="r">replay</button>
+      <button id="drill-cadence" title="hear the key-setting cadence again">cadence</button>
+      <button id="drill-reveal">reveal</button>
+      <span id="drill-status"></span>
+      <span id="drill-score"></span>
+    </div>
+    <p class="drill-hint">functional ear training, no video needed — a cadence sets the key center (picked up top), one chord plays, and you name its degree by clicking a palette chip above or playing the chord on your keyboard.</p>
+  </section>
+
   <footer>
-    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>⏎</kbd> log chord</p>
+    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>b</kbd> tap tempo · <kbd>r</kbd> replay drill chord</p>
   </footer>
 
   <script type="module" src="js/app.js"></script>

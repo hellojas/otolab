@@ -5,8 +5,19 @@ let ready = false;
 let currentVideoId = null;
 let loop = { a: null, b: null, on: false };
 let tickListeners = [];
+let errorListeners = [];
 
 function onTick(fn) { tickListeners.push(fn); }
+function onError(fn) { errorListeners.push(fn); }
+
+// YouTube IFrame API error codes -> human explanation
+const ERROR_MESSAGES = {
+  2: 'invalid video id',
+  5: 'this video can’t be played here',
+  100: 'video not found or removed',
+  101: 'the owner disabled embedding for this video',
+  150: 'the owner disabled embedding for this video',
+};
 
 function loadApi() {
   return new Promise(resolve => {
@@ -45,6 +56,10 @@ async function loadVideo(idOrUrl, onReadyCb) {
       playerVars: { rel: 0, playsinline: 1 },
       events: {
         onReady: () => { ready = true; startTicker(); if (onReadyCb) onReadyCb(id); },
+        onError: e => {
+          const msg = ERROR_MESSAGES[e.data] || `playback error (${e.data})`;
+          errorListeners.forEach(fn => fn(msg));
+        },
       },
     });
   }
@@ -67,6 +82,7 @@ function startTicker() {
 
 const api = {
   onTick,
+  onError,
   loadVideo,
   get videoId() { return currentVideoId; },
   get isReady() { return ready; },
