@@ -52,6 +52,9 @@ The diatonic palette still exists as a one-click row of chips (with a second
 8. Loop by chord: `.` loops the chord under the playhead, `,` widens the loop
    to ± one chord — no A/B fiddling. The **synth vol** slider keeps play-along
    under the record.
+   The **⚙ settings** menu in the header picks the synth's voice — piano,
+   e-piano, organ, guitar (a Karplus-Strong plucked string), brass, strings,
+   music box — plus its overall volume; both persist across sessions.
 9. Everything saves to localStorage per video. Export/import as JSON.
 
 ## Checking yourself against "real" chords

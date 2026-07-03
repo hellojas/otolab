@@ -9,7 +9,7 @@ import { initDrill, isDrillOn, answerDrill, drillReplay, stopDrill } from './dri
 import {
   onHeldChange, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 } from './input.js';
-import { playChord, ensureCtx } from './audio.js';
+import { playChord, ensureCtx, VOICES, setVoice, getVoice, setMasterVolume } from './audio.js';
 import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
@@ -721,6 +721,54 @@ function initTheme() {
     d.addEventListener('click', () => setTheme(d.dataset.theme)));
 }
 
+// ---------- settings: synth voice & volume ----------
+
+function initSettings() {
+  const btn = $('#settings-btn');
+  const panel = $('#settings-panel');
+  const sel = $('#voice-select');
+  const vol = $('#synth-vol');
+
+  for (const v of VOICES) {
+    const opt = document.createElement('option');
+    opt.value = v.id;
+    opt.textContent = v.label;
+    sel.appendChild(opt);
+  }
+  const savedVoice = localStorage.getItem('otolab:v1:voice');
+  if (savedVoice) setVoice(savedVoice); // ignored if unknown
+  sel.value = getVoice();
+
+  const savedVol = Number(localStorage.getItem('otolab:v1:synthvol'));
+  if (savedVol >= 10 && savedVol <= 100) vol.value = savedVol;
+  setMasterVolume(Number(vol.value) / 100);
+
+  const preview = () => {
+    ensureCtx();
+    playChord(chordVoicing(0, 'maj7'), 1.3, 0.7);
+  };
+  sel.addEventListener('change', () => {
+    setVoice(sel.value);
+    localStorage.setItem('otolab:v1:voice', sel.value);
+    preview(); // hear the new voice right away
+  });
+  vol.addEventListener('input', () => {
+    setMasterVolume(Number(vol.value) / 100);
+    localStorage.setItem('otolab:v1:synthvol', vol.value);
+  });
+  $('#voice-preview').addEventListener('click', preview);
+
+  btn.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    btn.classList.toggle('on', !panel.hidden);
+  });
+  document.addEventListener('click', e => {
+    if (panel.hidden || panel.contains(e.target) || btn.contains(e.target)) return;
+    panel.hidden = true;
+    btn.classList.remove('on');
+  });
+}
+
 // ---------- transport & wiring ----------
 
 function showVideoError(msg) {
@@ -907,6 +955,7 @@ function initImportExport() {
 
 function init() {
   initTheme();
+  initSettings();
   buildPiano($('#piano'));
   initComputerKeyboard(oct => { $('#kb-octave').textContent = `C${oct}`; });
   initTransport();

@@ -17,6 +17,18 @@
       <button class="theme-dot" data-theme="washi" title="washi 和紙 — paper &amp; indigo"></button>
       <button class="theme-dot" data-theme="kissa" title="kissa 喫茶 — jazz-café amber"></button>
     </div>
+    <div class="settings-wrap">
+      <button id="settings-btn" title="settings — synth voice &amp; volume">⚙</button>
+      <div id="settings-panel" class="settings-panel" hidden>
+        <label class="set-row">synth voice
+          <select id="voice-select"></select>
+        </label>
+        <label class="set-row">synth volume
+          <input id="synth-vol" type="range" min="10" max="100" value="50">
+        </label>
+        <button id="voice-preview" class="set-preview" title="hear the current voice on a Cmaj7">♪ preview</button>
+      </div>
+    </div>
   </header>
 
   <section class="load-row">
