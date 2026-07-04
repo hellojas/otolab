@@ -675,6 +675,19 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "one-note-samba",
+    title: "One Note Samba",
+    composer: "Antônio Carlos Jobim",
+    year: 1960,
+    tonic: 10, mode: "major", bpb: 4, style: "bossa", bpm: 132,
+    sections: [
+      { name: "A", bars: ['Dm7', 'Db7', 'Cm7', 'B7b5', 'Dm7', 'Db7', 'Cm7', 'B7b5', 'Fm7', 'Bb7', 'Ebmaj7', 'Ab7', 'Dm7', 'Db7', 'Cm7', 'B7b5 Bb6'] },
+      { name: "B", bars: ['Ebm7', 'Ab7', 'Dbmaj7', 'Dbmaj7', 'Dbm7', 'Gb7', 'Bmaj7', 'Cm7b5 B7b5'] },
+      { name: "A", bars: ['Dm7', 'Db7', 'Cm7', 'B7b5', 'Dm7', 'Db7', 'Cm7', 'B7b5', 'Fm7', 'Bb7', 'Ebmaj7', 'Ab7', 'Dm7', 'Db7', 'Cm7', 'B7b5 Bb6'] },
+      { name: "C", bars: ['Fm7', 'Bb7', 'Ebmaj7', 'Ab7', 'Db6', 'C7', 'Bbmaj7', 'Bb6'] },
+    ],
+  },
+  {
     id: "out-of-nowhere",
     title: "Out of Nowhere",
     composer: "Johnny Green",
