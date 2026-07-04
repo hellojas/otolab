@@ -32,6 +32,17 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "black-orpheus",
+    title: "Black Orpheus (Manhã de Carnaval)",
+    composer: "Luiz Bonfá",
+    year: 1959,
+    tonic: 9, mode: "minor", bpb: 4, style: "bossa", bpm: 126,
+    sections: [
+      { name: "A", bars: ['Am7', 'Bm7b5 E7b9', 'Am7', 'Bm7b5 E7b9', 'Am7', 'Dm7 G7', 'Cmaj7', 'Cmaj7', 'Bm7b5', 'E7b9', 'Am7', 'Bm7b5 E7b9', 'Am7', 'Bm7b5 E7b9', 'Am7', 'Am7'] },
+      { name: "B", bars: ['Em7b5', 'A7b9', 'Dm7', 'Dm7', 'Bm7b5', 'E7b9', 'Am7', 'Am7', 'Em7b5 A7b9', 'Dm7', 'Bm7b5 E7b9', 'Am7', 'Bm7b5', 'E7b9', 'Am7', 'Am7'] },
+    ],
+  },
+  {
     id: "blue-in-green",
     title: "Blue in Green",
     composer: "Miles Davis & Bill Evans",
@@ -75,6 +86,32 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['Fmaj7', 'Em7b5 A7', 'Dm7 G7', 'Cm7 F7', 'Bb7', 'Am7 D7', 'Gm7 C7', 'Fmaj7'] },
       { name: "B", bars: ['Cm7', 'F7', 'Bbmaj7', 'Bbmaj7', 'Ebm7', 'Ab7', 'Dbmaj7', 'Gm7 C7'] },
       { name: "A", bars: ['Fmaj7', 'Em7b5 A7', 'Dm7 G7', 'Cm7 F7', 'Bb7', 'Am7 D7', 'Gm7 C7', 'Fmaj7'] },
+    ],
+  },
+  {
+    id: "corcovado",
+    title: "Corcovado (Quiet Nights of Quiet Stars)",
+    composer: "Antônio Carlos Jobim",
+    year: 1960,
+    tonic: 0, mode: "major", bpb: 4, style: "bossa", bpm: 108,
+    sections: [
+      { name: "A", bars: ['D9', 'D9', 'Abdim7', 'Abdim7', 'Gm7', 'C7', 'Fdim7', 'Fmaj7'] },
+      { name: "B", bars: ['Fm7', 'Bb7', 'Em7', 'A7#5', 'D7', 'D7', 'Dm7', 'Abdim7'] },
+      { name: "A", bars: ['D9', 'D9', 'Abdim7', 'Abdim7', 'Gm7', 'C7', 'Fdim7', 'Fmaj7'] },
+      { name: "C", bars: ['Fm7', 'Bb7b5', 'Em7', 'Am7', 'Dm7', 'G7b9', 'Em7', 'A7#5', 'Dm7', 'G7', 'C6', 'C6'] },
+    ],
+  },
+  {
+    id: "desafinado",
+    title: "Desafinado",
+    composer: "Antônio Carlos Jobim & Newton Mendonça",
+    year: 1959,
+    tonic: 5, mode: "major", bpb: 4, style: "bossa", bpm: 126,
+    sections: [
+      { name: "A", bars: ['Fmaj7', 'Fmaj7', 'G7b5', 'G7b5', 'Gm7', 'C7', 'Am7b5', 'D7b9', 'Gm7', 'A7b9', 'D7', 'D7b9', 'G7b9', 'G7b9', 'Gbmaj7', 'C7b9'] },
+      { name: "A", bars: ['Fmaj7', 'Fmaj7', 'G7b5', 'G7b5', 'Gm7', 'C7', 'Am7b5', 'D7b9', 'Gm7', 'Bbm6', 'Fmaj7', 'Bm7b5 E7#9', 'Amaj7', 'Bbdim7', 'Bm7', 'E7'] },
+      { name: "B", bars: ['Amaj7', 'Bbdim7', 'Bm7', 'E7', 'Amaj7', 'F#m7', 'Bm7', 'E7', 'Cmaj7', 'C#dim7', 'Dm7', 'G7', 'Gm7', 'D7b9', 'G7', 'C7b9'] },
+      { name: "C", bars: ['Fmaj7', 'Fmaj7', 'G7b5', 'G7b5', 'Gm7', 'C7', 'Am7b5', 'D7', 'Gm7', 'Bbm6', 'Fmaj7', 'Dm7', 'G7', 'G7', 'Bbm7', 'Eb7', 'G7', 'Gm7 C7', 'F6', 'F6'] },
     ],
   },
   {
@@ -152,6 +189,19 @@ const SONGS_EXTRA = [
     tonic: 11, mode: "major", bpb: 4, style: "swing", bpm: 240,
     sections: [
       { name: "A", bars: ['Bmaj7 D7', 'Gmaj7 Bb7', 'Ebmaj7', 'Am7 D7', 'Gmaj7 Bb7', 'Ebmaj7 F#7', 'Bmaj7', 'Fm7 Bb7', 'Ebmaj7', 'Am7 D7', 'Gmaj7', 'C#m7 F#7', 'Bmaj7', 'Fm7 Bb7', 'Ebmaj7', 'C#m7 F#7'] },
+    ],
+  },
+  {
+    id: "how-insensitive",
+    title: "How Insensitive (Insensatez)",
+    composer: "Antônio Carlos Jobim",
+    year: 1961,
+    tonic: 2, mode: "minor", bpb: 4, style: "bossa", bpm: 96,
+    sections: [
+      { name: "A", bars: ['Dm9', 'Dm9', 'C#dim7', 'C#dim7', 'Cm6', 'Cm6', 'G7', 'G7'] },
+      { name: "B", bars: ['Bbmaj7', 'Bbmaj7', 'Ebmaj7', 'Ebmaj7', 'Em7b5', 'A7b9', 'Dm7', 'Db7'] },
+      { name: "C", bars: ['Cm9', 'Cm9', 'Bdim7', 'Bdim7', 'Bbmaj7', 'Em7b5 A7b9', 'Dm7', 'Dm7 Db7'] },
+      { name: "D", bars: ['Cm9', 'F7', 'Bm7', 'E7b9', 'Bbmaj7', 'A7b9', 'Dm7', 'Dm7'] },
     ],
   },
   {
@@ -283,6 +333,16 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "recorda-me",
+    title: "Recorda Me",
+    composer: "Joe Henderson",
+    year: 1963,
+    tonic: 9, mode: "minor", bpb: 4, style: "bossa", bpm: 156,
+    sections: [
+      { name: "A", bars: ['Am7', 'Am7', 'Am7', 'Am7', 'Cm7', 'Cm7', 'Cm7', 'Cm7 F7', 'Bbmaj7', 'Bbm7 Eb7', 'Abmaj7', 'Abm7 Db7', 'Gbmaj7', 'Gm7 C7', 'Fmaj7', 'E7#9'] },
+    ],
+  },
+  {
     id: "someday-my-prince",
     title: "Someday My Prince Will Come",
     composer: "Frank Churchill",
@@ -300,11 +360,22 @@ const SONGS_EXTRA = [
     title: "Song for My Father",
     composer: "Horace Silver",
     year: 1964,
-    tonic: 5, mode: "minor", bpb: 4, style: "bossa", bpm: 130,
+    tonic: 5, mode: "minor", bpb: 4, style: "bossa", bpm: 100,
     sections: [
       { name: "A", bars: ['Fm7', 'Fm7', 'Eb7', 'Eb7', 'Db7', 'C7', 'Fm7', 'Fm7'] },
       { name: "A", bars: ['Fm7', 'Fm7', 'Eb7', 'Eb7', 'Db7', 'C7', 'Fm7', 'Fm7'] },
-      { name: "B", bars: ['Eb7', 'Eb7', 'Fm7', 'Fm7', 'Db7 C7', 'Fm7', 'Fm7', 'Fm7'] },
+      { name: "B", bars: ['Eb7', 'Eb7', 'Fm7', 'Fm7', 'Eb7 Db7', 'C7', 'Fm7', 'Fm7'] },
+    ],
+  },
+  {
+    id: "st-thomas",
+    title: "St. Thomas",
+    composer: "Sonny Rollins",
+    year: 1956,
+    tonic: 0, mode: "major", bpb: 4, style: "bossa", bpm: 168,
+    sections: [
+      { name: "A", bars: ['C6', 'Em7 A7', 'Dm7 G7', 'C6', 'C6', 'Em7 A7', 'Dm7 G7', 'C6'] },
+      { name: "B", bars: ['Em7b5', 'A7', 'Dm7', 'G7', 'C7', 'F6 F#dim7', 'C6 G7', 'C6'] },
     ],
   },
   {
@@ -315,6 +386,19 @@ const SONGS_EXTRA = [
     tonic: 5, mode: "major", bpb: 4, style: "bossa", bpm: 126,
     sections: [
       { name: "A", bars: ['F7', 'F7', 'F7', 'F7', 'Bb7', 'Bb7', 'F7', 'F7', 'C7', 'Bb7', 'C7', 'Bb7', 'C7', 'Bb7', 'F7', 'F7'] },
+    ],
+  },
+  {
+    id: "wave",
+    title: "Wave",
+    composer: "Antônio Carlos Jobim",
+    year: 1967,
+    tonic: 2, mode: "major", bpb: 4, style: "bossa", bpm: 124,
+    sections: [
+      { name: "A", bars: ['Dmaj7', 'Bbdim7', 'Am7', 'D7', 'Gmaj7', 'Gm6', 'F#m7', 'B7', 'Bm7', 'E7', 'Bb7', 'A7'] },
+      { name: "A", bars: ['Dmaj7', 'Bbdim7', 'Am7', 'D7', 'Gmaj7', 'Gm6', 'F#m7', 'B7', 'Bm7', 'E7', 'Bb7', 'A7'] },
+      { name: "B", bars: ['Gm7', 'C7', 'Fmaj7', 'Fmaj7', 'Fm7', 'Bb7', 'Ebmaj7', 'A7'] },
+      { name: "A", bars: ['Dmaj7', 'Bbdim7', 'Am7', 'D7', 'Gmaj7', 'Gm6', 'F#m7', 'B7', 'Bm7', 'E7', 'Bb7', 'A7'] },
     ],
   },
   {
