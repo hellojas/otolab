@@ -1,7 +1,9 @@
 # groundtruth
 
-The curated data that powers otodojo's quizzes. Two collections, both plain
-ES modules so the app works as a static page with no fetch/build step.
+The curated data that powers dojo mode's song quiz and bassline drill. Two
+collections, both plain ES modules so the app works as a static page with no
+fetch/build step. (The standards section has its own, larger library in
+`js/standards-data.js`.)
 
 ## songs.js — progressions
 
@@ -22,7 +24,7 @@ ES modules so the app works as a static page with no fetch/build step.
 - Each entry in `bars` is one bar; multiple chords in a bar split it evenly
   (`['Bbm7','Eb7']` = two beats each in 4/4).
 - Chord spellings follow tab-site conventions: `m7`, `maj7`, `m7b5`, `dim7`,
-  `sus4`, `7#9`, slash basses like `C/E` … the parser in `js/theory.js`
+  `sus4`, `7#9`, slash basses like `C/E` … the parser in `js/dojo.js`
   normalizes the common variants (`min7`, `-7`, `ø`, `Δ7`, `M7`).
 - Consecutive identical chords merge into one longer quiz slot automatically,
   so writing one chord per bar is fine.

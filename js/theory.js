@@ -344,6 +344,6 @@ function voiceLeading(prev, cur) {
 
 export {
   NOTE_NAMES_SHARP, NOTE_NAMES_FLAT, useFlats, pcName, midiName,
-  detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey,
+  detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey, romanFor,
   qualityFamily, chordVoicing, qualityIntervals, guideTones, voiceLeading,
 };

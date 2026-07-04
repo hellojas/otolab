@@ -1,11 +1,19 @@
 # otolab
 
-Ear-training over real songs. Loop a section of a YouTube video, play what you
-hear on a MIDI keyboard (or your computer keys), and the app names the chord
-and tells you its **function in the key** — including when it's *not* diatonic.
+Ear-training over real songs — one app, two rooms:
 
-This recreates the "sit at the piano with Spotify, replay the bar, hunt for the
-bass note" workflow, minus the piano.
+- **lab** (default): loop a section of a YouTube video, play what you hear on
+  a MIDI keyboard (or your computer keys), and the app names the chord and
+  tells you its **function in the key** — including when it's *not* diatonic.
+  This recreates the "sit at the piano with Spotify, replay the bar, hunt for
+  the bass note" workflow, minus the piano.
+- **dojo** 道場: the practice hall — no video, no internet. Chip-answered
+  drills (song quiz, paste-a-tab, basslines, degrees, qualities, intervals —
+  absorbed from the old standalone otodojo app), plus the built-in standards
+  library with synth comping and transcription quizzes.
+
+The toggle lives in the header; the mode persists. Same synth, same theory
+engine, same themes everywhere.
 
 ## The core design idea
 
@@ -99,6 +107,28 @@ the fragment (nothing hits a server — it's all in the link). Opening it loads
 the video and the transcription; if you already have your own take on that
 song, it asks before replacing. Lyrics don't travel (too big for a URL) but
 refetch in one click, and the lyric offset does come along.
+
+## Dojo: the drill hall
+
+Dojo mode's tabbed drills flip otolab's direction: **the app plays, you
+name.** Everything is answered with chips, so it works on a phone with no
+keyboard. Naming a progression by ear decomposes into three skills, trained
+in order:
+
+1. **Bass first** — root motion *is* the progression. The **intervals** drill
+   (P4/P5/m3 both ways cover most real root motion) and the **basslines**
+   drill (famous root-motion lines — the 50s progression, the Andalusian
+   cadence, rhythm changes — played low after a key-setting cadence) train
+   exactly this.
+2. **Quality second** — the **qualities** drill: one chord, no key context;
+   triads & sus → sevenths → extensions.
+3. **Function last, the multiplier** — the **degrees** drill (random keys,
+   chip answers — the keyboard-free cousin of the drill section), then the
+   **song quiz**: a progression from the [groundtruth collection](groundtruth/)
+   plays with bass + comping and you fill in roman numerals; the title stays
+   hidden until you check. **paste a tab** turns any chords you paste — from
+   Ultimate Guitar, Chordify, anywhere — into the same quiz, key guessed
+   automatically.
 
 ## Drill: name the degree
 

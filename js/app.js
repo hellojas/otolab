@@ -14,6 +14,7 @@ import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
 import { initStandards, stopStandards } from './standards.js';
+import { initDojo, stopDojo } from './dojo.js';
 import player from './player.js';
 
 const $ = sel => document.querySelector(sel);
@@ -704,6 +705,20 @@ function initShare() {
   }
 }
 
+// ---------- lab / dojo mode ----------
+
+function initMode() {
+  const btns = document.querySelectorAll('.mode-toggle button');
+  const set = m => {
+    document.body.dataset.mode = m;
+    localStorage.setItem('otolab:v1:mode', m);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+    if (m === 'dojo') player.pause?.();
+  };
+  btns.forEach(b => b.addEventListener('click', () => set(b.dataset.mode)));
+  set(localStorage.getItem('otolab:v1:mode') === 'dojo' ? 'dojo' : 'lab');
+}
+
 // ---------- themes ----------
 
 const THEMES = ['yoru', 'sumi', 'washi', 'kissa'];
@@ -973,6 +988,7 @@ function init() {
     onStart: () => {
       stopProgression();
       stopStandards();
+      stopDojo();
       if (state.practice) $('#practice-toggle').click();
     },
   });
@@ -980,8 +996,17 @@ function init() {
     onStart: () => {
       stopProgression();
       stopDrill();
+      stopDojo();
     },
   });
+  initDojo({
+    onStart: () => {
+      stopProgression();
+      stopDrill();
+      stopStandards();
+    },
+  });
+  initMode();
   player.onError(showVideoError);
   renderRecent();
   renderGrid();

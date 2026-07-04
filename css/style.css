@@ -119,7 +119,31 @@ h2 {
   letter-spacing: 1px; margin: 18px 0 8px;
 }
 
-.theme-picker { margin-left: auto; display: flex; gap: 7px; align-items: center; align-self: center; }
+/* ---- lab / dojo mode ---- */
+
+.mode-toggle {
+  margin-left: auto; display: flex; align-self: center;
+  border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
+}
+.mode-toggle button {
+  border: none; border-radius: 0; background: transparent;
+  padding: 4px 14px; font-size: 13px; color: var(--muted);
+}
+.mode-toggle button.on { background: var(--accent); color: var(--accent-ink); }
+
+.tagline .tag-dojo { display: none; }
+body[data-mode="dojo"] .tagline .tag-lab { display: none; }
+body[data-mode="dojo"] .tagline .tag-dojo { display: inline; }
+
+body[data-mode="dojo"] .load-row,
+body[data-mode="dojo"] .video-col,
+body[data-mode="dojo"] .timeline-section,
+body[data-mode="dojo"] .lyrics-section,
+body[data-mode="dojo"] .check-section { display: none; }
+body[data-mode="dojo"] main { grid-template-columns: 1fr; }
+body[data-mode="lab"] .dojo-section { display: none; }
+
+.theme-picker { display: flex; gap: 7px; align-items: center; align-self: center; }
 .theme-dot {
   width: 20px; height: 20px; border-radius: 50%; padding: 0;
   border: 2px solid transparent; cursor: pointer;
@@ -362,6 +386,62 @@ body:not(.drilling) #drill-replay,
 body:not(.drilling) #drill-cadence,
 body:not(.drilling) #drill-reveal { display: none; }
 body.drilling .palette { outline: 1px dashed var(--accent); outline-offset: 6px; border-radius: 8px; }
+
+/* ---- dojo drills ---- */
+
+.dojo-section { margin-top: 14px; }
+#dojo-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+#dojo-tabs button {
+  border-radius: 999px; padding: 4px 13px; font-size: 13px; color: var(--muted);
+}
+#dojo-tabs button.active {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+}
+
+.dj-panel {
+  display: none; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; margin-top: 10px;
+}
+.dj-panel.active { display: block; }
+.dj-panel .blurb { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+.dj-panel .blurb code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
+.dj-panel textarea {
+  width: 100%; background: var(--panel2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; color: var(--text);
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical;
+}
+.dj-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 0; }
+.dj-row button, .dj-row select { font-size: 13px; padding: 5px 12px; }
+.dj-panel .primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.dj-panel label.check {
+  color: var(--muted); font-size: 13px; display: inline-flex; gap: 5px; align-items: center;
+}
+.dj-meta { color: var(--muted); font-size: 13px; }
+.dj-result { font-size: 13.5px; }
+.dj-score { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+.slots { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 4px; min-height: 30px; }
+.slot {
+  min-width: 56px; padding: 6px 10px; text-align: center; background: var(--panel2);
+  border: 1.5px dashed var(--border); border-radius: 9px; cursor: pointer;
+}
+.slot .top { font-size: 15px; font-weight: 600; }
+.slot .sub { font-size: 11px; color: var(--muted); }
+.slot .sub.strike { text-decoration: line-through; }
+.slot.filled { border-style: solid; }
+.slot.now { border-color: var(--accent); border-style: solid; box-shadow: 0 0 0 2px var(--accent) inset; }
+.slot.good { border-style: solid; border-color: var(--good); }
+.slot.good .top { color: var(--good); }
+.slot.bad { border-style: solid; border-color: var(--bad); }
+.slot.bad .top { color: var(--bad); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.chip { border-radius: 999px; padding: 5px 13px; font-size: 14px; }
+.chip.good { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
+.chip.bad { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
+
+.guide-list { color: var(--text); font-size: 14px; padding-left: 20px; margin: 0 0 12px; }
+.guide-list li { margin-bottom: 8px; }
 
 .standards-section { margin-top: 18px; }
 .standards-section #std-song { max-width: 320px; }
