@@ -8,7 +8,10 @@ import { pcName, useFlats, chordLabel, chordVoicing, midiName } from './theory.j
 import { parseChordSymbol, parseProgression, gradeProgression, alignSequences } from './reference.js';
 import { playNoteAt, playChordAt, clickAt, audioNow, ensureCtx } from './audio.js';
 import { onHeldChange } from './input.js';
-import { SONGS } from './standards-data.js';
+import { SONGS as SONGS_CORE } from './standards-data.js';
+import { SONGS_EXTRA } from './standards-data-extra.js';
+
+const SONGS = [...SONGS_CORE, ...SONGS_EXTRA];
 
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s).replace(/[&<>"']/g, c =>
@@ -393,8 +396,9 @@ function initStandards(opts = {}) {
   onStartCb = opts.onStart || null;
 
   const songSel = $('#std-song');
+  const byTitle = (a, b) => a.title.localeCompare(b.title);
   const withMel = SONGS.filter(s => s.melody);
-  const chordsOnly = SONGS.filter(s => !s.melody);
+  const chordsOnly = SONGS.filter(s => !s.melody).sort(byTitle);
   const addGroup = (label, songs) => {
     const g = document.createElement('optgroup');
     g.label = label;
