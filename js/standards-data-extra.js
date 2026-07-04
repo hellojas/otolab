@@ -150,6 +150,19 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "cherokee",
+    title: "Cherokee",
+    composer: "Ray Noble",
+    year: 1938,
+    tonic: 10, mode: "major", bpb: 4, style: "swing", bpm: 240,
+    sections: [
+      { name: "A", bars: ['Bb6', 'Bb6', 'Fm7', 'Bb7', 'Ebmaj7', 'Ebmaj7', 'Ab7', 'Ab7', 'Bb6', 'Bb6', 'C7', 'C7', 'Cm7', 'F7', 'Bb6', 'Bb6'] },
+      { name: "A", bars: ['Bb6', 'Bb6', 'Fm7', 'Bb7', 'Ebmaj7', 'Ebmaj7', 'Ab7', 'Ab7', 'Bb6', 'Bb6', 'C7', 'C7', 'Cm7', 'F7', 'Bb6', 'Bb6'] },
+      { name: "B", bars: ['C#m7', 'F#7', 'Bmaj7', 'Bmaj7', 'Bm7', 'E7', 'Amaj7', 'Amaj7', 'Am7', 'D7', 'Gmaj7', 'Gmaj7', 'Gm7', 'C7', 'Cm7', 'F7'] },
+      { name: "A", bars: ['Bb6', 'Bb6', 'Fm7', 'Bb7', 'Ebmaj7', 'Ebmaj7', 'Ab7', 'Ab7', 'Bb6', 'Bb6', 'C7', 'C7', 'Cm7', 'F7', 'Bb6', 'Bb6'] },
+    ],
+  },
+  {
     id: "come-rain-or-come-shine",
     title: "Come Rain or Come Shine",
     composer: "Harold Arlen",
@@ -568,6 +581,19 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['C6', 'E7', 'F6', 'G7', 'C6 Am7', 'D7', 'Dm7 G7', 'C6'] },
       { name: "B", bars: ['Gm7', 'C7', 'Fmaj7', 'Fmaj7', 'Am7', 'D7', 'Dm7', 'G7'] },
       { name: "A", bars: ['C6', 'E7', 'F6', 'G7', 'C6 Am7', 'D7', 'Dm7 G7', 'C6'] },
+    ],
+  },
+  {
+    id: "out-of-nowhere",
+    title: "Out of Nowhere",
+    composer: "Johnny Green",
+    year: 1931,
+    tonic: 7, mode: "major", bpb: 4, style: "swing", bpm: 144,
+    sections: [
+      { name: "A", bars: ['Gmaj7', 'Gmaj7', 'Bbm7', 'Eb7', 'Gmaj7', 'Gmaj7', 'Bm7', 'E7'] },
+      { name: "B", bars: ['Am7', 'E7', 'Am7', 'Am7', 'Bbm7', 'Eb7', 'Am7', 'D7'] },
+      { name: "A", bars: ['Gmaj7', 'Gmaj7', 'Bbm7', 'Eb7', 'Gmaj7', 'Gmaj7', 'Bm7', 'E7'] },
+      { name: "C", bars: ['Am7', 'E7', 'Am7', 'Am7', 'Bm7 Bbdim7', 'Am7 D7', 'G6', 'G6'] },
     ],
   },
   {
