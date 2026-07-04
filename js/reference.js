@@ -77,10 +77,10 @@ function pairScore(a, b) {
   return 0.5;
 }
 
-// user & ref: [{root, quality, …}] → { pairs, total, refCount, pct }
+// Generic Needleman–Wunsch alignment of two sequences under any pair scorer.
+// user & ref: arrays → { pairs, total, refCount, pct }
 // pairs: { user, ref, score } — user null = you missed one, ref null = extra
-function gradeProgression(user, ref) {
-  const GAP = -0.25;
+function alignSequences(user, ref, scoreFn, GAP = -0.25) {
   const n = user.length, m = ref.length;
   const S = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
   for (let i = 1; i <= n; i++) S[i][0] = i * GAP;
@@ -88,7 +88,7 @@ function gradeProgression(user, ref) {
   for (let i = 1; i <= n; i++) {
     for (let j = 1; j <= m; j++) {
       S[i][j] = Math.max(
-        S[i - 1][j - 1] + pairScore(user[i - 1], ref[j - 1]),
+        S[i - 1][j - 1] + scoreFn(user[i - 1], ref[j - 1]),
         S[i - 1][j] + GAP,
         S[i][j - 1] + GAP,
       );
@@ -97,8 +97,8 @@ function gradeProgression(user, ref) {
   const pairs = [];
   let i = n, j = m;
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && S[i][j] === S[i - 1][j - 1] + pairScore(user[i - 1], ref[j - 1])) {
-      pairs.unshift({ user: user[i - 1], ref: ref[j - 1], score: pairScore(user[i - 1], ref[j - 1]) });
+    if (i > 0 && j > 0 && S[i][j] === S[i - 1][j - 1] + scoreFn(user[i - 1], ref[j - 1])) {
+      pairs.unshift({ user: user[i - 1], ref: ref[j - 1], score: scoreFn(user[i - 1], ref[j - 1]) });
       i--; j--;
     } else if (i > 0 && (j === 0 || S[i][j] === S[i - 1][j] + GAP)) {
       pairs.unshift({ user: user[i - 1], ref: null, score: 0 });
@@ -112,4 +112,8 @@ function gradeProgression(user, ref) {
   return { pairs, total, refCount: m, pct: m ? Math.round((100 * total) / m) : 0 };
 }
 
-export { parseChordSymbol, parseProgression, gradeProgression };
+function gradeProgression(user, ref) {
+  return alignSequences(user, ref, pairScore);
+}
+
+export { parseChordSymbol, parseProgression, gradeProgression, alignSequences };

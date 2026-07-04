@@ -13,6 +13,7 @@ import { playChord, ensureCtx, VOICES, setVoice, getVoice, setMasterVolume } fro
 import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
+import { initStandards, stopStandards } from './standards.js';
 import player from './player.js';
 
 const $ = sel => document.querySelector(sel);
@@ -971,7 +972,14 @@ function init() {
     getKey: () => state.key,
     onStart: () => {
       stopProgression();
+      stopStandards();
       if (state.practice) $('#practice-toggle').click();
+    },
+  });
+  initStandards({
+    onStart: () => {
+      stopProgression();
+      stopDrill();
     },
   });
   player.onError(showVideoError);

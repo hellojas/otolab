@@ -109,6 +109,38 @@ degree by clicking a palette chip or playing the chord on your keyboard —
 **diatonic 7ths**; switch to **+ common outside** to get secondary dominants,
 subV7 and borrowed chords in the mix. Score is per session.
 
+## Standards: the built-in jam room
+
+The **standards** section is a full practice loop with no video and no
+internet — an iReal-Pro-style library baked into the app:
+
+- **25 lead sheets**: Autumn Leaves, All the Things You Are, Stella by
+  Starlight, rhythm changes, blues heads, bossas… Chord progressions aren't
+  copyrightable, so the classic changes ship free (the same model iReal Pro
+  uses). **Melodies are included only for public-domain/traditional tunes and
+  original otolab etudes** — copyrighted heads stay out on purpose; that's
+  what your ears and the recordings are for.
+- **▶ changes** comps the chart through the synth with a one-bar count-in:
+  walking-ish bass + stabs for swing, clave-flavored comping for bossa, pads
+  for ballads, oom-pah-pah for waltzes. Swing eighths land on the back of the
+  triplet. Click any bar in the chart to play from there; **loop** repeats the
+  form. Tempo is a slider; the ⚙ synth voice applies here too.
+- **Transpose to any key** — or **random key**, which is the real ear workout:
+  the key readout shows `?` until you reveal.
+- **quiz: chords** hides the chart. Listen, then type the changes you hear
+  (bars optional, jazz shorthand welcome) and **grade me** aligns your answer
+  against the chart with the same scorer as the check section — exact 1,
+  right root + family ¾, right root ½.
+- **quiz: melody** (melody tunes only) is melodic dictation: hear the line,
+  hit **● record my echo**, play it back on any keyboard (MIDI, computer keys,
+  on-screen piano), and get graded note-by-note — exact pitch 1, right note
+  wrong octave ¾. **reveal** prints the line.
+
+The etudes are a difficulty ladder for dictation: a ii–V–I arpeggio line, a
+blues riff that follows the changes, and a guide-tone line over the Autumn
+Leaves turnaround — plus Greensleeves and St. James Infirmary for real
+(public-domain) tunes.
+
 ## Practice mode
 
 Once a song is transcribed, toggle **practice**. Chord labels hide behind `?`.
@@ -137,6 +169,10 @@ transcribe-then-quiz is the model.)
 
 ## Roadmap ideas
 
-- Melodic dictation over the same engine (app plays a line, you play it back)
-- A spaced-repetition queue for songs/segments you keep missing
+- More standards in the library (and more public-domain heads as tunes age in
+  — everything published ≤1930 is now US public domain, so Body and Soul,
+  Georgia on My Mind and On the Sunny Side of the Street are fair game for
+  melodies)
+- Walking bass lines and drum feel for the standards comper
+- A spaced-repetition queue for songs/segments/tunes you keep missing
 - Per-song stats over time (accuracy by chord function)

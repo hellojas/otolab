@@ -176,6 +176,48 @@
     <p class="drill-hint">functional ear training, no video needed — a cadence sets the key center (picked up top), one chord plays, and you name its degree by clicking a palette chip above or playing the chord on your keyboard.</p>
   </section>
 
+  <section class="standards-section">
+    <div class="section-head">
+      <h2>standards</h2>
+      <select id="std-song" title="pick a tune from the built-in lead-sheet library"></select>
+      <select id="std-key" title="transpose — random key is the real ear workout"></select>
+      <label class="vol-label" title="tempo">
+        <input id="std-tempo" type="range" min="40" max="240" value="120">
+        <span id="std-bpm">120 bpm</span>
+      </label>
+    </div>
+    <div class="std-transport">
+      <button id="std-play" title="comp the changes (count-in first)">▶ changes</button>
+      <button id="std-melody-btn" title="play the melody alone">▶ melody</button>
+      <button id="std-both" title="melody over the changes — the full lead sheet">▶ both</button>
+      <button id="std-stop" title="stop">⏹</button>
+      <button id="std-loop" title="repeat the form until stopped">loop: off</button>
+      <span class="std-quiz-group">
+        <button id="std-quiz-chords" title="hide the chart — transcribe the changes by ear">quiz: chords</button>
+        <button id="std-quiz-melody" title="hear the line, echo it back on your keyboard">quiz: melody</button>
+        <button id="std-reveal">reveal</button>
+      </span>
+      <span id="std-status" class="std-status"></span>
+    </div>
+    <p class="drill-hint" id="std-info"></p>
+    <div id="std-chart" class="std-chart"></div>
+    <div id="std-answer" class="std-answer" hidden>
+      <textarea id="std-answer-input" rows="2" spellcheck="false"
+        placeholder="type the changes you hear — e.g.  Cm7 F7 | Bbmaj7 | Ebmaj7  (bars optional, jazz shorthand welcome)"></textarea>
+      <button id="std-grade">grade me</button>
+      <div id="std-grade-result" class="grade-result"></div>
+    </div>
+    <div id="std-melody-quiz" class="std-answer" hidden>
+      <div class="std-echo-row">
+        <button id="std-echo">● record my echo</button>
+        <button id="std-echo-done">grade my echo</button>
+        <span id="std-echo-status" class="std-status"></span>
+      </div>
+      <div id="std-melody-result" class="grade-result"></div>
+    </div>
+    <span id="std-quiz-status" class="std-quiz-status"></span>
+  </section>
+
   <footer>
     <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>b</kbd> tap tempo · <kbd>r</kbd> replay drill chord</p>
   </footer>

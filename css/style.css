@@ -363,6 +363,54 @@ body:not(.drilling) #drill-cadence,
 body:not(.drilling) #drill-reveal { display: none; }
 body.drilling .palette { outline: 1px dashed var(--accent); outline-offset: 6px; border-radius: 8px; }
 
+.standards-section { margin-top: 18px; }
+.standards-section #std-song { max-width: 320px; }
+#std-tempo { width: 110px; accent-color: var(--accent); }
+#std-bpm { font-variant-numeric: tabular-nums; }
+.std-transport {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+}
+.std-transport button { font-size: 13px; padding: 4px 10px; }
+.std-quiz-group {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: 10px;
+  padding-left: 10px; border-left: 1px solid var(--border);
+}
+.std-status { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.std-quiz-status { display: block; margin-top: 8px; color: var(--muted); font-size: 12.5px; }
+
+.std-chart {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px;
+}
+@media (max-width: 700px) { .std-chart { grid-template-columns: repeat(2, 1fr); } }
+.std-bar {
+  position: relative; display: flex; align-items: center; justify-content: space-evenly;
+  gap: 8px; min-height: 46px; padding: 12px 8px 6px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer;
+}
+.std-bar:hover { border-color: var(--accent); }
+.std-bar.playing {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel));
+}
+.std-bar .sec {
+  position: absolute; top: 2px; left: 7px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--accent);
+}
+.std-bar .ch { font-weight: 700; font-size: 14px; font-family: var(--font-display); }
+
+.std-answer { margin-top: 10px; }
+#std-answer-input {
+  width: 100%; resize: vertical; background: var(--panel); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+#std-grade { margin-top: 6px; }
+.std-echo-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#std-echo.on { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
+button:disabled { opacity: 0.4; cursor: default; }
+button:disabled:hover { border-color: var(--border); }
+
 footer { margin-top: 26px; color: var(--muted); font-size: 12.5px; }
 kbd {
   background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
