@@ -144,12 +144,17 @@ subV7 and borrowed chords in the mix. Score is per session.
 The **standards** section is a full practice loop with no video and no
 internet — an iReal-Pro-style library baked into the app:
 
-- **25 lead sheets**: Autumn Leaves, All the Things You Are, Stella by
-  Starlight, rhythm changes, blues heads, bossas… Chord progressions aren't
+- **~100 lead sheets** (`js/standards-data.js` + `js/standards-data-extra.js`):
+  Autumn Leaves, All the Things You Are, Stella by Starlight, Body and Soul,
+  Night and Day, Cherokee, Giant Steps, rhythm changes, blues heads, the
+  Jobim bossas, the Ellington and Blue Note books… Chord progressions aren't
   copyrightable, so the classic changes ship free (the same model iReal Pro
-  uses). **Melodies are included only for public-domain/traditional tunes and
-  original otolab etudes** — copyrighted heads stay out on purpose; that's
-  what your ears and the recordings are for.
+  uses); the extended library's forms were cross-checked against published
+  chart analyses and open chord-progression corpora, and tunes whose
+  published changes irreconcilably disagree were left out rather than
+  guessed. **Melodies are included only for public-domain/traditional tunes
+  and original otolab etudes** — copyrighted heads stay out on purpose;
+  that's what your ears and the recordings are for.
 - **▶ changes** comps the chart through the synth with a one-bar count-in:
   walking-ish bass + stabs for swing, clave-flavored comping for bossa, pads
   for ballads, oom-pah-pah for waltzes. Swing eighths land on the back of the

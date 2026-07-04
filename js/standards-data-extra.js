@@ -137,6 +137,32 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "but-not-for-me",
+    title: "But Not for Me",
+    composer: "George Gershwin",
+    year: 1930,
+    tonic: 3, mode: "major", bpb: 4, style: "swing", bpm: 126,
+    sections: [
+      { name: "A", bars: ['Ebmaj7', 'Fm7 Bb7', 'Ebmaj7', 'Cm7', 'F7', 'Fm7 Bb7', 'Ebmaj7', 'Bbm7 Eb7'] },
+      { name: "B", bars: ['Abmaj7', 'Db7', 'Ebmaj7', 'Cm7', 'F7', 'Bb7', 'Ebmaj7', 'Fm7 Bb7'] },
+      { name: "A", bars: ['Ebmaj7', 'Fm7 Bb7', 'Ebmaj7', 'Cm7', 'F7', 'Fm7 Bb7', 'Ebmaj7', 'Bbm7 Eb7'] },
+      { name: "B", bars: ['Abmaj7', 'Db7', 'Ebmaj7', 'Cm7', 'F7', 'Bb7', 'Ebmaj7', 'Fm7 Bb7'] },
+    ],
+  },
+  {
+    id: "bye-bye-blackbird",
+    title: "Bye Bye Blackbird",
+    composer: "Ray Henderson",
+    year: 1926,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 144,
+    sections: [
+      { name: "A", bars: ['F6', 'F6', 'Am7', 'Abdim7', 'Gm7', 'C7', 'F6 D7', 'Gm7 C7'] },
+      { name: "B", bars: ['Gm7', 'C7', 'Gm7', 'C7', 'Gm7', 'C7', 'F6', 'F6'] },
+      { name: "C", bars: ['F7', 'F7', 'Bb6', 'Am7b5 D7', 'Gm7', 'Gm7', 'Bbm6', 'C7'] },
+      { name: "D", bars: ['F6', 'F6', 'Am7', 'Am7b5 D7', 'Gm7', 'C7', 'F6', 'Gm7 C7'] },
+    ],
+  },
+  {
     id: "caravan",
     title: "Caravan",
     composer: "Juan Tizol & Duke Ellington",
@@ -210,6 +236,19 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['G6', 'Bbm7 Eb7', 'Am7 B7', 'Em7 Cm6', 'Bm7b5 E7', 'Am7 F7', 'Bm7 Bbm7', 'Am7 D7'] },
       { name: "B", bars: ['Fm7 Bb7', 'Ebmaj7', 'Ebmaj7 C7', 'Fm7 Bb7', 'Ebmaj7', 'Bm7b5 E7', 'Am7', 'Am7 D7'] },
       { name: "A", bars: ['G6', 'Bbm7 Eb7', 'Am7 B7', 'Em7 Cm6', 'Bm7b5 E7', 'Bm7 Bbm7', 'Am7 D7', 'G6'] },
+    ],
+  },
+  {
+    id: "days-of-wine-and-roses",
+    title: "Days of Wine and Roses",
+    composer: "Henry Mancini",
+    year: 1962,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 138,
+    sections: [
+      { name: "A", bars: ['Fmaj7', 'Eb7#11', 'D7', 'D7', 'Gm7', 'Gm7', 'Bbm7', 'Eb7'] },
+      { name: "B", bars: ['Am7', 'Dm7', 'Gm7', 'C7', 'Em7b5 A7', 'Dm7 G7', 'Gm7', 'C7'] },
+      { name: "A", bars: ['Fmaj7', 'Eb7#11', 'D7', 'D7', 'Gm7', 'Gm7', 'Bbm7', 'Eb7'] },
+      { name: "C", bars: ['Am7', 'Dm7', 'Gm7', 'C7', 'Dm7', 'Gm7', 'C7', 'Fmaj7'] },
     ],
   },
   {
@@ -377,6 +416,19 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "i-remember-you",
+    title: "I Remember You",
+    composer: "Victor Schertzinger",
+    year: 1941,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 144,
+    sections: [
+      { name: "A", bars: ['Fmaj7', 'Bm7b5 E7', 'Fmaj7', 'Cm7 F7', 'Bbmaj7', 'Bbm7 Eb7', 'Am7 D7', 'Gm7 C7'] },
+      { name: "A", bars: ['Fmaj7', 'Bm7b5 E7', 'Fmaj7', 'Cm7 F7', 'Bbmaj7', 'Bbm7 Eb7', 'Am7 D7', 'Gm7 C7'] },
+      { name: "B", bars: ['Cm7', 'F7', 'Bbmaj7', 'Bbmaj7', 'Em7', 'A7', 'Dmaj7', 'Dmaj7'] },
+      { name: "A", bars: ['Fmaj7', 'Bm7b5 E7', 'Fmaj7', 'Am7b5 D7', 'Gm7', 'Bbm6', 'Fmaj7', 'Am7b5 D7', 'Gm7', 'C7', 'Fmaj7', 'Gm7 C7'] },
+    ],
+  },
+  {
     id: "ill-remember-april",
     title: "I'll Remember April",
     composer: "Gene de Paul",
@@ -399,6 +451,19 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['Dm DmMaj7', 'Dm7 Dm6', 'Gm GmMaj7', 'Gm7 A7', 'Dm', 'D7', 'Gm7 C7', 'Ebm7 Ab7'] },
       { name: "B", bars: ['Dbmaj7 Bb7', 'Ebm7 Ab7', 'Dbmaj7 Bb7', 'Ebm7 Ab7', 'Dbmaj7 Bb7', 'Ebm7 Ab7', 'Gm7', 'C7'] },
       { name: "A", bars: ['Dm DmMaj7', 'Dm7 Dm6', 'Gm GmMaj7', 'Gm7 A7', 'Dm', 'D7', 'Gm7 C7', 'Fmaj7'] },
+    ],
+  },
+  {
+    id: "it-could-happen-to-you",
+    title: "It Could Happen to You",
+    composer: "Jimmy Van Heusen",
+    year: 1944,
+    tonic: 3, mode: "major", bpb: 4, style: "swing", bpm: 132,
+    sections: [
+      { name: "A", bars: ['Ebmaj7', 'Edim7', 'Fm7', 'F#dim7', 'Gm7', 'C7', 'Fm7', 'Bbm7 Eb7'] },
+      { name: "B", bars: ['Abmaj7', 'Abm7 Db7', 'Ebmaj7', 'Ebmaj7', 'Cm7', 'C7', 'Fm7', 'Bb7'] },
+      { name: "A", bars: ['Ebmaj7', 'Edim7', 'Fm7', 'F#dim7', 'Gm7', 'C7', 'Fm7', 'Bbm7 Eb7'] },
+      { name: "C", bars: ['Abmaj7', 'Fm7', 'Ebmaj7', 'Gm7 C7', 'Abmaj7 Fm7', 'Bb7', 'Ebmaj7', 'Fm7 Bb7'] },
     ],
   },
   {
@@ -527,6 +592,19 @@ const SONGS_EXTRA = [
     tonic: 4, mode: "minor", bpb: 3, style: "waltz", bpm: 168,
     sections: [
       { name: "A", bars: ['Em7', 'F#m7', 'Em7', 'F#m7', 'Cmaj7', 'Cmaj7', 'Cmaj7', 'Cmaj7', 'Am7', 'Am7', 'D7', 'D7', 'Gmaj7', 'Cmaj7', 'F#m7b5', 'B7'] },
+    ],
+  },
+  {
+    id: "my-funny-valentine",
+    title: "My Funny Valentine",
+    composer: "Richard Rodgers",
+    year: 1937,
+    tonic: 0, mode: "minor", bpb: 4, style: "ballad", bpm: 66,
+    sections: [
+      { name: "A", bars: ['Cm', 'CmMaj7', 'Cm7', 'Cm6', 'Abmaj7', 'Fm7', 'Dm7b5', 'G7b9'] },
+      { name: "A", bars: ['Cm', 'CmMaj7', 'Cm7', 'Cm6', 'Abmaj7', 'Fm7', 'Abm6', 'Bb7b9'] },
+      { name: "B", bars: ['Ebmaj7 Fm7', 'Gm7 Fm7', 'Ebmaj7 Fm7', 'Gm7 Fm7', 'Ebmaj7 G7', 'Cm7 Bbm7', 'Abmaj7', 'Dm7b5 G7b9'] },
+      { name: "A", bars: ['Cm', 'CmMaj7', 'Cm7', 'Cm6', 'Abmaj7', 'Dm7b5 G7b9', 'Cm7', 'Bbm7 Eb7', 'Abmaj7', 'Fm7 Bb7', 'Ebmaj7', 'Dm7b5 G7b9'] },
     ],
   },
   {
