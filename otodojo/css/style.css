@@ -1,0 +1,190 @@
+/* otodojo — washi 和紙 (light paper & indigo, default) and yoru 夜 (night indigo),
+   tokens borrowed from otolab so the two apps feel like siblings. */
+
+body, body[data-theme="washi"] {
+  color-scheme: light;
+  --bg: #f3eee4;
+  --panel: #fbf8f0;
+  --panel2: #ece5d5;
+  --border: #d4cab4;
+  --text: #2b2620;
+  --muted: #7c7263;
+  --accent: #35507a;
+  --accent-ink: #f7f4ea;
+  --good: #3a7c4d;
+  --bad: #b23e2c;
+  --font-display: Georgia, "Times New Roman", serif;
+}
+
+body[data-theme="yoru"] {
+  color-scheme: dark;
+  --bg: #131620;
+  --panel: #1b1f2c;
+  --panel2: #232839;
+  --border: #323950;
+  --text: #e8eaf2;
+  --muted: #8d93a8;
+  --accent: #7fa9f5;
+  --accent-ink: #0f1320;
+  --good: #55c68e;
+  --bad: #e0616e;
+  --font-display: inherit;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 20px 24px 8px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  margin: 0;
+}
+h1 .jp { color: var(--muted); font-size: 18px; font-weight: normal; margin-left: 6px; }
+.tagline { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+#tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 860px;
+  margin: 10px auto 0;
+  padding: 0 24px;
+}
+#tabs button {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+#tabs button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+main { max-width: 860px; margin: 14px auto 60px; padding: 0 24px; }
+
+.panel {
+  display: none;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.panel.active { display: block; }
+.panel h2 { font-family: var(--font-display); font-size: 19px; margin: 0 0 10px; }
+
+.blurb { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; }
+.blurb a, .meta a, #panel-guide a { color: var(--accent); }
+.blurb code {
+  background: var(--panel2);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+button, select {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 13px;
+  color: var(--text);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+button.ghost { background: none; border: none; font-size: 17px; }
+label.check { color: var(--muted); font-size: 13px; display: flex; gap: 5px; align-items: center; }
+
+textarea {
+  width: 100%;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  resize: vertical;
+}
+
+.meta { color: var(--muted); font-size: 13px; margin: 6px 0 10px; }
+
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 8px 0 14px;
+  min-height: 30px;
+}
+.slot {
+  min-width: 58px;
+  padding: 7px 10px;
+  text-align: center;
+  background: var(--panel2);
+  border: 1.5px dashed var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+}
+.slot .top { font-size: 16px; font-weight: 600; }
+.slot .sub { font-size: 11px; color: var(--muted); }
+.slot .sub.strike { text-decoration: line-through; }
+.slot.filled { border-style: solid; }
+.slot.now { border-color: var(--accent); border-style: solid; box-shadow: 0 0 0 2px var(--accent) inset; }
+.slot.good { border-style: solid; border-color: var(--good); }
+.slot.good .top { color: var(--good); }
+.slot.bad { border-style: solid; border-color: var(--bad); }
+.slot.bad .top { color: var(--bad); }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.chip {
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 14px;
+}
+.chip.good { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
+.chip.bad { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
+
+.result { min-height: 22px; font-size: 14px; margin: 8px 0 4px; }
+.score { color: var(--muted); font-size: 13px; }
+
+#panel-guide ol { padding-left: 20px; }
+#panel-guide li { margin-bottom: 10px; }
+
+@media (max-width: 560px) {
+  header, #tabs, main { padding-left: 14px; padding-right: 14px; }
+  .panel { padding: 14px; }
+}

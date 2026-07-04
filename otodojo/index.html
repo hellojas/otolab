@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>otodojo 音道場 — chord ear-training drills</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥋</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="washi">
+  <header>
+    <div class="title">
+      <h1>otodojo <span class="jp">音道場</span></h1>
+      <p class="tagline">hear a progression, name the chords — drills built on real songs</p>
+    </div>
+    <button id="theme-btn" class="ghost" title="theme">☾</button>
+  </header>
+
+  <nav id="tabs">
+    <button data-tab="songs" class="active">song quiz</button>
+    <button data-tab="paste">paste a tab</button>
+    <button data-tab="bass">basslines</button>
+    <button data-tab="degrees">degrees</button>
+    <button data-tab="qualities">qualities</button>
+    <button data-tab="intervals">intervals</button>
+    <button data-tab="guide">how to practice</button>
+  </nav>
+
+  <main>
+    <!-- ============ song quiz ============ -->
+    <section id="panel-songs" class="panel active">
+      <p class="blurb">A famous progression plays on the synth (from the
+        <a href="groundtruth/songs.js">groundtruth collection</a>). Fill in the
+        roman numerals. Title stays hidden until you check.</p>
+      <div class="row">
+        <select id="song-genre">
+          <option value="all">all genres</option>
+          <option value="pop">pop / rock</option>
+          <option value="jazz">jazz</option>
+          <option value="blues">blues</option>
+        </select>
+        <select id="song-diff">
+          <option value="all">any difficulty</option>
+          <option value="1">easy · diatonic</option>
+          <option value="2">medium · one surprise</option>
+          <option value="3">hard · jazz changes</option>
+        </select>
+        <button id="song-new" class="primary">new song</button>
+      </div>
+      <div class="row">
+        <button id="song-play">▶ play</button>
+        <button id="song-stop">■ stop</button>
+        <select id="song-speed">
+          <option value="1">full speed</option>
+          <option value="0.75">0.75×</option>
+          <option value="0.5">0.5×</option>
+        </select>
+        <button id="song-cadence">hear the key</button>
+        <label class="check"><input type="checkbox" id="song-showkey" checked> name the key</label>
+      </div>
+      <div id="song-meta" class="meta"></div>
+      <div id="song-slots" class="slots"></div>
+      <div id="song-chips" class="chips"></div>
+      <div class="row">
+        <button id="song-undo">undo</button>
+        <button id="song-clear">clear</button>
+        <button id="song-check" class="primary">check</button>
+        <button id="song-reveal">reveal</button>
+      </div>
+      <div id="song-result" class="result"></div>
+      <div id="song-score" class="score"></div>
+    </section>
+
+    <!-- ============ paste a tab ============ -->
+    <section id="panel-paste" class="panel">
+      <p class="blurb">Copy chords from any tab or chord site — Ultimate Guitar,
+        Guitar World, Chordify, a Real Book chart — and paste them here. Bar
+        lines <code>|</code> are respected; otherwise each chord gets a bar.
+        The app guesses the key, plays the synth version, and quizzes you the
+        same way. Lyrics lines are ignored.</p>
+      <textarea id="paste-input" rows="5"
+        placeholder="| Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7 | Em7 | Em7 |&#10;&#10;or just:  C  G  Am  F"></textarea>
+      <div class="row">
+        <button id="paste-make" class="primary">make a quiz</button>
+        <span id="paste-status" class="meta"></span>
+      </div>
+      <div class="row">
+        <button id="paste-play">▶ play</button>
+        <button id="paste-stop">■ stop</button>
+        <select id="paste-speed">
+          <option value="1">full speed</option>
+          <option value="0.75">0.75×</option>
+          <option value="0.5">0.5×</option>
+        </select>
+        <button id="paste-cadence">hear the key</button>
+        <label class="check"><input type="checkbox" id="paste-showkey" checked> name the key</label>
+      </div>
+      <div id="paste-meta" class="meta"></div>
+      <div id="paste-slots" class="slots"></div>
+      <div id="paste-chips" class="chips"></div>
+      <div class="row">
+        <button id="paste-undo">undo</button>
+        <button id="paste-clear">clear</button>
+        <button id="paste-check" class="primary">check</button>
+        <button id="paste-reveal">reveal</button>
+      </div>
+      <div id="paste-result" class="result"></div>
+      <div id="paste-score" class="score"></div>
+    </section>
+
+    <!-- ============ basslines ============ -->
+    <section id="panel-bass" class="panel">
+      <p class="blurb">The real-world move: find the bass first. A cadence
+        establishes the key, then a famous bassline plays low. Name the scale
+        degrees — the reveal tells you whose line it was.</p>
+      <div class="row">
+        <button id="bass-new" class="primary">new line</button>
+        <button id="bass-replay">▶ replay</button>
+        <button id="bass-stop">■ stop</button>
+      </div>
+      <div id="bass-meta" class="meta"></div>
+      <div id="bass-slots" class="slots"></div>
+      <div id="bass-chips" class="chips"></div>
+      <div class="row">
+        <button id="bass-undo">undo</button>
+        <button id="bass-clear">clear</button>
+        <button id="bass-check" class="primary">check</button>
+        <button id="bass-reveal">reveal</button>
+      </div>
+      <div id="bass-result" class="result"></div>
+      <div id="bass-score" class="score"></div>
+    </section>
+
+    <!-- ============ degrees ============ -->
+    <section id="panel-degrees" class="panel">
+      <p class="blurb">Functional hearing: a cadence sets the key, one diatonic
+        seventh chord plays. Which degree is it? This is the drill that makes
+        whole progressions start labeling themselves.</p>
+      <div class="row">
+        <select id="deg-mode">
+          <option value="major">major keys</option>
+          <option value="minor">minor keys</option>
+          <option value="both">both</option>
+        </select>
+        <button id="deg-new" class="primary">new question</button>
+        <button id="deg-cadence">replay cadence</button>
+        <button id="deg-chord">replay chord</button>
+      </div>
+      <div id="deg-meta" class="meta"></div>
+      <div id="deg-answers" class="chips"></div>
+      <div id="deg-result" class="result"></div>
+      <div id="deg-score" class="score"></div>
+    </section>
+
+    <!-- ============ qualities ============ -->
+    <section id="panel-qualities" class="panel">
+      <p class="blurb">One chord, no key. Major or minor? Seventh flavor?
+        Root position, bass note included — the same way you'd meet it in a song.</p>
+      <div class="row">
+        <select id="qual-level">
+          <option value="triads">triads &amp; sus</option>
+          <option value="sevenths">sevenths</option>
+          <option value="colors">extensions &amp; colors</option>
+        </select>
+        <button id="qual-new" class="primary">new chord</button>
+        <button id="qual-replay">▶ replay</button>
+      </div>
+      <div id="qual-answers" class="chips"></div>
+      <div id="qual-result" class="result"></div>
+      <div id="qual-score" class="score"></div>
+    </section>
+
+    <!-- ============ intervals ============ -->
+    <section id="panel-intervals" class="panel">
+      <p class="blurb">The atoms. Root motion in a progression is just a chain
+        of intervals — hear P4s and P5s instantly and half of chord hunting is done.</p>
+      <div class="row">
+        <select id="int-type">
+          <option value="melodic-asc">melodic · up</option>
+          <option value="melodic-desc">melodic · down</option>
+          <option value="melodic-both">melodic · both</option>
+          <option value="harmonic">harmonic</option>
+          <option value="mixed">mixed</option>
+        </select>
+        <button id="int-new" class="primary">new interval</button>
+        <button id="int-replay">▶ replay</button>
+      </div>
+      <div id="int-answers" class="chips"></div>
+      <div id="int-result" class="result"></div>
+      <div id="int-score" class="score"></div>
+    </section>
+
+    <!-- ============ guide ============ -->
+    <section id="panel-guide" class="panel">
+      <h2>what actually helps you figure out chords</h2>
+      <p>The skill of hearing "oh, that's a <b>ii–V–I</b>" decomposes into three
+        smaller skills, and they're best trained in this order:</p>
+      <ol>
+        <li><b>Bass first.</b> The bass note is the loudest, most isolated pitch
+          in almost every mix, and root motion is what defines a progression.
+          Train it with the <b>intervals</b> drill (P4/P5/m3 up and down are 80%
+          of real root motion), then the <b>basslines</b> drill, which is real
+          songs reduced to exactly this skill.</li>
+        <li><b>Quality second.</b> Once you have the root, is what's on top
+          major, minor, dominant, half-diminished? That's the
+          <b>qualities</b> drill. Learn triads cold before sevenths.</li>
+        <li><b>Function last — and it's the multiplier.</b> Root + quality
+          <i>relative to the key</i> is the roman numeral, and roman numerals are
+          why you can hear a song once and play it in any key. The
+          <b>degrees</b> drill trains hearing a chord as "the IV" rather than
+          "an F". Then the <b>song quiz</b> puts it together on real tunes.</li>
+      </ol>
+      <p>A good session: 5 minutes of intervals as a warm-up, 5 of degrees,
+        then song quizzes until your ears tire. When a song beats you, don't
+        reveal — replay at 0.5× and hunt the bass line degree by degree.
+        And when you meet a song in the wild, grab its chords from a tab site
+        and feed them to <b>paste a tab</b> — transcribe-then-quiz on anything.</p>
+      <p class="meta">companion to <a href="https://github.com/hellojas/otolab">otolab</a>,
+        which does this over real YouTube recordings with a MIDI keyboard.</p>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
