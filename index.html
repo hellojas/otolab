@@ -10,7 +10,14 @@
 <body>
   <header>
     <h1>otolab</h1>
-    <p class="tagline">loop a song · play what you hear · the app names the chord &amp; its function</p>
+    <p class="tagline">
+      <span class="tag-lab">loop a song · play what you hear · the app names the chord &amp; its function</span>
+      <span class="tag-dojo">the practice hall 道場 — drills, standards &amp; dictation, no video needed</span>
+    </p>
+    <div class="mode-toggle" title="lab = transcribe over a YouTube recording · dojo = pure practice, no video">
+      <button data-mode="lab">lab</button>
+      <button data-mode="dojo">dojo</button>
+    </div>
     <div class="theme-picker">
       <button class="theme-dot" data-theme="yoru" title="yoru 夜 — night indigo"></button>
       <button class="theme-dot" data-theme="sumi" title="sumi 墨 — ink &amp; vermillion"></button>
@@ -159,6 +166,206 @@
     <div id="grade-result" class="grade-result"></div>
   </section>
 
+  <section class="dojo-section">
+    <div class="section-head">
+      <h2>dojo</h2>
+      <nav id="dojo-tabs">
+        <button data-tab="songs" class="active">song quiz</button>
+        <button data-tab="paste">paste a tab</button>
+        <button data-tab="bass">basslines</button>
+        <button data-tab="degrees">degrees</button>
+        <button data-tab="qualities">qualities</button>
+        <button data-tab="intervals">intervals</button>
+        <button data-tab="guide">how to practice</button>
+      </nav>
+    </div>
+
+    <section id="panel-songs" class="dj-panel active">
+      <p class="blurb">A famous progression plays on the synth (from the
+        groundtruth collection). Fill in the roman numerals from the chips.
+        The title stays hidden until you check.</p>
+      <div class="dj-row">
+        <select id="song-genre">
+          <option value="all">all genres</option>
+          <option value="pop">pop / rock</option>
+          <option value="jazz">jazz</option>
+          <option value="blues">blues</option>
+        </select>
+        <select id="song-diff">
+          <option value="all">any difficulty</option>
+          <option value="1">easy · diatonic</option>
+          <option value="2">medium · one surprise</option>
+          <option value="3">hard · jazz changes</option>
+        </select>
+        <button id="song-new" class="primary">new song</button>
+        <button id="song-play">▶ play</button>
+        <button id="song-stop">■ stop</button>
+        <select id="song-speed">
+          <option value="1">full speed</option>
+          <option value="0.75">0.75×</option>
+          <option value="0.5">0.5×</option>
+        </select>
+        <button id="song-cadence">hear the key</button>
+        <label class="check"><input type="checkbox" id="song-showkey" checked> name the key</label>
+      </div>
+      <div id="song-meta" class="dj-meta"></div>
+      <div id="song-slots" class="slots"></div>
+      <div id="song-chips" class="chips"></div>
+      <div class="dj-row">
+        <button id="song-undo">undo</button>
+        <button id="song-clear">clear</button>
+        <button id="song-check" class="primary">check</button>
+        <button id="song-reveal">reveal</button>
+        <span id="song-result" class="dj-result"></span>
+        <span id="song-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-paste" class="dj-panel">
+      <p class="blurb">Copy chords from any tab or chord site and paste them
+        here. Bar lines <code>|</code> are respected; lyric lines are ignored.
+        The app guesses the key, plays the synth version, and quizzes you the
+        same way — turn any song you're learning into an ear-training exercise.</p>
+      <textarea id="paste-input" rows="5" spellcheck="false"
+        placeholder="| Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7 | Em7 | Em7 |&#10;&#10;or just:  C  G  Am  F"></textarea>
+      <div class="dj-row">
+        <button id="paste-make" class="primary">make a quiz</button>
+        <span id="paste-status" class="dj-meta"></span>
+      </div>
+      <div class="dj-row">
+        <button id="paste-play">▶ play</button>
+        <button id="paste-stop">■ stop</button>
+        <select id="paste-speed">
+          <option value="1">full speed</option>
+          <option value="0.75">0.75×</option>
+          <option value="0.5">0.5×</option>
+        </select>
+        <button id="paste-cadence">hear the key</button>
+        <label class="check"><input type="checkbox" id="paste-showkey" checked> name the key</label>
+      </div>
+      <div id="paste-meta" class="dj-meta"></div>
+      <div id="paste-slots" class="slots"></div>
+      <div id="paste-chips" class="chips"></div>
+      <div class="dj-row">
+        <button id="paste-undo">undo</button>
+        <button id="paste-clear">clear</button>
+        <button id="paste-check" class="primary">check</button>
+        <button id="paste-reveal">reveal</button>
+        <span id="paste-result" class="dj-result"></span>
+        <span id="paste-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-bass" class="dj-panel">
+      <p class="blurb">The real-world move: find the bass first. A cadence
+        establishes the key, then a famous bassline plays low. Name the scale
+        degrees — the reveal tells you whose line it was.</p>
+      <div class="dj-row">
+        <button id="bass-new" class="primary">new line</button>
+        <button id="bass-replay">▶ replay</button>
+        <button id="bass-stop">■ stop</button>
+        <span id="bass-meta" class="dj-meta"></span>
+      </div>
+      <div id="bass-slots" class="slots"></div>
+      <div id="bass-chips" class="chips"></div>
+      <div class="dj-row">
+        <button id="bass-undo">undo</button>
+        <button id="bass-clear">clear</button>
+        <button id="bass-check" class="primary">check</button>
+        <button id="bass-reveal">reveal</button>
+        <span id="bass-result" class="dj-result"></span>
+        <span id="bass-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-degrees" class="dj-panel">
+      <p class="blurb">Functional hearing in random keys, chips only — the
+        keyboard-free cousin of the drill section below. A cadence sets the
+        key, one diatonic seventh plays: which degree is it?</p>
+      <div class="dj-row">
+        <select id="deg-mode">
+          <option value="major">major keys</option>
+          <option value="minor">minor keys</option>
+          <option value="both">both</option>
+        </select>
+        <button id="deg-new" class="primary">new question</button>
+        <button id="deg-cadence">replay cadence</button>
+        <button id="deg-chord">replay chord</button>
+        <span id="deg-meta" class="dj-meta"></span>
+      </div>
+      <div id="deg-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="deg-result" class="dj-result"></span>
+        <span id="deg-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-qualities" class="dj-panel">
+      <p class="blurb">One chord, no key. Major or minor? Seventh flavor?
+        Root position, bass note included — the way you'd meet it in a song.</p>
+      <div class="dj-row">
+        <select id="qual-level">
+          <option value="triads">triads &amp; sus</option>
+          <option value="sevenths">sevenths</option>
+          <option value="colors">extensions &amp; colors</option>
+        </select>
+        <button id="qual-new" class="primary">new chord</button>
+        <button id="qual-replay">▶ replay</button>
+      </div>
+      <div id="qual-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="qual-result" class="dj-result"></span>
+        <span id="qual-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-intervals" class="dj-panel">
+      <p class="blurb">The atoms. Root motion in a progression is just a chain
+        of intervals — hear P4s and P5s instantly and half of chord hunting is done.</p>
+      <div class="dj-row">
+        <select id="int-type">
+          <option value="melodic-asc">melodic · up</option>
+          <option value="melodic-desc">melodic · down</option>
+          <option value="melodic-both">melodic · both</option>
+          <option value="harmonic">harmonic</option>
+          <option value="mixed">mixed</option>
+        </select>
+        <button id="int-new" class="primary">new interval</button>
+        <button id="int-replay">▶ replay</button>
+      </div>
+      <div id="int-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="int-result" class="dj-result"></span>
+        <span id="int-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-guide" class="dj-panel">
+      <p class="blurb"><b>What actually helps you figure out chords.</b>
+        Naming a progression decomposes into three skills, best trained in order:</p>
+      <ol class="guide-list">
+        <li><b>Bass first.</b> The bass is the most isolated pitch in nearly
+          every mix, and root motion <i>is</i> the progression. Train it with
+          <b>intervals</b> (P4/P5/m3 both ways cover most real root motion),
+          then <b>basslines</b> — real songs reduced to exactly this skill.</li>
+        <li><b>Quality second.</b> Given the root, is the color major, minor,
+          dominant, half-diminished? That's <b>qualities</b>. Triads cold
+          before sevenths.</li>
+        <li><b>Function last — the multiplier.</b> Root + quality
+          <i>relative to the key</i> is the roman numeral, and hearing
+          "IV going iv" instead of "C going Cm" is what transfers between
+          songs and keys. Train it with <b>degrees</b>, then apply it on real
+          tunes with the <b>song quiz</b> and the <b>standards</b> section
+          below.</li>
+      </ol>
+      <p class="blurb">A good session: 5 minutes of intervals to warm up,
+        5 of degrees, then song quizzes or a standards transcription until your
+        ears tire. When a tune beats you, don't reveal — replay at 0.5× and
+        hunt the bass line degree by degree. Met a song in the wild? Grab its
+        chords from a tab site and feed <b>paste a tab</b>.</p>
+    </section>
+  </section>
+
   <section class="drill-section">
     <div class="section-head">
       <h2>drill</h2>
@@ -174,6 +381,48 @@
       <span id="drill-score"></span>
     </div>
     <p class="drill-hint">functional ear training, no video needed — a cadence sets the key center (picked up top), one chord plays, and you name its degree by clicking a palette chip above or playing the chord on your keyboard.</p>
+  </section>
+
+  <section class="standards-section">
+    <div class="section-head">
+      <h2>standards</h2>
+      <select id="std-song" title="pick a tune from the built-in lead-sheet library"></select>
+      <select id="std-key" title="transpose — random key is the real ear workout"></select>
+      <label class="vol-label" title="tempo">
+        <input id="std-tempo" type="range" min="40" max="240" value="120">
+        <span id="std-bpm">120 bpm</span>
+      </label>
+    </div>
+    <div class="std-transport">
+      <button id="std-play" title="comp the changes (count-in first)">▶ changes</button>
+      <button id="std-melody-btn" title="play the melody alone">▶ melody</button>
+      <button id="std-both" title="melody over the changes — the full lead sheet">▶ both</button>
+      <button id="std-stop" title="stop">⏹</button>
+      <button id="std-loop" title="repeat the form until stopped">loop: off</button>
+      <span class="std-quiz-group">
+        <button id="std-quiz-chords" title="hide the chart — transcribe the changes by ear">quiz: chords</button>
+        <button id="std-quiz-melody" title="hear the line, echo it back on your keyboard">quiz: melody</button>
+        <button id="std-reveal">reveal</button>
+      </span>
+      <span id="std-status" class="std-status"></span>
+    </div>
+    <p class="drill-hint" id="std-info"></p>
+    <div id="std-chart" class="std-chart"></div>
+    <div id="std-answer" class="std-answer" hidden>
+      <textarea id="std-answer-input" rows="2" spellcheck="false"
+        placeholder="type the changes you hear — e.g.  Cm7 F7 | Bbmaj7 | Ebmaj7  (bars optional, jazz shorthand welcome)"></textarea>
+      <button id="std-grade">grade me</button>
+      <div id="std-grade-result" class="grade-result"></div>
+    </div>
+    <div id="std-melody-quiz" class="std-answer" hidden>
+      <div class="std-echo-row">
+        <button id="std-echo">● record my echo</button>
+        <button id="std-echo-done">grade my echo</button>
+        <span id="std-echo-status" class="std-status"></span>
+      </div>
+      <div id="std-melody-result" class="grade-result"></div>
+    </div>
+    <span id="std-quiz-status" class="std-quiz-status"></span>
   </section>
 
   <footer>

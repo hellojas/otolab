@@ -298,6 +298,9 @@ function chordVoicing(root, quality) {
     '7': [0,4,7,10], maj7: [0,4,7,11], m7: [0,3,7,10], m7b5: [0,3,6,10], dim7: [0,3,6,9],
     '6': [0,4,7,9], m6: [0,3,7,9], mMaj7: [0,3,7,11], '7sus4': [0,5,7,10],
     '9': [0,4,7,10,14], maj9: [0,4,7,11,14], m9: [0,3,7,10,14],
+    '7b9': [0,4,10,13], '7#9': [0,4,10,15], '7#11': [0,4,10,18], '13': [0,4,10,14,21],
+    '7#5': [0,4,8,10], '7b5': [0,4,6,10], 'maj7#5': [0,4,8,11], 'maj7#11': [0,4,11,18],
+    add9: [0,4,7,14], madd9: [0,3,7,14], '6/9': [0,4,9,14], m11: [0,3,10,14,17],
   }[quality] || [0,4,7];
   const r = 60 + ((root % 12) + 12) % 12;
   const anchor = r > 66 ? r - 12 : r;
@@ -341,6 +344,6 @@ function voiceLeading(prev, cur) {
 
 export {
   NOTE_NAMES_SHARP, NOTE_NAMES_FLAT, useFlats, pcName, midiName,
-  detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey,
+  detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey, romanFor,
   qualityFamily, chordVoicing, qualityIntervals, guideTones, voiceLeading,
 };

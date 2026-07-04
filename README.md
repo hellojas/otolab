@@ -1,11 +1,19 @@
 # otolab
 
-Ear-training over real songs. Loop a section of a YouTube video, play what you
-hear on a MIDI keyboard (or your computer keys), and the app names the chord
-and tells you its **function in the key** — including when it's *not* diatonic.
+Ear-training over real songs — one app, two rooms:
 
-This recreates the "sit at the piano with Spotify, replay the bar, hunt for the
-bass note" workflow, minus the piano.
+- **lab** (default): loop a section of a YouTube video, play what you hear on
+  a MIDI keyboard (or your computer keys), and the app names the chord and
+  tells you its **function in the key** — including when it's *not* diatonic.
+  This recreates the "sit at the piano with Spotify, replay the bar, hunt for
+  the bass note" workflow, minus the piano.
+- **dojo** 道場: the practice hall — no video, no internet. Chip-answered
+  drills (song quiz, paste-a-tab, basslines, degrees, qualities, intervals —
+  absorbed from the old standalone otodojo app), plus the built-in standards
+  library with synth comping and transcription quizzes.
+
+The toggle lives in the header; the mode persists. Same synth, same theory
+engine, same themes everywhere.
 
 ## The core design idea
 
@@ -100,6 +108,28 @@ the video and the transcription; if you already have your own take on that
 song, it asks before replacing. Lyrics don't travel (too big for a URL) but
 refetch in one click, and the lyric offset does come along.
 
+## Dojo: the drill hall
+
+Dojo mode's tabbed drills flip otolab's direction: **the app plays, you
+name.** Everything is answered with chips, so it works on a phone with no
+keyboard. Naming a progression by ear decomposes into three skills, trained
+in order:
+
+1. **Bass first** — root motion *is* the progression. The **intervals** drill
+   (P4/P5/m3 both ways cover most real root motion) and the **basslines**
+   drill (famous root-motion lines — the 50s progression, the Andalusian
+   cadence, rhythm changes — played low after a key-setting cadence) train
+   exactly this.
+2. **Quality second** — the **qualities** drill: one chord, no key context;
+   triads & sus → sevenths → extensions.
+3. **Function last, the multiplier** — the **degrees** drill (random keys,
+   chip answers — the keyboard-free cousin of the drill section), then the
+   **song quiz**: a progression from the [groundtruth collection](groundtruth/)
+   plays with bass + comping and you fill in roman numerals; the title stays
+   hidden until you check. **paste a tab** turns any chords you paste — from
+   Ultimate Guitar, Chordify, anywhere — into the same quiz, key guessed
+   automatically.
+
 ## Drill: name the degree
 
 The **drill** section is functional ear training with no video: a I–IV–V7–I
@@ -108,6 +138,43 @@ degree by clicking a palette chip or playing the chord on your keyboard —
 `r` replays it, **cadence** re-grounds you, **reveal** gives up. Start with
 **diatonic 7ths**; switch to **+ common outside** to get secondary dominants,
 subV7 and borrowed chords in the mix. Score is per session.
+
+## Standards: the built-in jam room
+
+The **standards** section is a full practice loop with no video and no
+internet — an iReal-Pro-style library baked into the app:
+
+- **~100 lead sheets** (`js/standards-data.js` + `js/standards-data-extra.js`):
+  Autumn Leaves, All the Things You Are, Stella by Starlight, Body and Soul,
+  Night and Day, Cherokee, Giant Steps, rhythm changes, blues heads, the
+  Jobim bossas, the Ellington and Blue Note books… Chord progressions aren't
+  copyrightable, so the classic changes ship free (the same model iReal Pro
+  uses); the extended library's forms were cross-checked against published
+  chart analyses and open chord-progression corpora, and tunes whose
+  published changes irreconcilably disagree were left out rather than
+  guessed. **Melodies are included only for public-domain/traditional tunes
+  and original otolab etudes** — copyrighted heads stay out on purpose;
+  that's what your ears and the recordings are for.
+- **▶ changes** comps the chart through the synth with a one-bar count-in:
+  walking-ish bass + stabs for swing, clave-flavored comping for bossa, pads
+  for ballads, oom-pah-pah for waltzes. Swing eighths land on the back of the
+  triplet. Click any bar in the chart to play from there; **loop** repeats the
+  form. Tempo is a slider; the ⚙ synth voice applies here too.
+- **Transpose to any key** — or **random key**, which is the real ear workout:
+  the key readout shows `?` until you reveal.
+- **quiz: chords** hides the chart. Listen, then type the changes you hear
+  (bars optional, jazz shorthand welcome) and **grade me** aligns your answer
+  against the chart with the same scorer as the check section — exact 1,
+  right root + family ¾, right root ½.
+- **quiz: melody** (melody tunes only) is melodic dictation: hear the line,
+  hit **● record my echo**, play it back on any keyboard (MIDI, computer keys,
+  on-screen piano), and get graded note-by-note — exact pitch 1, right note
+  wrong octave ¾. **reveal** prints the line.
+
+The etudes are a difficulty ladder for dictation: a ii–V–I arpeggio line, a
+blues riff that follows the changes, and a guide-tone line over the Autumn
+Leaves turnaround — plus Greensleeves and St. James Infirmary for real
+(public-domain) tunes.
 
 ## Practice mode
 
@@ -137,6 +204,10 @@ transcribe-then-quiz is the model.)
 
 ## Roadmap ideas
 
-- Melodic dictation over the same engine (app plays a line, you play it back)
-- A spaced-repetition queue for songs/segments you keep missing
+- More standards in the library (and more public-domain heads as tunes age in
+  — everything published ≤1930 is now US public domain, so Body and Soul,
+  Georgia on My Mind and On the Sunny Side of the Street are fair game for
+  melodies)
+- Walking bass lines and drum feel for the standards comper
+- A spaced-repetition queue for songs/segments/tunes you keep missing
 - Per-song stats over time (accuracy by chord function)

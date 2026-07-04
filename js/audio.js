@@ -307,7 +307,47 @@ function allNotesOff() {
   for (const m of [...voices.keys()]) noteOff(m, true);
 }
 
+// ---------- scheduled playback (standards player) ----------
+// Fire-and-forget notes at a future AudioContext time. The release is
+// scheduled up front, so nothing is tracked in the voices map and these
+// never collide with interactively held notes.
+
+function playNoteAt(midi, when, dur, velocity = 0.7) {
+  ensureCtx();
+  const t = Math.max(ctx.currentTime + 0.005, when);
+  const v = VOICE_DEFS[currentVoice].build(midiToFreq(midi), velocity, t);
+  const end = t + Math.max(0.06, dur);
+  v.gain.gain.setTargetAtTime(0.0001, end, Math.max(0.02, v.rel / 4));
+  v.oscs.forEach(o => o.stop(end + v.rel + 0.4));
+}
+
+function playChordAt(midiNotes, when, dur, velocity = 0.7) {
+  for (const m of midiNotes) playNoteAt(m, when, dur, velocity);
+}
+
+// short metronome tick for count-ins; accent marks the downbeat
+function clickAt(when, accent = false) {
+  ensureCtx();
+  const t = Math.max(ctx.currentTime + 0.005, when);
+  const o = ctx.createOscillator();
+  o.type = 'sine';
+  o.frequency.value = accent ? 1660 : 1245;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(accent ? 0.2 : 0.13, t + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+  o.connect(g).connect(master);
+  o.start(t);
+  o.stop(t + 0.1);
+}
+
+function audioNow() {
+  ensureCtx();
+  return ctx.currentTime;
+}
+
 export {
   noteOn, noteOff, playChord, allNotesOff, ensureCtx,
+  playNoteAt, playChordAt, clickAt, audioNow,
   VOICES, setVoice, getVoice, setMasterVolume,
 };
