@@ -116,6 +116,16 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "bessies-blues",
+    title: "Bessie's Blues",
+    composer: "John Coltrane",
+    year: 1964,
+    tonic: 3, mode: "major", bpb: 4, style: "swing", bpm: 152,
+    sections: [
+      { name: "A", bars: ['Eb7', 'Ab7', 'Eb7', 'Eb7', 'Ab7', 'Eb7', 'Eb7', 'Eb7', 'Bb7', 'Ab7', 'Eb7', 'Bb7'] },
+    ],
+  },
+  {
     id: "black-orpheus",
     title: "Black Orpheus (Manhã de Carnaval)",
     composer: "Luiz Bonfá",
@@ -134,6 +144,16 @@ const SONGS_EXTRA = [
     tonic: 2, mode: "minor", bpb: 4, style: "ballad", bpm: 58,
     sections: [
       { name: "A", bars: ['Gm7', 'A7#9', 'Dm7 Db7', 'Cm7 F7', 'Bbmaj7', 'A7#9', 'Dm7', 'E7#9', 'Am7', 'Dm7'] },
+    ],
+  },
+  {
+    id: "blue-monk",
+    title: "Blue Monk",
+    composer: "Thelonious Monk",
+    year: 1954,
+    tonic: 10, mode: "major", bpb: 4, style: "swing", bpm: 104,
+    sections: [
+      { name: "A", bars: ['Bb7', 'Eb7', 'Bb7', 'Bb7', 'Eb7', 'Edim7', 'Bb7', 'Bb7', 'F7', 'Eb7', 'Bb7', 'F7'] },
     ],
   },
   {
