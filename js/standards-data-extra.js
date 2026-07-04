@@ -69,6 +69,16 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "all-blues",
+    title: "All Blues",
+    composer: "Miles Davis",
+    year: 1959,
+    tonic: 7, mode: "major", bpb: 3, style: "waltz", bpm: 138,
+    sections: [
+      { name: "A", bars: ['G7', 'G7', 'G7', 'G7', 'C7', 'C7', 'G7', 'G7', 'D7#9', 'Eb7#9 D7#9', 'G7', 'G7'] },
+    ],
+  },
+  {
     id: "alone-together",
     title: "Alone Together",
     composer: "Arthur Schwartz",
@@ -356,6 +366,16 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "freddie-freeloader",
+    title: "Freddie Freeloader",
+    composer: "Miles Davis",
+    year: 1959,
+    tonic: 10, mode: "major", bpb: 4, style: "swing", bpm: 104,
+    sections: [
+      { name: "A", bars: ['Bb7', 'Bb7', 'Bb7', 'Bb7', 'Eb7', 'Eb7', 'Bb7', 'Bb7', 'F7', 'Eb7', 'Ab7', 'Ab7'] },
+    ],
+  },
+  {
     id: "georgia-on-my-mind",
     title: "Georgia on My Mind",
     composer: "Hoagy Carmichael",
@@ -451,6 +471,19 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['G6', 'G6', 'G6', 'G6', 'Gm7', 'Gm7', 'Gm7', 'Gm7', 'Am7b5', 'D7', 'Bm7b5', 'E7', 'Am7', 'D7', 'G6', 'G6'] },
       { name: "B", bars: ['Cm7', 'F7', 'Bbmaj7', 'Bbmaj7', 'Cm7', 'F7', 'Bbmaj7', 'Bbmaj7', 'Am7', 'D7', 'Gmaj7', 'Gmaj7', 'F#m7', 'B7', 'Emaj7', 'Am7 D7'] },
       { name: "A", bars: ['G6', 'G6', 'G6', 'G6', 'Gm7', 'Gm7', 'Gm7', 'Gm7', 'Am7b5', 'D7', 'Bm7b5', 'E7', 'Am7', 'D7', 'G6', 'G6'] },
+    ],
+  },
+  {
+    id: "impressions",
+    title: "Impressions",
+    composer: "John Coltrane",
+    year: 1963,
+    tonic: 2, mode: "minor", bpb: 4, style: "swing", bpm: 200,
+    sections: [
+      { name: "A", bars: ['Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7'] },
+      { name: "A", bars: ['Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7'] },
+      { name: "B", bars: ['Ebm7', 'Ebm7', 'Ebm7', 'Ebm7', 'Ebm7', 'Ebm7', 'Ebm7', 'Ebm7'] },
+      { name: "A", bars: ['Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7', 'Dm7'] },
     ],
   },
   {
@@ -595,6 +628,16 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['Fm7 Ab7', 'G7b9 C7', 'Fm7 Ab7', 'G7b9 C7', 'Fm7 Ab7', 'G7b9 C7', 'Fm7', 'Cm7b5 F7'] },
       { name: "B", bars: ['Bbm7 Ab7', 'G7b9 C7', 'Gm7', 'F B9', 'Bbm7 Ab7', 'G7b9', 'Gm7', 'C7'] },
       { name: "A", bars: ['Fm7 Ab7', 'G7b9 C7', 'Fm7 Ab7', 'G7b9 C7', 'Fm7 Ab7', 'G7b9 C7', 'Fm7', 'Fm7'] },
+    ],
+  },
+  {
+    id: "mr-pc",
+    title: "Mr. P.C.",
+    composer: "John Coltrane",
+    year: 1959,
+    tonic: 0, mode: "minor", bpb: 4, style: "swing", bpm: 200,
+    sections: [
+      { name: "A", bars: ['Cm7', 'Cm7', 'Cm7', 'Cm7', 'Fm7', 'Fm7', 'Cm7', 'Cm7', 'Ab7', 'G7', 'Cm7', 'G7'] },
     ],
   },
   {
@@ -783,6 +826,16 @@ const SONGS_EXTRA = [
     sections: [
       { name: "A", bars: ['C6', 'Em7 A7', 'Dm7 G7', 'C6', 'C6', 'Em7 A7', 'Dm7 G7', 'C6'] },
       { name: "B", bars: ['Em7b5', 'A7', 'Dm7', 'G7', 'C7', 'F6 F#dim7', 'C6 G7', 'C6'] },
+    ],
+  },
+  {
+    id: "straight-no-chaser",
+    title: "Straight, No Chaser",
+    composer: "Thelonious Monk",
+    year: 1951,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 160,
+    sections: [
+      { name: "A", bars: ['F7', 'Bb7', 'F7', 'F7', 'Bb7', 'F7', 'F7', 'Am7 D7', 'Gm7', 'C7', 'F7', 'F7'] },
     ],
   },
   {
