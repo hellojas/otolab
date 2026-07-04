@@ -6,6 +6,19 @@
 
 const SONGS_EXTRA = [
   {
+    id: "foggy-day",
+    title: "A Foggy Day",
+    composer: "George Gershwin",
+    year: 1937,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 168,
+    sections: [
+      { name: "A", bars: ['Fmaj7', 'Am7b5 D7b9', 'Gm7', 'C7', 'F6', 'Dm7b5', 'Gm7', 'Gm7 C7'] },
+      { name: "B", bars: ['Fmaj7', 'Cm7 F7', 'Bb6', 'Bbm6', 'Fmaj7', 'Am7 D7', 'Gm7', 'Gm7 C7'] },
+      { name: "A", bars: ['Fmaj7', 'Abm7', 'Gm7', 'C7', 'F6', 'Dm7b5', 'Gm7', 'Gm7 C7'] },
+      { name: "C", bars: ['Cm7', 'F7', 'Bb6', 'Eb7', 'F6 Gm7', 'Am7 Bbm6', 'Am7 D7', 'Gm7 C7'] },
+    ],
+  },
+  {
     id: "night-in-tunisia",
     title: "A Night in Tunisia",
     composer: "Dizzy Gillespie",
