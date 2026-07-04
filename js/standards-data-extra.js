@@ -32,6 +32,30 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "angel-eyes",
+    title: "Angel Eyes",
+    composer: "Matt Dennis",
+    year: 1946,
+    tonic: 0, mode: "minor", bpb: 4, style: "ballad", bpm: 60,
+    sections: [
+      { name: "A", bars: ['Cm Ab7', 'Cm G7', 'Cm', 'Dm7b5 G7', 'Cm Ab7', 'Cm Ab7', 'Cm G7', 'Cm G7'] },
+      { name: "A", bars: ['Cm Ab7', 'Cm G7', 'Cm', 'Dm7b5 G7', 'Cm Ab7', 'Cm Ab7', 'Cm G7', 'Cm'] },
+      { name: "B", bars: ['Bbm7 Eb7', 'Abmaj7', 'Bbm7 Eb7', 'Abmaj7', 'Am7 D7', 'Gmaj7', 'C#m7 F#7', 'Dm7b5 G7'] },
+      { name: "A", bars: ['Cm Ab7', 'Cm G7', 'Cm', 'Dm7b5 G7', 'Cm Ab7', 'Cm Ab7', 'Cm G7', 'Cm'] },
+    ],
+  },
+  {
+    id: "beautiful-love",
+    title: "Beautiful Love",
+    composer: "Victor Young / Wayne King / Egbert Van Alstyne",
+    year: 1931,
+    tonic: 2, mode: "minor", bpb: 4, style: "swing", bpm: 138,
+    sections: [
+      { name: "A", bars: ['Em7b5', 'A7', 'Dm', 'D7', 'Gm7', 'C7', 'Fmaj7', 'Em7b5 A7', 'Dm', 'Gm7', 'Bb7', 'A7', 'Dm', 'B7', 'Bb7', 'A7'] },
+      { name: "A", bars: ['Em7b5', 'A7', 'Dm', 'D7', 'Gm7', 'C7', 'Fmaj7', 'Em7b5 A7', 'Dm', 'Gm7', 'Bb7', 'A7', 'Dm B7', 'Bb7 A7', 'Dm', 'Dm'] },
+    ],
+  },
+  {
     id: "black-orpheus",
     title: "Black Orpheus (Manhã de Carnaval)",
     composer: "Luiz Bonfá",
@@ -63,6 +87,19 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "body-and-soul",
+    title: "Body and Soul",
+    composer: "Johnny Green",
+    year: 1930,
+    tonic: 1, mode: "major", bpb: 4, style: "ballad", bpm: 60,
+    sections: [
+      { name: "A", bars: ['Ebm7', 'Bb7', 'Ebm7 Ab7', 'Dbmaj7 Gb7', 'Fm7 Em7', 'Ebm7 Ab7', 'Dbmaj7', 'Ebm7 Ab7'] },
+      { name: "A", bars: ['Ebm7', 'Bb7', 'Ebm7 Ab7', 'Dbmaj7 Gb7', 'Fm7 Em7', 'Ebm7 Ab7', 'Dbmaj7', 'Em7 A7'] },
+      { name: "B", bars: ['Dmaj7 Em7', 'F#m7 Gm6', 'Em7 A7', 'Dmaj7', 'Dm7 G7', 'Cmaj7', 'C7 B7', 'Bb7'] },
+      { name: "A", bars: ['Ebm7', 'Bb7', 'Ebm7 Ab7', 'Dbmaj7 Gb7', 'Fm7 Em7', 'Ebm7 Ab7', 'Dbmaj7', 'Ebm7 Ab7'] },
+    ],
+  },
+  {
     id: "caravan",
     title: "Caravan",
     composer: "Juan Tizol & Duke Ellington",
@@ -73,6 +110,17 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'Fm6', 'Fm6', 'Fm6', 'Fm6'] },
       { name: "B", bars: ['F7', 'F7', 'F7', 'F7', 'Bb7', 'Bb7', 'Bb7', 'Bb7', 'Eb7', 'Eb7', 'Eb7', 'Eb7', 'Ab7', 'Ab7', 'G7', 'G7'] },
       { name: "A", bars: ['C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'C7b9', 'Fm6', 'Fm6', 'Fm6', 'Fm6'] },
+    ],
+  },
+  {
+    id: "come-rain-or-come-shine",
+    title: "Come Rain or Come Shine",
+    composer: "Harold Arlen",
+    year: 1946,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 108,
+    sections: [
+      { name: "A", bars: ['Fmaj7', 'Em7b5 A7', 'Dm7', 'Dm7', 'G7', 'C7', 'F7', 'Cm7 F7', 'Bbm7', 'Fm7', 'Bbm7', 'Gm7 C7', 'Bm7b5 E7', 'Am7b5 D7', 'Am7b5 D7', 'Gm7 C7'] },
+      { name: "B", bars: ['Fmaj7', 'Em7b5 A7', 'Dm7', 'Dm7', 'B7', 'B7', 'Em7', 'A7', 'D7', 'D7', 'G7', 'G7', 'Dm7 Bm7b5', 'Em7b5 A7', 'Dm7', 'Gm7 C7'] },
     ],
   },
   {
@@ -149,6 +197,17 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "east-of-the-sun",
+    title: "East of the Sun (and West of the Moon)",
+    composer: "Brooks Bowman",
+    year: 1934,
+    tonic: 7, mode: "major", bpb: 4, style: "swing", bpm: 138,
+    sections: [
+      { name: "A", bars: ['Gmaj7', 'Gmaj7', 'Bm7', 'E7', 'Am7', 'Am7', 'Cm7', 'F7', 'Am7', 'D7', 'F#m7b5 B7', 'Em7', 'Em7', 'A7', 'Am7', 'D7'] },
+      { name: "B", bars: ['Gmaj7', 'Gmaj7', 'Bm7', 'E7', 'Am7', 'Am7', 'Cm7', 'F7', 'Am7', 'F#m7b5 B7', 'Em7', 'A7', 'Am7', 'D7', 'Bm7', 'Bbm7 Eb7', 'Am7', 'D7', 'G6', 'Am7 D7'] },
+    ],
+  },
+  {
     id: "equinox",
     title: "Equinox",
     composer: "John Coltrane",
@@ -182,6 +241,19 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "georgia-on-my-mind",
+    title: "Georgia on My Mind",
+    composer: "Hoagy Carmichael",
+    year: 1930,
+    tonic: 5, mode: "major", bpb: 4, style: "ballad", bpm: 66,
+    sections: [
+      { name: "A", bars: ['F', 'Em7b5 A7', 'Dm7', 'Bm7b5 Bbm6', 'Am7 D7', 'Gm7 C7', 'F D7', 'Gm7 C7'] },
+      { name: "A", bars: ['F', 'Em7b5 A7', 'Dm7', 'Bm7b5 Bbm6', 'Am7 D7', 'Gm7 C7', 'F D7', 'Gm7 C7'] },
+      { name: "B", bars: ['Dm7', 'Gm7', 'Dm7', 'Gm7 A7', 'Dm7', 'Bb7', 'F D7', 'Gm7 C7'] },
+      { name: "A", bars: ['F', 'Em7b5 A7', 'Dm7', 'Bm7b5 Bbm6', 'Am7 D7', 'Gm7 C7', 'F6', 'F6'] },
+    ],
+  },
+  {
     id: "giant-steps",
     title: "Giant Steps",
     composer: "John Coltrane",
@@ -189,6 +261,17 @@ const SONGS_EXTRA = [
     tonic: 11, mode: "major", bpb: 4, style: "swing", bpm: 240,
     sections: [
       { name: "A", bars: ['Bmaj7 D7', 'Gmaj7 Bb7', 'Ebmaj7', 'Am7 D7', 'Gmaj7 Bb7', 'Ebmaj7 F#7', 'Bmaj7', 'Fm7 Bb7', 'Ebmaj7', 'Am7 D7', 'Gmaj7', 'C#m7 F#7', 'Bmaj7', 'Fm7 Bb7', 'Ebmaj7', 'C#m7 F#7'] },
+    ],
+  },
+  {
+    id: "how-high-the-moon",
+    title: "How High the Moon",
+    composer: "Morgan Lewis",
+    year: 1940,
+    tonic: 7, mode: "major", bpb: 4, style: "swing", bpm: 176,
+    sections: [
+      { name: "A", bars: ['Gmaj7', 'Gmaj7', 'Gm7', 'C7', 'Fmaj7', 'Fmaj7', 'Fm7', 'Bb7', 'Ebmaj7', 'Ebmaj7', 'Am7b5', 'D7', 'Gmaj7', 'Gmaj7', 'Am7', 'D7'] },
+      { name: "B", bars: ['Gmaj7', 'Gmaj7', 'Gm7', 'C7', 'Fmaj7', 'Fmaj7', 'Fm7', 'Bb7', 'Ebmaj7', 'Ebmaj7', 'Am7b5', 'D7', 'Gmaj7', 'E7', 'Am7 D7', 'Gmaj7'] },
     ],
   },
   {
@@ -231,6 +314,19 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "just-friends",
+    title: "Just Friends",
+    composer: "John Klenner",
+    year: 1931,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 184,
+    sections: [
+      { name: "A", bars: ['Bbmaj7', 'Bbmaj7', 'Bbm7', 'Eb7', 'Fmaj7', 'Fmaj7', 'Abm7', 'Db7'] },
+      { name: "B", bars: ['Gm7', 'C7', 'Fmaj7', 'Dm7', 'G7', 'G7', 'Gm7 C7', 'Cm7 F7'] },
+      { name: "A", bars: ['Bbmaj7', 'Bbmaj7', 'Bbm7', 'Eb7', 'Fmaj7', 'Fmaj7', 'Abm7', 'Db7'] },
+      { name: "C", bars: ['Gm7', 'C7', 'Am7', 'Dm7', 'G7', 'C7', 'Fmaj7', 'Cm7 F7'] },
+    ],
+  },
+  {
     id: "killer-joe",
     title: "Killer Joe",
     composer: "Benny Golson",
@@ -254,6 +350,32 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['Am7 D7', 'Cm7 F7', 'Fm7', 'Bb7', 'Ebmaj7', 'Am7 D7', 'Gmaj7', 'Gmaj7'] },
       { name: "B", bars: ['Bm7', 'E7', 'Amaj7', 'Bbm7 Eb7', 'Am7', 'D7', 'Gmaj7', 'Abm7 Db7'] },
       { name: "A", bars: ['Am7 D7', 'Cm7 F7', 'Fm7', 'Bb7', 'Ebmaj7', 'Am7 D7', 'Gmaj7', 'Gmaj7'] },
+    ],
+  },
+  {
+    id: "long-ago-and-far-away",
+    title: "Long Ago and Far Away",
+    composer: "Jerome Kern",
+    year: 1944,
+    tonic: 5, mode: "major", bpb: 4, style: "swing", bpm: 152,
+    sections: [
+      { name: "A", bars: ['Fmaj7 Dm7', 'Gm7 C7', 'Fmaj7 Dm7', 'Gm7 C7', 'Fmaj7 Dm7', 'Gm7 C7', 'Fmaj7 D7', 'Gm7 C7'] },
+      { name: "B", bars: ['Abmaj7 Fm7', 'Bbm7 Eb7', 'Abmaj7', 'G7', 'Cmaj7', 'Am7', 'Gm7', 'C7'] },
+      { name: "A", bars: ['Fmaj7 Dm7', 'Gm7 C7', 'Fmaj7 Dm7', 'Gm7 C7', 'Fmaj7 Dm7', 'Gm7 C7', 'Fmaj7 D7', 'Gm7 C7'] },
+      { name: "C", bars: ['Cm7', 'F7', 'Bbmaj7', 'Bbm6 Eb7', 'Fmaj7 Abdim7', 'Gm7 C7', 'Fmaj7', 'Gm7 C7'] },
+    ],
+  },
+  {
+    id: "lover-man",
+    title: "Lover Man",
+    composer: "Jimmy Davis, Roger Ramirez & Jimmy Sherman",
+    year: 1941,
+    tonic: 5, mode: "major", bpb: 4, style: "ballad", bpm: 66,
+    sections: [
+      { name: "A", bars: ['Dm7 G7', 'Dm7 G7', 'Gm7 C7', 'Gm7 C7', 'F7', 'Bb7', 'Db7 C7', 'Fmaj7 A7'] },
+      { name: "A", bars: ['Dm7 G7', 'Dm7 G7', 'Gm7 C7', 'Gm7 C7', 'F7', 'Bb7', 'Db7 C7', 'Fmaj7 E7'] },
+      { name: "B", bars: ['Am7', 'Am7 D7', 'Gmaj7', 'Am7 D7', 'Gm7', 'Gm7 C7', 'Fmaj7', 'Em7b5 A7'] },
+      { name: "A", bars: ['Dm7 G7', 'Dm7 G7', 'Gm7 C7', 'Gm7 C7', 'F7', 'Bb7', 'Db7 C7', 'Fmaj7 A7'] },
     ],
   },
   {
@@ -320,6 +442,34 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "night-and-day",
+    title: "Night and Day",
+    composer: "Cole Porter",
+    year: 1932,
+    tonic: 0, mode: "major", bpb: 4, style: "swing", bpm: 152,
+    sections: [
+      { name: "A", bars: ['Abmaj7', 'G7', 'Cmaj7', 'Cmaj7', 'Abmaj7', 'G7', 'Cmaj7', 'Cmaj7'] },
+      { name: "B", bars: ['F#m7b5', 'Fm7', 'Em7', 'Ebdim7', 'Dm7', 'G7', 'Cmaj7', 'Cmaj7'] },
+      { name: "A", bars: ['Abmaj7', 'G7', 'Cmaj7', 'Cmaj7', 'Abmaj7', 'G7', 'Cmaj7', 'Cmaj7'] },
+      { name: "B", bars: ['F#m7b5', 'Fm7', 'Em7', 'Ebdim7', 'Dm7', 'G7', 'Cmaj7', 'Cmaj7'] },
+      { name: "C", bars: ['Ebmaj7', 'Ebmaj7', 'Cmaj7', 'Cmaj7', 'Ebmaj7', 'Ebmaj7', 'Cmaj7', 'Cmaj7'] },
+      { name: "B", bars: ['F#m7b5', 'Fm7', 'Em7', 'Ebdim7', 'Dm7', 'G7', 'Cmaj7', 'Cmaj7'] },
+    ],
+  },
+  {
+    id: "over-the-rainbow",
+    title: "Over the Rainbow",
+    composer: "Harold Arlen",
+    year: 1939,
+    tonic: 3, mode: "major", bpb: 4, style: "ballad", bpm: 72,
+    sections: [
+      { name: "A", bars: ['Eb6 Cm7', 'Gm7 Eb7', 'Abmaj7', 'Gm7 C7', 'Fm7 Db7', 'Eb6 C7', 'F7 Bb7', 'Eb6 Bb7'] },
+      { name: "A", bars: ['Eb6 Cm7', 'Gm7 Eb7', 'Abmaj7', 'Gm7 C7', 'Fm7 Db7', 'Eb6 C7', 'F7 Bb7', 'Eb6 Bb7'] },
+      { name: "B", bars: ['Eb6', 'Fm7 Bb7', 'Gm7 C7', 'Fm7 Bb7', 'Eb6', 'Am7b5 D7', 'Gm7 C7', 'Fm7 Bb7'] },
+      { name: "A", bars: ['Eb6 Cm7', 'Gm7 Eb7', 'Abmaj7', 'Gm7 C7', 'Fm7 Db7', 'Eb6 C7', 'F7 Bb7', 'Eb6'] },
+    ],
+  },
+  {
     id: "perdido",
     title: "Perdido",
     composer: "Juan Tizol",
@@ -340,6 +490,19 @@ const SONGS_EXTRA = [
     tonic: 9, mode: "minor", bpb: 4, style: "bossa", bpm: 156,
     sections: [
       { name: "A", bars: ['Am7', 'Am7', 'Am7', 'Am7', 'Cm7', 'Cm7', 'Cm7', 'Cm7 F7', 'Bbmaj7', 'Bbm7 Eb7', 'Abmaj7', 'Abm7 Db7', 'Gbmaj7', 'Gm7 C7', 'Fmaj7', 'E7#9'] },
+    ],
+  },
+  {
+    id: "softly-as-in-a-morning-sunrise",
+    title: "Softly, As in a Morning Sunrise",
+    composer: "Sigmund Romberg",
+    year: 1928,
+    tonic: 0, mode: "minor", bpb: 4, style: "swing", bpm: 144,
+    sections: [
+      { name: "A", bars: ['Cm7', 'Dm7b5 G7', 'Cm7', 'Dm7b5 G7', 'Cm7', 'Dm7b5 G7', 'Cm7', 'Dm7b5 G7'] },
+      { name: "A", bars: ['Cm7', 'Dm7b5 G7', 'Cm7', 'Dm7b5 G7', 'Cm7', 'Dm7b5 G7', 'Cm7', 'Fm7 Bb7'] },
+      { name: "B", bars: ['Ebmaj7', 'Ebmaj7', 'C7', 'C7', 'Fm7', 'F#dim7', 'Dm7b5', 'G7'] },
+      { name: "A", bars: ['Cm7', 'Dm7b5 G7', 'Cm7', 'Dm7b5 G7', 'Cm7', 'Dm7b5 G7', 'Cm7', 'Cm7'] },
     ],
   },
   {
@@ -379,6 +542,45 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "tenderly",
+    title: "Tenderly",
+    composer: "Walter Gross",
+    year: 1946,
+    tonic: 3, mode: "major", bpb: 3, style: "waltz", bpm: 88,
+    sections: [
+      { name: "A", bars: ['Ebmaj7', 'Ab7#11', 'Ebm7', 'Ab7', 'Fm7', 'Db7#11', 'Ebmaj7', 'Gm7b5 C7'] },
+      { name: "B", bars: ['Fm7b5', 'Bb7', 'Fm7b5', 'Bb7 Bdim7', 'Cm7', 'F7', 'Fm7', 'Bb7'] },
+      { name: "A", bars: ['Ebmaj7', 'Ab7#11', 'Ebm7', 'Ab7', 'Fm7', 'Db7#11', 'Ebmaj7', 'Gm7b5 C7'] },
+      { name: "C", bars: ['Fm7b5', 'Bb7 Bdim7', 'Cm7', 'F7 F#dim7', 'Gm7 C7', 'Fm7 Bb7', 'Eb6', 'Fm7 Bb7'] },
+    ],
+  },
+  {
+    id: "the-nearness-of-you",
+    title: "The Nearness of You",
+    composer: "Hoagy Carmichael",
+    year: 1938,
+    tonic: 5, mode: "major", bpb: 4, style: "ballad", bpm: 66,
+    sections: [
+      { name: "A", bars: ['Fmaj7', 'Cm7 F7', 'Bbmaj7', 'Bbm7 Eb7', 'Fmaj7', 'Gm7 C7', 'Am7 D7', 'Gm7 C7'] },
+      { name: "A", bars: ['Fmaj7', 'Cm7 F7', 'Bbmaj7', 'Bbm7 Eb7', 'Fmaj7', 'Gm7 C7', 'Am7 D7', 'Gm7 C7'] },
+      { name: "B", bars: ['Fmaj7', 'F7', 'Bbmaj7', 'D7', 'Gm7', 'Bbm7 Eb7', 'Gm7', 'C7'] },
+      { name: "A", bars: ['Fmaj7', 'Cm7 F7', 'Bbmaj7', 'Bbm7 Eb7', 'Fmaj7', 'Gm7 C7', 'F6', 'F6'] },
+    ],
+  },
+  {
+    id: "there-will-never-be-another-you",
+    title: "There Will Never Be Another You",
+    composer: "Harry Warren",
+    year: 1942,
+    tonic: 3, mode: "major", bpb: 4, style: "swing", bpm: 168,
+    sections: [
+      { name: "A", bars: ['Ebmaj7', 'Ebmaj7', 'Dm7b5', 'G7', 'Cm7', 'Cm7', 'Bbm7', 'Eb7'] },
+      { name: "B", bars: ['Abmaj7', 'Db7', 'Ebmaj7', 'Cm7', 'F7', 'F7', 'Fm7', 'Bb7'] },
+      { name: "A", bars: ['Ebmaj7', 'Ebmaj7', 'Dm7b5', 'G7', 'Cm7', 'Cm7', 'Bbm7', 'Eb7'] },
+      { name: "C", bars: ['Abmaj7', 'Db7', 'Ebmaj7', 'Am7b5 D7', 'Gm7 C7', 'Fm7 Bb7', 'Ebmaj7', 'Fm7 Bb7'] },
+    ],
+  },
+  {
     id: "watermelon-man",
     title: "Watermelon Man",
     composer: "Herbie Hancock",
@@ -415,6 +617,32 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "what-is-this-thing-called-love",
+    title: "What Is This Thing Called Love",
+    composer: "Cole Porter",
+    year: 1929,
+    tonic: 0, mode: "major", bpb: 4, style: "swing", bpm: 168,
+    sections: [
+      { name: "A", bars: ['Gm7b5', 'C7b9', 'Fm7', 'Fm7', 'Dm7b5', 'G7', 'Cmaj7', 'Cmaj7'] },
+      { name: "A", bars: ['Gm7b5', 'C7b9', 'Fm7', 'Fm7', 'Dm7b5', 'G7', 'Cmaj7', 'Cmaj7'] },
+      { name: "B", bars: ['Cm7', 'F7', 'Bbmaj7', 'Bbmaj7', 'Ab7', 'Ab7', 'Dm7b5', 'G7'] },
+      { name: "A", bars: ['Gm7b5', 'C7b9', 'Fm7', 'Fm7', 'Dm7b5', 'G7', 'Cmaj7', 'Cmaj7'] },
+    ],
+  },
+  {
+    id: "when-i-fall-in-love",
+    title: "When I Fall in Love",
+    composer: "Victor Young",
+    year: 1952,
+    tonic: 3, mode: "major", bpb: 4, style: "ballad", bpm: 64,
+    sections: [
+      { name: "A", bars: ['Ebmaj7 C7', 'Fm7 Bb7', 'Ebmaj7 C7', 'Fm7 Bb7', 'Ebmaj7 Ab7', 'G7 C7', 'F7', 'Bb7'] },
+      { name: "B", bars: ['Ebmaj7 A7#11', 'Abmaj7 Db7', 'Gm7 Abmaj7', 'Gm7b5 C7', 'Fm7 D7', 'Gm7b5 C7', 'Fm7 C7', 'Fm7 Bb7'] },
+      { name: "A", bars: ['Ebmaj7 C7', 'Fm7 Bb7', 'Ebmaj7 C7', 'Fm7 Bb7', 'Ebmaj7 Ab7', 'G7 C7', 'F7', 'Bb7'] },
+      { name: "C", bars: ['Ebmaj7 A7#11', 'Abmaj7 D7', 'Gm7 C7', 'Fm7 Bb7', 'Ebmaj7 C7', 'Fm7 Bb7', 'Eb6', 'Fm7 Bb7'] },
+    ],
+  },
+  {
     id: "work-song",
     title: "Work Song",
     composer: "Nat Adderley",
@@ -422,6 +650,16 @@ const SONGS_EXTRA = [
     tonic: 5, mode: "minor", bpb: 4, style: "swing", bpm: 126,
     sections: [
       { name: "A", bars: ['Fm7', 'Fm7', 'Fm7', 'Fm7', 'Fm7', 'Fm7', 'C7', 'C7', 'Fm7', 'Fm7', 'Fm7', 'Fm7', 'F7', 'Bb7', 'Db7 C7', 'Fm7'] },
+    ],
+  },
+  {
+    id: "yesterdays",
+    title: "Yesterdays",
+    composer: "Jerome Kern",
+    year: 1933,
+    tonic: 2, mode: "minor", bpb: 4, style: "swing", bpm: 132,
+    sections: [
+      { name: "A", bars: ['Dm', 'Em7b5 A7', 'Dm', 'Em7b5 A7', 'Dm DmMaj7', 'Dm7', 'Bm7b5', 'E7', 'A7#5', 'D7', 'G7', 'C7', 'F7', 'Bbmaj7', 'Em7b5', 'A7'] },
     ],
   },
 ];
