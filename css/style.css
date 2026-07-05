@@ -135,14 +135,22 @@ h2 {
 body[data-mode="dojo"] .tagline .tag-lab { display: none; }
 body[data-mode="dojo"] .tagline .tag-dojo { display: inline; }
 
+/* dojo = the practice hall: drills, standards & dictation, no video.
+   Hide everything tied to transcribing a recording, including the lab
+   work-column (key picker · detected chord · capture · palette). */
 body[data-mode="dojo"] .load-row,
 body[data-mode="dojo"] .video-col,
+body[data-mode="dojo"] .work-col,
 body[data-mode="dojo"] .timeline-section,
 body[data-mode="dojo"] .solo-section,
 body[data-mode="dojo"] .lyrics-section,
 body[data-mode="dojo"] .check-section { display: none; }
 body[data-mode="dojo"] main { grid-template-columns: 1fr; }
-body[data-mode="lab"] .dojo-section { display: none; }
+
+/* lab = transcribe over a recording. The standards library is a no-video
+   practice room, so it lives in the dojo (per the tagline), not here. */
+body[data-mode="lab"] .dojo-section,
+body[data-mode="lab"] .standards-section { display: none; }
 
 .theme-picker { display: flex; gap: 7px; align-items: center; align-self: center; }
 .theme-dot {
@@ -377,16 +385,7 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 }
 .vl .common { opacity: 0.55; }
 
-.drill-section { margin-top: 14px; }
 .drill-hint { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
-#drill-status { font-size: 14px; }
-#drill-status.drill-right { color: var(--good); font-weight: 700; }
-#drill-status.drill-wrong { color: var(--bad); }
-#drill-score { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
-body:not(.drilling) #drill-replay,
-body:not(.drilling) #drill-cadence,
-body:not(.drilling) #drill-reveal { display: none; }
-body.drilling .palette { outline: 1px dashed var(--accent); outline-offset: 6px; border-radius: 8px; }
 
 /* ---- dojo drills ---- */
 

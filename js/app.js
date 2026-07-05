@@ -5,7 +5,6 @@ import {
   chordVoicing, voiceLeading,
 } from './theory.js';
 import { encodeShare, decodeShare, packState, unpackState } from './share.js';
-import { initDrill, isDrillOn, answerDrill, drillReplay, stopDrill } from './drill.js';
 import {
   onHeldChange, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 } from './input.js';
@@ -106,7 +105,6 @@ onHeldChange(notes => {
       $('#function-line').innerHTML =
         `<span class="roman tag-${a.tag}">${esc(a.roman)}</span> <span class="detail">${esc(a.detail)}</span>`;
       if (state.practice && state.quizIdx != null) checkQuizAnswer(det);
-      else if (isDrillOn()) answerDrill(det.root, det.quality);
     } else {
       $('#function-line').textContent = '';
     }
@@ -280,7 +278,6 @@ function renderPalette() {
       b.innerHTML = `<span class="roman">${p.roman}</span><span class="name">${chordLabel(p.root, p.quality, null, f)}</span>`;
       if (p.detail) b.title = p.detail;
       b.addEventListener('click', () => {
-        if (isDrillOn()) answerDrill(p.root, p.quality); // chip click = drill answer
         const voicing = chordVoicing(p.root, p.quality);
         playChord(voicing);
         paintPiano($('#piano'), heldNow, voicing);
@@ -939,7 +936,6 @@ function initShortcuts() {
       case ',':          loopAroundCurrent(1); break;
       case 'b':          tapTempo(); break;
       case 'n':          soloLog(); break;
-      case 'r':          drillReplay(); break;
     }
   });
 }
@@ -997,20 +993,9 @@ function init() {
     setNotes: arr => { state.solo = arr; save(); },
     onStart: () => { stopProgression(); },
   });
-  initDrill({
-    getKey: () => state.key,
-    onStart: () => {
-      stopProgression();
-      stopStandards();
-      stopDojo();
-      stopSolo();
-      if (state.practice) $('#practice-toggle').click();
-    },
-  });
   initStandards({
     onStart: () => {
       stopProgression();
-      stopDrill();
       stopDojo();
       stopSolo();
     },
@@ -1018,7 +1003,6 @@ function init() {
   initDojo({
     onStart: () => {
       stopProgression();
-      stopDrill();
       stopStandards();
       stopSolo();
     },
@@ -1051,9 +1035,9 @@ function init() {
   });
   $('#practice-toggle').addEventListener('click', () => {
     state.practice = !state.practice;
-    if (state.practice) { stopProgression(); stopDrill(); }
+    if (state.practice) { stopProgression(); }
     $('#practice-toggle').classList.toggle('on', state.practice);
-    $('#practice-toggle').textContent = state.practice ? 'practice: on' : 'practice: off';
+    $('#practice-toggle').textContent = state.practice ? 'quiz: on' : 'quiz: off';
     resetQuiz();
     renderChords(); renderScore();
   });
