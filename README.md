@@ -10,13 +10,17 @@ Ear-training over real songs — one app, two rooms:
   single line — transcribe a melody or improvised solo one note at a time and
   the app places each note on its chord and names its role (chord tone /
   tension / approach).
-- **dojo** 道場: the practice hall — no video, no internet. Chip-answered
-  drills (song quiz, paste-a-tab, basslines, degrees, qualities, intervals —
-  absorbed from the old standalone otodojo app), plus the built-in standards
-  library with synth comping and transcription quizzes.
+- **dojo** 道場: the practice hall — no video, no internet. A sequenced
+  curriculum (**today**'s workout + a mastery-gated **path**) drives a deck of
+  chip-answered drills: recognition (intervals, qualities, degrees, scale
+  degrees, basslines), harmony (cadences, form), production (echo/dictation,
+  sing, licks), color (modes, tensions), rhythm, and the song-quiz / paste-a-tab
+  progression trainers — plus the built-in standards library with synth comping
+  and transcription quizzes.
 
 The toggle lives in the header; the mode persists. Same synth, same theory
-engine, same themes everywhere.
+engine, same themes everywhere. lab is strictly the transcribe-over-video room;
+dojo is the no-video practice hall (the standards library lives there).
 
 ## The core design idea
 
@@ -117,6 +121,12 @@ note as the video reaches it so you can check it against the record; the summary
 tallies what percentage of the line is chord tones vs tensions vs approaches.
 The line saves per video and travels in export/import.
 
+**🎙 sing over: on** turns the same mic into a sing-along coach: play the record
+and sing, and every sustained note you produce is scored against the chord under
+the playhead — a live chord-tone / tension / approach breakdown that trains you
+to *aim* for chord tones over the moving harmony instead of just reading them
+back afterward.
+
 ## Voice-leading hints
 
 Toggle **voice leading** in the progression bar and small connectors appear
@@ -137,8 +147,27 @@ refetch in one click, and the lyric offset does come along.
 
 Dojo mode's tabbed drills flip otolab's direction: **the app plays, you
 name.** Everything is answered with chips, so it works on a phone with no
-keyboard. Naming a progression by ear decomposes into three skills, trained
-in order:
+keyboard. Every drill logs to a cross-session progress store, and a curriculum
+sits on top of them so there's always an obvious next thing to do.
+
+### today + path — the program
+
+The gym had no program, so the **today** and **path** tabs add one:
+
+- **today** assembles a short daily workout from where you are in the path:
+  a warm-up on something you've learned, today's focus unit, a review of the
+  items due for spaced repetition, and one applied task (a real song quiz).
+  Each step launches the right drill preconfigured and ticks itself off as you
+  hit its mini-goal ("10 right at ≥85%"). A day **streak** keeps you honest.
+- **path** is the syllabus in order — intervals → scale degrees → qualities →
+  function → production. A unit completes when its goal items reach their
+  accuracy target over enough tries, which unlocks the units that depend on it;
+  locked units show what to clear first. You can always practise an open unit
+  early — nothing is a wall.
+
+### recognition — name what plays
+
+Naming a progression by ear decomposes into three skills, trained in order:
 
 1. **Bass first** — root motion *is* the progression. The **intervals** drill
    (P4/P5/m3 both ways cover most real root motion) and the **basslines**
@@ -147,46 +176,63 @@ in order:
    exactly this.
 2. **Quality second** — the **qualities** drill: one chord, no key context;
    triads & sus → sevenths → extensions.
-3. **Function last, the multiplier** — the **degrees** drill (random keys,
-   chip answers — the keyboard-free cousin of the drill section), then the
+3. **Function last, the multiplier** — the **degrees** drill (a diatonic
+   seventh after a key-setting cadence: name its roman numeral), then the
    **song quiz**: a progression from the [groundtruth collection](groundtruth/)
    plays with bass + comping and you fill in roman numerals; the title stays
    hidden until you check. **paste a tab** turns any chords you paste — from
    Ultimate Guitar, Chordify, anywhere — into the same quiz, key guessed
-   automatically.
+   automatically. **scale degrees** is the single-note foundation under
+   *degrees*: a cadence sets the key, the tonic sounds, then one note plays —
+   which degree is it? Diatonic first, chromatics when the seven are automatic.
 
-The melodic side gets its own tabs:
+### harmony — hear the bigger gesture
 
-- **scale degrees** — the single-note foundation under *degrees* (which uses
-  chords). A cadence sets the key, the tonic sounds, then one note plays: which
-  scale degree is it? Diatonic first; add chromatics when the seven are
-  automatic.
-- **sing** — audiation, the skill every method is built on. Enable the mic and
-  either *match a note* the app plays, or *sing a scale degree* from the key
-  with no reference pitch. A live tuner grades you when you lock onto the pitch.
+- **cadences** — a tonic chord sets the key, then a short cadence plays and you
+  name the type as one gesture: ii–V–I, backdoor (bVII7→I), tritone sub
+  (subV→I), deceptive (V→vi), plagal, or minor ii–V–i.
+- **form** — a standard comps by at speed; listen for how the sections repeat
+  and return, then name the form: AABA, ABAC, AB, 12-bar blues, or 16-bar.
+
+### production — make the sound, not just name it
+
+- **echo** — call & response, the productive half of ear training. An idiomatic
+  line (a guide-tone line, a bebop run, or an enclosure over a ii–V–I) plays
+  over a light comp; reproduce it on keyboard/MIDI/on-screen piano, graded
+  note-by-note. **echo** mode replays the phrase; **dictation** plays it once
+  and you rebuild it from memory. Save a phrase you like to the lick bank.
+- **sing** — audiation, the skill every method builds on. Enable the mic and
+  *match a note* the app plays, *sing a scale degree* from the key with no
+  reference pitch, *sing a chord tone* (hear a chord, produce its root/3rd/5th/
+  7th), or *sing a guide-tone line* over a ii–V–i note by note. A live tuner
+  grades you when you lock onto the pitch.
+- **licks** — your lick bank. Phrases banked from the echo tab can be played,
+  echoed, or cycled through **all 12 keys** — transposing a line into every key
+  is how it becomes yours, and each echo is graded and logged.
+
+### color + time
+
+- **modes** — scale color, not key. A tonic vamp anchors home, the scale runs
+  up, and you name the mode from its characteristic note (lydian's ♯4,
+  phrygian's ♭2, mixolydian's ♭7). Selectable sets: jazz three, dark four, or
+  all seven.
+- **tensions** — a seventh chord sounds, then a single extension above it, then
+  both together; name the color (9 · ♭9 · ♯9 · 11 · ♯11 · ♭13 · 13). The
+  available tensions follow the chord family.
 - **rhythm** — half of transcription and the app trained none of it. Hear a
   one-bar pattern, tap it back over a count-in (spacebar or the pad), and get
   scored on how close each hit lands. Eighths → syncopation → triplets.
 
-Every drill (old and new) now logs to a **progress** tab: overall accuracy,
-per-drill bars, a 14-day activity sparkline, and your weakest items. Tick
-**focus weak** in a drill and a spaced-repetition scheduler biases questions
-toward what you keep missing — because ear training only sticks through
-repetition over time. Nothing leaves your browser.
-
-## Drill: name the degree
-
-The **drill** section is functional ear training with no video: a I–IV–V7–I
-cadence establishes the key you've set up top, then one chord plays. Name its
-degree by clicking a palette chip or playing the chord on your keyboard —
-`r` replays it, **cadence** re-grounds you, **reveal** gives up. Start with
-**diatonic 7ths**; switch to **+ common outside** to get secondary dominants,
-subV7 and borrowed chords in the mix. Score is per session.
+Every drill logs to a **progress** tab: overall accuracy, per-drill bars, a
+14-day activity sparkline, and your weakest items. Tick **focus weak** where a
+drill offers it and a spaced-repetition scheduler biases questions toward what
+you keep missing — because ear training only sticks through repetition over
+time. Nothing leaves your browser.
 
 ## Standards: the built-in jam room
 
-The **standards** section is a full practice loop with no video and no
-internet — an iReal-Pro-style library baked into the app:
+The **standards** section (in the dojo) is a full practice loop with no video
+and no internet — an iReal-Pro-style library baked into the app:
 
 - **~100 lead sheets** (`js/standards-data.js` + `js/standards-data-extra.js`):
   Autumn Leaves, All the Things You Are, Stella by Starlight, Body and Soul,
@@ -220,12 +266,13 @@ blues riff that follows the changes, and a guide-tone line over the Autumn
 Leaves turnaround — plus Greensleeves and St. James Infirmary for real
 (public-domain) tunes.
 
-## Practice mode
+## Quiz mode
 
-Once a song is transcribed, toggle **practice**. Chord labels hide behind `?`.
-Click a chip: that segment loops. Play your guess on the keyboard — nail the
-root *and* quality and it flips green and reveals; a wrong full chord counts as
-an attempt. **reveal** gives up on the current one. Score is per session.
+Once a song is transcribed, toggle **quiz** (in the lab work-column). Chord
+labels hide behind `?`. Click a chip: that segment loops. Play your guess on the
+keyboard — nail the root *and* quality and it flips green and reveals; a wrong
+full chord counts as an attempt. **reveal** gives up on the current one. Score
+is per session.
 
 ## Running it
 
@@ -253,7 +300,7 @@ transcribe-then-quiz is the model.)
   Georgia on My Mind and On the Sunny Side of the Street are fair game for
   melodies)
 - Walking bass lines and drum feel for the standards comper
-- Extend the spaced-repetition queue (now driving the dojo drills) to cover
-  songs/segments and standards you keep missing
+- Extend the mastery-gated curriculum to fold songs/segments and standards you
+  keep missing into the daily workout
 - Solo-line export to notation, and pitch-detection transcription straight from
   shared tab audio (not just the mic)
