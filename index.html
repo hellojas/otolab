@@ -86,7 +86,7 @@
         <div id="function-line"></div>
         <div class="capture-row">
           <button id="capture-btn" title="Enter">log chord @ current time ⏎</button>
-          <button id="practice-toggle">practice: off</button>
+          <button id="practice-toggle" title="hide the logged chords and quiz yourself against your own transcription">quiz: off</button>
           <button id="reveal-btn" style="display:none">reveal</button>
           <span id="quiz-score"></span>
         </div>
@@ -490,23 +490,6 @@
     </section>
   </section>
 
-  <section class="drill-section">
-    <div class="section-head">
-      <h2>drill</h2>
-      <button id="drill-start">start</button>
-      <select id="drill-pool" title="which chords can come up">
-        <option value="diatonic">diatonic 7ths</option>
-        <option value="outside">+ common outside</option>
-      </select>
-      <button id="drill-replay" title="r">replay</button>
-      <button id="drill-cadence" title="hear the key-setting cadence again">cadence</button>
-      <button id="drill-reveal">reveal</button>
-      <span id="drill-status"></span>
-      <span id="drill-score"></span>
-    </div>
-    <p class="drill-hint">functional ear training, no video needed — a cadence sets the key center (picked up top), one chord plays, and you name its degree by clicking a palette chip above or playing the chord on your keyboard.</p>
-  </section>
-
   <section class="standards-section">
     <div class="section-head">
       <h2>standards</h2>
@@ -550,7 +533,7 @@
   </section>
 
   <footer>
-    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>n</kbd> log solo note · <kbd>b</kbd> tap tempo · <kbd>r</kbd> replay drill chord</p>
+    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>n</kbd> log solo note · <kbd>b</kbd> tap tempo</p>
   </footer>
 
   <script type="module" src="js/app.js"></script>
