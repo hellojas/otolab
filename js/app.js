@@ -14,7 +14,7 @@ import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
 import { initStandards, stopStandards } from './standards.js';
-import { initDojo, stopDojo } from './dojo.js';
+import { initDojo, stopDojo, stopDojoMic } from './dojo.js';
 import { initSolo, soloLog, refreshSolo, stopSolo, stopSoloMic } from './solo.js';
 import player from './player.js';
 
@@ -718,6 +718,7 @@ function initMode() {
     localStorage.setItem('otolab:v1:mode', m);
     btns.forEach(b => b.classList.toggle('on', b.dataset.mode === m));
     if (m === 'dojo') { player.pause?.(); stopSolo(); stopSoloMic(); }
+    else { stopDojo(); stopDojoMic(); }
   };
   btns.forEach(b => b.addEventListener('click', () => set(b.dataset.mode)));
   set(localStorage.getItem('otolab:v1:mode') === 'dojo' ? 'dojo' : 'lab');

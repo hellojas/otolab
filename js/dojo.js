@@ -4,8 +4,10 @@
 // theory + audio engines so the synth voices and richer chord vocabulary
 // apply here too. Chips in, no keyboard required — works on a phone.
 
-import { pcName, useFlats, chordVoicing, paletteForKey, romanFor, guessKey } from './theory.js';
-import { playChord, allNotesOff, ensureCtx } from './audio.js';
+import { pcName, useFlats, midiName, chordVoicing, paletteForKey, romanFor, guessKey } from './theory.js';
+import { playChord, allNotesOff, ensureCtx, clickAt, audioNow } from './audio.js';
+import { startMic, stopMic, isMicOn } from './pitch.js';
+import { record, pickWeighted, stats as progressStats, reset as resetProgress } from './progress.js';
 import { SONGS } from '../groundtruth/songs.js';
 import { BASSLINES } from '../groundtruth/basslines.js';
 
@@ -24,6 +26,18 @@ function el(tag, cls, text) {
   if (cls) e.className = cls;
   if (text != null) e.textContent = text;
   return e;
+}
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const panelActive = name => !!document.getElementById(`panel-${name}`)?.classList.contains('active');
+
+// Stop the sing-drill microphone and reset its button. Kept out of stopDojo()
+// on purpose — that runs on every drill playback, and singing is graded while
+// the synth plays the target, so the mic must survive playSequence().
+function stopDojoMic() {
+  if (isMicOn()) stopMic();
+  const mic = document.getElementById('sing-mic');
+  if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
 }
 
 let onStartCb = null;
@@ -513,7 +527,8 @@ function initDojo(opts = {}) {
     const mode = modeSel === 'both' ? pick(['major', 'minor']) : modeSel;
     degState.key = { tonic: rand(12), mode };
     const palette = diatonicSevenths(degState.key);
-    degState.chord = pick(palette);
+    const wroman = pickWeighted('degrees', palette.map(p => p.roman));
+    degState.chord = palette.find(p => p.roman === wroman) || pick(palette);
     degState.answered = false;
     $('deg-meta').textContent = `key: ${keyName(degState.key)} — cadence, then the mystery chord`;
     $('deg-result').textContent = '';
@@ -526,6 +541,7 @@ function initDojo(opts = {}) {
         degState.answered = true;
         const ok = p.roman === degState.chord.roman;
         degScore.add(ok ? 1 : 0);
+        record('degrees', degState.chord.roman, ok);
         chip.classList.add(ok ? 'good' : 'bad');
         const flats = useFlats(degState.key.tonic, degState.key.mode);
         $('deg-result').textContent = (ok ? '✓ ' : '✗ that was ') +
@@ -565,6 +581,7 @@ function initDojo(opts = {}) {
         qualState.answered = true;
         const ok = q === qualState.quality;
         qualScore.add(ok ? 1 : 0);
+        record('qualities', qualState.quality || 'maj', ok);
         chip.classList.add(ok ? 'good' : 'bad');
         $('qual-result').textContent = ok
           ? `✓ ${qualLabel(q)}`
@@ -576,7 +593,10 @@ function initDojo(opts = {}) {
   }
 
   $('qual-new').onclick = () => {
-    qualState.quality = pick(QUAL_LEVELS[$('qual-level').value]);
+    // '' (major triad) is tracked as 'maj' in progress; recover it after the pick
+    const level = QUAL_LEVELS[$('qual-level').value];
+    const wq = pickWeighted('qualities', level.map(q => q || 'maj'));
+    qualState.quality = wq === 'maj' ? '' : wq;
     qualState.root = rand(12);
     qualState.answered = false;
     $('qual-result').textContent = '';
@@ -593,12 +613,14 @@ function initDojo(opts = {}) {
   function intPlay() {
     if (!intState.iv) return;
     const a = intState.low, b = intState.low + intState.iv.semis;
-    if (intState.harmonic) {
-      playSequence([{ notes: [a, b], beats: 2.5 }], 80);
-    } else {
-      const [first, second] = intState.up ? [a, b] : [b, a];
-      playSequence([{ notes: [first], beats: 1 }, { notes: [second], beats: 2 }], 84);
-    }
+    const seq = intState.harmonic
+      ? [{ notes: [a, b], beats: 2.5 }]
+      : intState.up ? [{ notes: [a], beats: 1 }, { notes: [b], beats: 2 }]
+                    : [{ notes: [b], beats: 1 }, { notes: [a], beats: 2 }];
+    playSequence(seq, 84);
+    // an optional tonic drone under the interval puts it in a tonal context —
+    // hearing "P5 above the key note" is a different skill than a bare interval
+    if ($('int-drone').checked) playChord([a - 12], 3.0, 0.26);
   }
 
   function intBuildAnswers() {
@@ -611,6 +633,7 @@ function initDojo(opts = {}) {
         intState.answered = true;
         const ok = iv.name === intState.iv.name;
         intScore.add(ok ? 1 : 0);
+        record('intervals', intState.iv.name, ok);
         chip.classList.add(ok ? 'good' : 'bad');
         $('int-result').textContent = ok ? `✓ ${iv.name}` : `✗ that was ${intState.iv.name}`;
         setTimeout(() => $('int-new').click(), 1100);
@@ -621,7 +644,8 @@ function initDojo(opts = {}) {
 
   $('int-new').onclick = () => {
     const type = $('int-type').value;
-    intState.iv = pick(INTERVALS);
+    const wname = pickWeighted('intervals', INTERVALS.map(i => i.name));
+    intState.iv = INTERVALS.find(i => i.name === wname) || pick(INTERVALS);
     intState.low = 48 + rand(20);
     intState.harmonic = type === 'harmonic' || (type === 'mixed' && Math.random() < 0.5);
     intState.up = type === 'melodic-asc' ? true
@@ -634,14 +658,326 @@ function initDojo(opts = {}) {
   };
   $('int-replay').onclick = intPlay;
 
+  // ---- melodic scale-degree drill (single notes, not chords) ----
+  const MDEG_MAJOR = ['1', '2', '3', '4', '5', '6', '7'];
+  const MDEG_MINOR = ['1', '2', 'b3', '4', '5', 'b6', 'b7'];
+  const mdegScore = makeScore('mdeg-score');
+  const mdegState = { key: null, deg: null, last: null, answered: true };
+
+  const mdegDegrees = (mode, level) =>
+    level === 'chromatic' ? DEGREE_CHIPS : (mode === 'minor' ? MDEG_MINOR : MDEG_MAJOR);
+  const mdegNoteMidi = () =>
+    60 + mdegState.key.tonic + DEGREE_TO_PC[mdegState.deg];
+
+  function mdegPlay(withCadence) {
+    const { key } = mdegState;
+    const tonicMidi = 60 + key.tonic;
+    const noteEv = [{ notes: [tonicMidi], beats: 1 }, { beats: 0.35 }, { notes: [mdegNoteMidi()], beats: 2 }];
+    if (withCadence) playSequence([...cadenceEvents(key), { beats: 1 }, ...noteEv], 100);
+    else playSequence(noteEv, 96);
+  }
+
+  $('mdeg-new').onclick = () => {
+    const modeSel = $('mdeg-mode').value;
+    const mode = modeSel === 'both' ? pick(['major', 'minor']) : modeSel;
+    mdegState.key = { tonic: rand(12), mode };
+    const degs = mdegDegrees(mode, $('mdeg-level').value);
+    const focus = $('mdeg-focus').checked;
+    let deg = pickWeighted('mdeg', degs, focus);
+    if (deg === mdegState.last && degs.length > 1) deg = pickWeighted('mdeg', degs, focus);
+    mdegState.deg = deg; mdegState.last = deg; mdegState.answered = false;
+    $('mdeg-meta').textContent = `key: ${keyName(mdegState.key)} — cadence, tonic, then the note`;
+    $('mdeg-result').textContent = '';
+    const box = $('mdeg-answers');
+    box.innerHTML = '';
+    for (const d of degs) {
+      const chip = el('button', 'chip', d);
+      chip.onclick = () => {
+        if (mdegState.answered) return;
+        mdegState.answered = true;
+        const ok = d === mdegState.deg;
+        mdegScore.add(ok ? 1 : 0);
+        record('mdeg', mdegState.deg, ok);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('mdeg-result').textContent = ok ? `✓ ${mdegState.deg}` : `✗ that was ${mdegState.deg}`;
+        setTimeout(() => { if (panelActive('melodic')) $('mdeg-new').click(); }, 1300);
+      };
+      box.appendChild(chip);
+    }
+    mdegPlay(true);
+  };
+  $('mdeg-cadence').onclick = () => { if (mdegState.key) playSequence(cadenceEvents(mdegState.key), 100); };
+  $('mdeg-note').onclick = () => { if (mdegState.deg != null) mdegPlay(false); };
+
+  // ---- sing-back drill (mic; audiation) ----
+  const singScore = makeScore('sing-score');
+  const singState = { mode: 'match', key: null, targetPc: null, targetMidi: null,
+                      item: 'match', answered: true, holdRun: 0 };
+  const noteNameOf = midi => midiName(midi, false);
+
+  function singNeedle(cents, inTune) {
+    const n = $('sing-needle');
+    if (!n) return;
+    n.style.left = `calc(50% + ${Math.max(-100, Math.min(100, cents)) * 0.45}%)`;
+    n.classList.toggle('in-tune', inTune);
+  }
+
+  function singOnPitch(p) {
+    if (!p || singState.targetPc == null) { if (p == null) $('sing-read').textContent = 'sing…'; return; }
+    const sungFloat = p.midi + p.cents / 100;
+    let tm = p.midi + ((((singState.targetPc - p.midi) % 12) + 12) % 12);
+    if (tm - p.midi > 6) tm -= 12;
+    const cents = (sungFloat - tm) * 100;
+    singNeedle(cents, Math.abs(cents) < 18);
+    $('sing-read').textContent = `singing ${noteNameOf(p.midi)} ${cents >= 0 ? '+' : ''}${Math.round(cents)}¢`;
+    if (!singState.answered) {
+      singState.holdRun = Math.abs(cents) < 35 ? singState.holdRun + 1 : 0;
+      if (singState.holdRun >= 20) singGrade(true);
+    }
+  }
+
+  function singGrade(ok) {
+    if (singState.answered) return;
+    singState.answered = true;
+    singScore.add(ok ? 1 : 0);
+    record('sing', singState.item, ok);
+    $('sing-result').textContent = ok ? `✓ locked ${noteNameOf(singState.targetMidi)}`
+                                      : `✗ target was ${noteNameOf(singState.targetMidi)}`;
+    singNeedle(0, ok);
+    if (ok) setTimeout(() => { if (panelActive('sing')) $('sing-new').click(); }, 1400);
+  }
+
+  $('sing-mic').onclick = async () => {
+    if (isMicOn()) { stopDojoMic(); return; }
+    try {
+      await startMic(singOnPitch, () => stopDojoMic());
+      $('sing-mic').textContent = 'mic on'; $('sing-mic').classList.add('on');
+      $('sing-read').textContent = 'sing…';
+    } catch (e) {
+      $('sing-meta').textContent = 'mic blocked — allow microphone access in the browser';
+    }
+  };
+
+  $('sing-new').onclick = () => {
+    if (!singState.answered && singState.targetPc != null) { // moved on = gave up
+      singScore.add(0); record('sing', singState.item, false);
+    }
+    const mode = $('sing-mode').value;
+    singState.mode = mode; singState.answered = false; singState.holdRun = 0;
+    singNeedle(0, false);
+    $('sing-result').textContent = '';
+    if (mode === 'match') {
+      const midi = 55 + rand(17); // ~G3–B4, a comfortable singing band
+      singState.targetMidi = midi; singState.targetPc = midi % 12; singState.item = 'match';
+      $('sing-meta').textContent = 'sing the note you hear';
+      playSequence([{ notes: [midi], beats: 2 }], 90);
+    } else {
+      const key = { tonic: rand(12), mode: $('sing-keymode').value };
+      singState.key = key;
+      const degs = (key.mode === 'minor' ? MDEG_MINOR : MDEG_MAJOR).map(d => 'deg:' + d);
+      const item = pickWeighted('sing', degs);
+      const dd = item.slice(4);
+      singState.item = item;
+      singState.targetMidi = 60 + key.tonic + DEGREE_TO_PC[dd];
+      singState.targetPc = singState.targetMidi % 12;
+      $('sing-meta').textContent = `sing scale degree ${dd} of ${keyName(key)}`;
+      playSequence([...cadenceEvents(key), { beats: 0.8 }, { notes: [60 + key.tonic], beats: 1.5 }], 100);
+    }
+    if (!isMicOn()) $('sing-read').textContent = 'enable the mic to be graded';
+  };
+
+  $('sing-replay').onclick = () => {
+    if (singState.mode === 'match' && singState.targetMidi != null) {
+      playSequence([{ notes: [singState.targetMidi], beats: 2 }], 90);
+    } else if (singState.key) {
+      playSequence([...cadenceEvents(singState.key), { beats: 0.8 }, { notes: [60 + singState.key.tonic], beats: 1.5 }], 100);
+    }
+  };
+
+  // ---- rhythm tap-back drill ----
+  const RHYTHMS = {
+    easy:   [[0,1,2,3], [0,1,1.5,2,3], [0,0.5,1,2,3], [0,1,2,2.5,3], [0,0.5,1,1.5,2,3], [0,1,2,3,3.5]],
+    medium: [[0,1.5,2,3], [0,0.5,1.5,2.5,3], [0,1,2.5,3], [0,0.5,2,2.5,3], [0,1.5,2.5,3], [0,0.5,1,2.5]],
+    hard:   [[0,0.25,0.5,1,2,3], [0,0.667,1,2,3], [0,1,1.333,1.667,2,3], [0,0.5,0.75,1.5,2,2.5,3], [0,0.333,0.667,1,1.5,2,3]],
+  };
+  const rhyScore = makeScore('rhy-score');
+  const rhyState = { pattern: null, bpm: 88, level: 'easy', taps: [],
+                     recording: false, perfStart: 0, timers: [] };
+  const rhyBeatSec = () => 60 / rhyState.bpm;
+  const rhyClearTimers = () => { rhyState.timers.forEach(clearTimeout); rhyState.timers = []; };
+
+  function rhyRenderViz(marks = [], extras = []) {
+    const box = $('rhy-viz');
+    box.innerHTML = '';
+    if (!rhyState.pattern) return;
+    const bar = el('div', 'rhy-bar');
+    for (let b = 0; b <= 4; b++) { const g = el('div', 'rhy-grid'); g.style.left = (b / 4 * 100) + '%'; bar.appendChild(g); }
+    const src = marks.length ? marks : rhyState.pattern.map(on => ({ on, ok: null }));
+    for (const m of src) {
+      const t = el('div', 'rhy-onset' + (m.ok === true ? ' ok' : m.ok === false ? ' miss' : ''));
+      t.style.left = (m.on / 4 * 100) + '%';
+      bar.appendChild(t);
+    }
+    for (const tp of extras) {
+      const t = el('div', 'rhy-extra');
+      t.style.left = (Math.max(0, Math.min(4, tp)) / 4 * 100) + '%';
+      bar.appendChild(t);
+    }
+    box.appendChild(bar);
+  }
+
+  function rhyPlay() {
+    stopDojo(); ensureCtx();
+    if (onStartCb) onStartCb();
+    const spb = rhyBeatSec(), t0 = audioNow() + 0.25;
+    for (let i = 0; i < 4; i++) clickAt(t0 + i * spb, i === 0);         // count-in bar
+    for (const on of rhyState.pattern) clickAt(t0 + (4 + on) * spb, false);
+  }
+
+  function rhyRecord() {
+    stopDojo(); ensureCtx(); rhyClearTimers();
+    if (onStartCb) onStartCb();
+    rhyState.taps = []; rhyState.recording = false;
+    const spb = rhyBeatSec(), t0 = audioNow() + 0.25;
+    for (let i = 0; i < 4; i++) clickAt(t0 + i * spb, i === 0);         // count-in for the tapper
+    const openDelay = Math.max(0, (t0 + 4 * spb - audioNow()) * 1000);
+    $('rhy-meta').textContent = 'count in… then tap the pattern';
+    rhyState.timers.push(setTimeout(() => {
+      rhyState.recording = true;
+      rhyState.perfStart = performance.now();
+      $('rhy-pad').classList.add('armed');
+      $('rhy-meta').textContent = 'tap now!';
+    }, openDelay));
+    rhyState.timers.push(setTimeout(() => {
+      rhyState.recording = false;
+      $('rhy-pad').classList.remove('armed');
+      rhyGrade();
+    }, openDelay + 4 * spb * 1000 + 400));
+  }
+
+  function rhyTap() {
+    if (!rhyState.recording) return;
+    rhyState.taps.push((performance.now() - rhyState.perfStart) / 1000 / rhyBeatSec());
+    clickAt(audioNow() + 0.001, false);
+    $('rhy-pad').classList.add('hit');
+    setTimeout(() => $('rhy-pad').classList.remove('hit'), 80);
+  }
+
+  function rhyGrade() {
+    const ref = rhyState.pattern, taps = rhyState.taps, TOL = 0.28;
+    const used = new Array(taps.length).fill(false);
+    const marks = [];
+    let hits = 0;
+    for (const on of ref) {
+      let best = -1, bestD = TOL;
+      taps.forEach((tp, i) => { if (!used[i]) { const d = Math.abs(tp - on); if (d < bestD) { bestD = d; best = i; } } });
+      if (best >= 0) { used[best] = true; hits++; marks.push({ on, ok: true }); }
+      else marks.push({ on, ok: false });
+    }
+    const extras = taps.filter((_, i) => !used[i]);
+    const denom = ref.length + extras.length;
+    const pct = Math.round(100 * hits / denom);
+    rhyScore.add(hits, denom);
+    record('rhythm', rhyState.level, pct >= 75);
+    $('rhy-result').textContent = `${hits}/${ref.length} hits${extras.length ? ` · ${extras.length} extra` : ''} — ${pct}%`;
+    $('rhy-meta').textContent = 'hear it again, or new pattern';
+    rhyRenderViz(marks, extras);
+  }
+
+  $('rhy-tempo').oninput = e => { rhyState.bpm = Number(e.target.value); $('rhy-bpm').textContent = `${rhyState.bpm} bpm`; };
+  $('rhy-level').onchange = e => { rhyState.level = e.target.value; };
+  $('rhy-new').onclick = () => {
+    rhyClearTimers();
+    const pool = RHYTHMS[rhyState.level].filter(p => p !== rhyState.pattern);
+    rhyState.pattern = pick(pool.length ? pool : RHYTHMS[rhyState.level]);
+    rhyState.taps = [];
+    $('rhy-result').textContent = '';
+    $('rhy-meta').textContent = `${rhyState.pattern.length} hits · listen, then tap it back`;
+    rhyRenderViz();
+    rhyPlay();
+  };
+  $('rhy-play').onclick = () => { if (rhyState.pattern) rhyPlay(); };
+  $('rhy-go').onclick = () => { if (rhyState.pattern) rhyRecord(); };
+  $('rhy-pad').onclick = rhyTap;
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space' && rhyState.recording && panelActive('rhythm')) { e.preventDefault(); rhyTap(); }
+  });
+
+  // ---- progress / stats panel ----
+  function renderStats() {
+    const s = progressStats();
+    const box = $('stats-body');
+    box.innerHTML = '';
+    const line = (label, val) => { const d = el('div', 'stats-line'); d.innerHTML = `<span>${label}</span><b>${val}</b>`; return d; };
+
+    const overall = el('div', 'stats-block');
+    overall.appendChild(el('h4', null, 'overall'));
+    overall.appendChild(line('attempts logged', s.overall.seen));
+    overall.appendChild(line('accuracy', s.overall.seen ? s.overall.pct + '%' : '—'));
+    overall.appendChild(line('items due for review', s.dueCount));
+    box.appendChild(overall);
+
+    const cats = el('div', 'stats-block');
+    cats.appendChild(el('h4', null, 'by drill'));
+    const names = Object.keys(s.byCat).sort();
+    if (!names.length) cats.appendChild(el('div', 'dj-meta', 'no attempts yet — go run a drill'));
+    for (const c of names) {
+      const row = el('div', 'stats-bar-row');
+      row.appendChild(el('span', 'stats-bar-label', c));
+      const track = el('div', 'stats-bar-track');
+      const fill = el('div', 'stats-bar-fill');
+      fill.style.width = s.byCat[c].pct + '%';
+      fill.classList.add(s.byCat[c].pct < 50 ? 'low' : s.byCat[c].pct < 75 ? 'mid' : 'high');
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(el('span', 'stats-bar-num', `${s.byCat[c].pct}% · ${s.byCat[c].seen}`));
+      cats.appendChild(row);
+    }
+    box.appendChild(cats);
+
+    const days = el('div', 'stats-block');
+    days.appendChild(el('h4', null, 'last 14 days'));
+    const spark = el('div', 'stats-spark');
+    const maxTot = Math.max(1, ...s.days.map(d => d.total));
+    for (const d of s.days) {
+      const col = el('div', 'stats-spark-col');
+      const b = el('div', 'stats-spark-bar');
+      b.style.height = Math.max(3, Math.round(d.total / maxTot * 100)) + '%';
+      if (d.total) b.classList.add(d.correct / d.total < 0.5 ? 'low' : d.correct / d.total < 0.75 ? 'mid' : 'high');
+      col.title = `${d.date}: ${d.correct}/${d.total}`;
+      col.appendChild(b);
+      spark.appendChild(col);
+    }
+    days.appendChild(spark);
+    box.appendChild(days);
+
+    const weak = el('div', 'stats-block');
+    weak.appendChild(el('h4', null, 'weakest items (≥3 tries)'));
+    if (!s.weak.length) weak.appendChild(el('div', 'dj-meta', 'nothing logged enough yet'));
+    for (const w of s.weak) {
+      const r = el('div', 'stats-line');
+      const label = w.id.replace(/^[a-z]+:/, ''), cat = w.id.split(':')[0];
+      r.innerHTML = `<span>${esc(label)} <small>${cat}</small></span><b>${w.pct}% · ${w.seen}</b>`;
+      weak.appendChild(r);
+    }
+    box.appendChild(weak);
+  }
+  $('stats-refresh').onclick = renderStats;
+  $('stats-reset').onclick = () => {
+    if (confirm('Erase all logged progress? This cannot be undone.')) { resetProgress(); renderStats(); }
+  };
+
   // ---- tabs ----
   for (const btn of document.querySelectorAll('#dojo-tabs button')) {
     btn.onclick = () => {
       stopDojo();
+      stopDojoMic();
+      rhyState.recording = false; rhyClearTimers();
       document.querySelectorAll('#dojo-tabs button').forEach(b =>
         b.classList.toggle('active', b === btn));
       document.querySelectorAll('.dj-panel').forEach(p =>
         p.classList.toggle('active', p.id === `panel-${btn.dataset.tab}`));
+      if (btn.dataset.tab === 'stats') renderStats();
     };
   }
 
@@ -649,4 +985,4 @@ function initDojo(opts = {}) {
   $('song-new').click();
 }
 
-export { initDojo, stopDojo };
+export { initDojo, stopDojo, stopDojoMic };

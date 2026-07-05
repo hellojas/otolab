@@ -535,3 +535,70 @@ kbd {
 #solo-mic.on, #solo-along.on, #solo-play.on {
   background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
 }
+
+/* ---------- sing-back drill ---------- */
+.sing-tuner {
+  position: relative; height: 46px; margin: 12px 0 4px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--panel);
+  overflow: hidden;
+}
+.sing-target {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+  background: var(--accent); opacity: 0.55; transform: translateX(-50%);
+}
+.sing-needle {
+  position: absolute; top: 6px; bottom: 6px; width: 4px; left: 50%;
+  background: var(--secondary); border-radius: 2px; transform: translateX(-50%);
+  transition: left 0.06s linear;
+}
+.sing-needle.in-tune { background: var(--good); box-shadow: 0 0 8px var(--good); }
+.sing-read {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+
+/* ---------- rhythm drill ---------- */
+.rhy-pad {
+  width: 100%; margin: 12px 0 4px; padding: 22px; font-size: 16px;
+  border-radius: 12px; border: 1.5px dashed var(--border); background: var(--panel);
+  color: var(--muted); user-select: none;
+}
+.rhy-pad.armed { border-style: solid; border-color: var(--accent); color: var(--text); }
+.rhy-pad.hit { background: var(--accent); color: var(--accent-ink); }
+.rhy-viz { margin-top: 4px; }
+.rhy-bar {
+  position: relative; height: 44px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--panel);
+}
+.rhy-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); opacity: 0.6; }
+.rhy-onset {
+  position: absolute; top: 8px; bottom: 8px; width: 6px; border-radius: 3px;
+  background: var(--muted); transform: translateX(-50%);
+}
+.rhy-onset.ok { background: var(--good); }
+.rhy-onset.miss { background: var(--bad); }
+.rhy-extra {
+  position: absolute; top: 2px; height: 8px; width: 6px; border-radius: 2px;
+  background: var(--secondary); transform: translateX(-50%);
+}
+
+/* ---------- progress / stats ---------- */
+.stats-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 6px; }
+.stats-block { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stats-block h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.stats-line { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 2px 0; }
+.stats-line small { color: var(--muted); font-size: 11px; }
+.stats-bar-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 12.5px; }
+.stats-bar-label { min-width: 66px; color: var(--muted); }
+.stats-bar-track { flex: 1; height: 8px; background: var(--panel2); border-radius: 999px; overflow: hidden; }
+.stats-bar-fill { height: 100%; border-radius: 999px; }
+.stats-bar-fill.low { background: var(--bad); }
+.stats-bar-fill.mid { background: var(--secondary); }
+.stats-bar-fill.high { background: var(--good); }
+.stats-bar-num { min-width: 58px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats-spark { display: flex; align-items: flex-end; gap: 3px; height: 56px; }
+.stats-spark-col { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.stats-spark-bar { width: 100%; background: var(--muted); border-radius: 2px 2px 0 0; min-height: 3px; }
+.stats-spark-bar.low { background: var(--bad); }
+.stats-spark-bar.mid { background: var(--secondary); }
+.stats-spark-bar.high { background: var(--good); }

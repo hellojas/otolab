@@ -197,6 +197,10 @@
         <button data-tab="degrees">degrees</button>
         <button data-tab="qualities">qualities</button>
         <button data-tab="intervals">intervals</button>
+        <button data-tab="melodic">scale degrees</button>
+        <button data-tab="sing">sing</button>
+        <button data-tab="rhythm">rhythm</button>
+        <button data-tab="stats">progress</button>
         <button data-tab="guide">how to practice</button>
       </nav>
     </div>
@@ -353,11 +357,110 @@
         </select>
         <button id="int-new" class="primary">new interval</button>
         <button id="int-replay">▶ replay</button>
+        <label class="check"><input type="checkbox" id="int-drone"> anchor to a tonic drone</label>
       </div>
       <div id="int-answers" class="chips"></div>
       <div class="dj-row">
         <span id="int-result" class="dj-result"></span>
         <span id="int-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-melodic" class="dj-panel">
+      <p class="blurb">Single-note functional hearing — the melodic foundation
+        the <b>degrees</b> drill (which uses chords) rests on. A cadence sets the
+        key, the tonic sounds, then one note plays: which scale degree is it?
+        Diatonic first; add chromatics when the seven are automatic.</p>
+      <div class="dj-row">
+        <select id="mdeg-mode">
+          <option value="major">major keys</option>
+          <option value="minor">minor keys</option>
+          <option value="both">both</option>
+        </select>
+        <select id="mdeg-level">
+          <option value="diatonic">diatonic — 7 degrees</option>
+          <option value="chromatic">+ chromatic — all 12</option>
+        </select>
+        <button id="mdeg-new" class="primary">new note</button>
+        <button id="mdeg-cadence">replay cadence</button>
+        <button id="mdeg-note">replay note</button>
+        <label class="check"><input type="checkbox" id="mdeg-focus"> focus weak</label>
+        <span id="mdeg-meta" class="dj-meta"></span>
+      </div>
+      <div id="mdeg-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="mdeg-result" class="dj-result"></span>
+        <span id="mdeg-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-sing" class="dj-panel">
+      <p class="blurb">Audiation — the skill every method builds on: hear it,
+        then make it yourself with your voice. Enable the mic and sing.
+        <b>match a note</b> plays a pitch to sing back; <b>sing a degree</b>
+        plays a cadence and names a scale degree to produce from the key, with
+        no reference pitch. Hold the note — it grades when you lock on.</p>
+      <div class="dj-row">
+        <select id="sing-mode">
+          <option value="match">match a note</option>
+          <option value="degree">sing a degree</option>
+        </select>
+        <select id="sing-keymode">
+          <option value="major">major</option>
+          <option value="minor">minor</option>
+        </select>
+        <button id="sing-mic" class="primary">enable mic</button>
+        <button id="sing-new">new target</button>
+        <button id="sing-replay">replay</button>
+        <span id="sing-meta" class="dj-meta"></span>
+      </div>
+      <div id="sing-tuner" class="sing-tuner">
+        <div class="sing-target"></div>
+        <div class="sing-needle" id="sing-needle"></div>
+        <span class="sing-read" id="sing-read"></span>
+      </div>
+      <div class="dj-row">
+        <span id="sing-result" class="dj-result"></span>
+        <span id="sing-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-rhythm" class="dj-panel">
+      <p class="blurb">Rhythm is half of transcription and the app trained none
+        of it. Listen to a one-bar pattern, then tap it back over a count-in —
+        spacebar or the pad. Each hit is scored on how close it lands.</p>
+      <div class="dj-row">
+        <select id="rhy-level">
+          <option value="easy">easy · quarters &amp; eighths</option>
+          <option value="medium">medium · rests &amp; syncopation</option>
+          <option value="hard">hard · triplets &amp; sixteenths</option>
+        </select>
+        <label class="vol-label">tempo
+          <input id="rhy-tempo" type="range" min="50" max="150" value="88">
+          <span id="rhy-bpm">88 bpm</span>
+        </label>
+        <button id="rhy-new" class="primary">new pattern</button>
+        <button id="rhy-play">▶ hear it</button>
+        <button id="rhy-go">tap it back</button>
+        <span id="rhy-meta" class="dj-meta"></span>
+      </div>
+      <button id="rhy-pad" class="rhy-pad">tap here (or press space)</button>
+      <div id="rhy-viz" class="rhy-viz"></div>
+      <div class="dj-row">
+        <span id="rhy-result" class="dj-result"></span>
+        <span id="rhy-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-stats" class="dj-panel">
+      <p class="blurb">Ear training only sticks through repetition over time.
+        Every drill here logs to your browser (nothing leaves it); this is the
+        longitudinal picture the app never kept before. Weak items resurface
+        automatically when you tick <b>focus weak</b> in a drill.</p>
+      <div id="stats-body" class="stats-body"></div>
+      <div class="dj-row">
+        <button id="stats-refresh" class="primary">refresh</button>
+        <button id="stats-reset">reset all progress</button>
       </div>
     </section>
 
