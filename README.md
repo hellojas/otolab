@@ -14,9 +14,9 @@ Ear-training over real songs — one app, two rooms:
   curriculum (**today**'s workout + a mastery-gated **path**) drives a deck of
   chip-answered drills: recognition (intervals, qualities, degrees, scale
   degrees, basslines), harmony (cadences, form), production (echo/dictation,
-  sing, licks), color (modes, tensions), rhythm, and the song-quiz / paste-a-tab
-  progression trainers — plus the built-in standards library with synth comping
-  and transcription quizzes.
+  sing, licks), color (modes, tensions), rhythm, and the **changes**
+  progression trainer (a built-in collection plus paste-a-tab in one) — with
+  the built-in standards library, comped and quizzable, alongside it.
 
 The toggle lives in the header; the mode persists. Same synth, same theory
 engine, same themes everywhere. lab is strictly the transcribe-over-video room;
@@ -156,7 +156,8 @@ The gym had no program, so the **today** and **path** tabs add one:
 
 - **today** assembles a short daily workout from where you are in the path:
   a warm-up on something you've learned, today's focus unit, a review of the
-  items due for spaced repetition, and one applied task (a real song quiz).
+  items due for spaced repetition, and one applied task (a real progression on
+  the **changes** quiz).
   Each step launches the right drill preconfigured and ticks itself off as you
   hit its mini-goal ("10 right at ≥85%"). A day **streak** keeps you honest.
 - **path** is the syllabus in order — intervals → scale degrees → qualities →
@@ -178,11 +179,11 @@ Naming a progression by ear decomposes into three skills, trained in order:
    triads & sus → sevenths → extensions.
 3. **Function last, the multiplier** — the **degrees** drill (a diatonic
    seventh after a key-setting cadence: name its roman numeral), then the
-   **song quiz**: a progression from the [groundtruth collection](groundtruth/)
-   plays with bass + comping and you fill in roman numerals; the title stays
-   hidden until you check. **paste a tab** turns any chords you paste — from
-   Ultimate Guitar, Chordify, anywhere — into the same quiz, key guessed
-   automatically. **scale degrees** is the single-note foundation under
+   **changes** quiz: a progression plays with bass + comping and you fill in
+   roman numerals; the title stays hidden until you check. Its source switch
+   pulls a tune from the [groundtruth collection](groundtruth/) or takes chords
+   you **paste a tab** — from Ultimate Guitar, Chordify, anywhere — key guessed
+   automatically, same quiz either way. **scale degrees** is the single-note foundation under
    *degrees*: a cadence sets the key, the tonic sounds, then one note plays —
    which degree is it? Diatonic first, chromatics when the seven are automatic.
 
@@ -223,15 +224,16 @@ Naming a progression by ear decomposes into three skills, trained in order:
   one-bar pattern, tap it back over a count-in (spacebar or the pad), and get
   scored on how close each hit lands. Eighths → syncopation → triplets.
 
-Every drill logs to a **progress** tab: overall accuracy, per-drill bars, a
-14-day activity sparkline, and your weakest items. Tick **focus weak** where a
+Every drill logs to the **progress** drawer — opened from the header button in
+either mode: overall accuracy, per-drill bars, a 14-day activity sparkline, and
+your weakest items. Tick **focus weak** where a
 drill offers it and a spaced-repetition scheduler biases questions toward what
 you keep missing — because ear training only sticks through repetition over
 time. Nothing leaves your browser.
 
 ## Standards: the built-in jam room
 
-The **standards** section (in the dojo) is a full practice loop with no video
+The **standards** tab (in the dojo) is a full practice loop with no video
 and no internet — an iReal-Pro-style library baked into the app:
 
 - **~100 lead sheets** (`js/standards-data.js` + `js/standards-data-extra.js`):

@@ -1,6 +1,7 @@
 // dojo.js — dojo mode's drill hall, absorbed from the old standalone otodojo
-// app: a shared progression-quiz engine (song quiz + paste-a-tab), plus
-// basslines, degrees, qualities and intervals drills. Rewired onto otolab's
+// app: a shared progression-quiz engine (the "changes" tab — built-in
+// collection + paste-a-tab), plus basslines, degrees, qualities and intervals
+// drills, and the curriculum. Rewired onto otolab's
 // theory + audio engines so the synth voices and richer chord vocabulary
 // apply here too. Chips in, no keyboard required — works on a phone.
 
@@ -54,7 +55,7 @@ const DRILL_TABS = {
   form:      { tab: 'form',      start: 'form-new' },
   modal:     { tab: 'modal',     start: 'modal-new' },
   tension:   { tab: 'tension',   start: 'tens-new' },
-  songs:     { tab: 'changes',   start: 'changes-new' },
+  changes:   { tab: 'changes',   start: 'changes-new' },
   bass:      { tab: 'bass',      start: 'bass-new' },
 };
 
@@ -357,7 +358,7 @@ function makeScore(elId, label = 'this session') {
 }
 
 // =====================================================================
-// Progression quiz engine — used by both the song quiz and paste-a-tab.
+// Progression quiz engine — drives the "changes" tab (built-in + paste).
 // =====================================================================
 function makeQuiz(prefix, scoreLabel) {
   const ids = k => $(`${prefix}-${k}`);
@@ -686,8 +687,8 @@ function initDojo(opts = {}) {
     bassFinish(null);
   };
 
-  // ---- degrees drill (random keys, chip answers — the keyboard-free cousin
-  //      of the main drill section) ----
+  // ---- degrees drill (random keys, chip answers — the single-chord drill
+  //      the "changes" quiz builds on) ----
   const degScore = makeScore('deg-score');
   const degState = { key: null, chord: null, answered: false };
 
@@ -1625,7 +1626,6 @@ function initDojo(opts = {}) {
         b.classList.toggle('active', b === btn));
       document.querySelectorAll('.dj-panel').forEach(p =>
         p.classList.toggle('active', p.id === `panel-${btn.dataset.tab}`));
-      if (btn.dataset.tab === 'stats') renderStats();
       if (btn.dataset.tab === 'today') currRenderToday();
       if (btn.dataset.tab === 'path') currRenderPath();
       if (btn.dataset.tab === 'licks') renderLicks();

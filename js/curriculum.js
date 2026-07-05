@@ -203,8 +203,8 @@ function buildWorkout() {
   });
 
   steps.push({
-    key: 'apply', label: 'Apply it', title: 'Song quiz — real changes', cat: null,
-    drill: 'songs', config: {}, manual: true,
+    key: 'apply', label: 'Apply it', title: 'Changes — a real progression', cat: null,
+    drill: 'changes', config: {}, manual: true,
     note: 'name a real progression by ear, then check',
   });
 
