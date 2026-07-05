@@ -390,12 +390,24 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 /* ---- dojo drills ---- */
 
 .dojo-section { margin-top: 14px; }
-#dojo-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Grouped tab strip: 15 drills + meta/utility surfaces read as one flat row
+   otherwise. Cluster them by the guide's own path (foundations -> function ->
+   repertoire -> produce) and set progress/help apart as "track". */
+#dojo-tabs { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; }
+.tab-group { display: flex; flex-direction: column; gap: 5px; }
+.tab-group-label {
+  font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--muted); opacity: 0.7; padding-left: 3px;
+}
+.tab-group-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab-group-util { margin-left: auto; }
+.tab-group-util .tab-group-btns button { opacity: 0.82; }
 #dojo-tabs button {
   border-radius: 999px; padding: 4px 13px; font-size: 13px; color: var(--muted);
 }
 #dojo-tabs button.active {
   background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+  opacity: 1;
 }
 
 .dj-panel {
