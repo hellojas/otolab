@@ -70,6 +70,7 @@ const DRILL_TABS = {
   changes:   { tab: 'changes',   start: 'changes-new' },
   bass:      { tab: 'bass',      start: 'bass-new' },
   inversion: { tab: 'inversion', start: 'inv-new' },
+  time:      { tab: 'time',      start: 'time-new' },
 };
 
 function runAssignment(drill, config = {}) {
@@ -1218,6 +1219,67 @@ function initDojo(opts = {}) {
   window.addEventListener('keydown', e => {
     if (e.code === 'Space' && rhyState.recording && panelActive('rhythm')) { e.preventDefault(); rhyTap(); }
   });
+
+  // ---- time-feel drill (meter count / swing-vs-straight) ----
+  // A groove plays on the audio clock: a click on every beat, a low thump on
+  // each downbeat (so "1" is audible), and — in feel mode — the off-beat eighth
+  // placed evenly (straight) or long-short at the triplet (swing). You name it.
+  const timeScore = makeScore('time-score');
+  const timeState = { mode: 'meter', meter: 4, feel: 'straight', answered: false };
+  const METERS = [3, 4, 5];
+
+  function timePlay() {
+    ensureCtx();
+    const bpm = 116, spb = 60 / bpm;
+    const start = audioNow() + 0.2;
+    const meter = timeState.mode === 'meter' ? timeState.meter : 4;
+    const feel = timeState.mode === 'feel' ? timeState.feel : 'straight';
+    const bars = timeState.mode === 'meter' ? 3 : 2;
+    for (let bar = 0; bar < bars; bar++) {
+      for (let beat = 0; beat < meter; beat++) {
+        const t = start + (bar * meter + beat) * spb;
+        const down = beat === 0;
+        clickAt(t, down);                               // pulse; accent marks "1"
+        if (down) playNoteAt(40, t, spb * 0.9, 0.55);   // low thump on the downbeat
+        if (timeState.mode === 'feel') {                // subdivide for feel mode
+          const off = feel === 'swing' ? spb * (2 / 3) : spb * 0.5;
+          clickAt(t + off, false);
+        }
+      }
+    }
+  }
+
+  $('time-mode').onchange = e => { timeState.mode = e.target.value; };
+  $('time-new').onclick = () => {
+    timeState.answered = false;
+    timeState.meter = pick(METERS.filter(m => m !== timeState.meter));
+    timeState.feel = pick(['straight', 'swing'].filter(f => f !== timeState.feel));
+    $('time-result').textContent = '';
+    $('time-meta').textContent = timeState.mode === 'meter'
+      ? 'count the beats between downbeats' : 'even eighths, or long-short?';
+    const correct = timeState.mode === 'meter' ? String(timeState.meter) : timeState.feel;
+    const opts = timeState.mode === 'meter' ? METERS.map(String) : ['straight', 'swing'];
+    const box = $('time-answers');
+    box.innerHTML = '';
+    for (const o of opts) {
+      const chip = el('button', 'chip', timeState.mode === 'meter' ? `${o}/4` : o);
+      chip.onclick = () => {
+        if (timeState.answered) return;
+        timeState.answered = true;
+        const ok = o === correct;
+        timeScore.add(ok ? 1 : 0);
+        if (timeState.mode === 'meter') record('meter', String(timeState.meter), ok);
+        else record('feel', timeState.feel, ok);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('time-result').textContent = ok
+          ? '✓ right' : `✗ it was ${timeState.mode === 'meter' ? correct + '/4' : correct}`;
+        setTimeout(() => { if (panelActive('time')) $('time-new').click(); }, 1500);
+      };
+      box.appendChild(chip);
+    }
+    timePlay();
+  };
+  $('time-replay').onclick = () => timePlay();
 
   // ---- echo drill (call & response / dictation) ----
   const echoScore = makeScore('echo-score');

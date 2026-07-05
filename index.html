@@ -281,6 +281,7 @@
             <button data-tab="echo">echo</button>
             <button data-tab="licks">licks</button>
             <button data-tab="rhythm">rhythm</button>
+            <button data-tab="time">time feel</button>
           </div>
         </div>
         <div class="tab-group tab-group-util">
@@ -657,6 +658,28 @@
       <div class="dj-row">
         <span id="rhy-result" class="dj-result"></span>
         <span id="rhy-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-time" class="dj-panel">
+      <p class="blurb">The thing that lets you play <em>with</em> people, and the
+        one skill nothing here trained: feeling time. Hear a groove, then answer.
+        <b>Meter</b> — count the beats per bar (a low downbeat marks each “1”):
+        3, 4 or 5. <b>Feel</b> — are the eighth-notes even (straight) or
+        long-short (swing)?</p>
+      <div class="dj-row">
+        <select id="time-mode">
+          <option value="meter">meter · how many beats per bar?</option>
+          <option value="feel">feel · straight or swung?</option>
+        </select>
+        <button id="time-new" class="primary">new groove</button>
+        <button id="time-replay">▶ replay</button>
+        <span id="time-meta" class="dj-meta"></span>
+      </div>
+      <div id="time-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="time-result" class="dj-result"></span>
+        <span id="time-score" class="dj-score"></span>
       </div>
     </section>
 
