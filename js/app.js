@@ -15,6 +15,7 @@ import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
 import { initStandards, stopStandards } from './standards.js';
 import { initDojo, stopDojo } from './dojo.js';
+import { initSolo, soloLog, refreshSolo, stopSolo, stopSoloMic } from './solo.js';
 import player from './player.js';
 
 const $ = sel => document.querySelector(sel);
@@ -28,6 +29,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
 const state = {
   key: { tonic: 0, mode: 'major' },
   chords: [],            // { t, root, quality, bass }
+  solo: [],              // { t, midi } — transcribed single-line notes
   grid: null,            // { bpm, t0, bpb, snap } — beat grid for bar-aligned capture
   lyrics: null,          // { artist, track, synced: [{t,text}]|null, plain, offset }
   reference: '',         // pasted reference progression (raw text)
@@ -52,7 +54,7 @@ const storeKey = id => `otolab:v1:${id}`;
 
 function save() {
   if (!player.videoId) return;
-  const data = { key: state.key, chords: state.chords, grid: state.grid,
+  const data = { key: state.key, chords: state.chords, solo: state.solo, grid: state.grid,
                  lyrics: state.lyrics, reference: state.reference,
                  title: player.videoTitle() };
   localStorage.setItem(storeKey(player.videoId), JSON.stringify(data));
@@ -65,12 +67,13 @@ function save() {
 
 function loadSaved(id) {
   const raw = localStorage.getItem(storeKey(id));
-  state.chords = []; state.lyrics = null; state.reference = ''; state.grid = null;
+  state.chords = []; state.solo = []; state.lyrics = null; state.reference = ''; state.grid = null;
   if (raw) {
     try {
       const data = JSON.parse(raw);
       state.key = data.key || state.key;
       state.chords = data.chords || [];
+      state.solo = data.solo || [];
       state.grid = data.grid || null;
       state.lyrics = data.lyrics || null;
       state.reference = data.reference || '';
@@ -304,6 +307,7 @@ function renderKeyDependent() {
 function renderChords() {
   renderTimeline();
   renderLyrics();
+  refreshSolo();
 }
 
 // ---------- recent videos ----------
@@ -713,7 +717,7 @@ function initMode() {
     document.body.dataset.mode = m;
     localStorage.setItem('otolab:v1:mode', m);
     btns.forEach(b => b.classList.toggle('on', b.dataset.mode === m));
-    if (m === 'dojo') player.pause?.();
+    if (m === 'dojo') { player.pause?.(); stopSolo(); stopSoloMic(); }
   };
   btns.forEach(b => b.addEventListener('click', () => set(b.dataset.mode)));
   set(localStorage.getItem('otolab:v1:mode') === 'dojo' ? 'dojo' : 'lab');
@@ -933,6 +937,7 @@ function initShortcuts() {
       case '.':          loopAroundCurrent(0); break;
       case ',':          loopAroundCurrent(1); break;
       case 'b':          tapTempo(); break;
+      case 'n':          soloLog(); break;
       case 'r':          drillReplay(); break;
     }
   });
@@ -941,7 +946,7 @@ function initShortcuts() {
 function initImportExport() {
   $('#export-btn').addEventListener('click', () => {
     const data = { videoId: player.videoId, title: player.videoTitle(),
-                   key: state.key, chords: state.chords, grid: state.grid,
+                   key: state.key, chords: state.chords, solo: state.solo, grid: state.grid,
                    lyrics: state.lyrics, reference: state.reference };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -955,6 +960,7 @@ function initImportExport() {
     const data = JSON.parse(await file.text());
     state.key = data.key || state.key;
     state.chords = data.chords || [];
+    state.solo = data.solo || [];
     state.grid = data.grid || state.grid;
     state.lyrics = data.lyrics || state.lyrics;
     state.reference = data.reference || state.reference;
@@ -983,12 +989,20 @@ function init() {
   initGrid();
   initVoiceLeading();
   initShare();
+  initSolo({
+    getKey: () => state.key,
+    getChords: () => state.chords,
+    getNotes: () => state.solo,
+    setNotes: arr => { state.solo = arr; save(); },
+    onStart: () => { stopProgression(); },
+  });
   initDrill({
     getKey: () => state.key,
     onStart: () => {
       stopProgression();
       stopStandards();
       stopDojo();
+      stopSolo();
       if (state.practice) $('#practice-toggle').click();
     },
   });
@@ -997,6 +1011,7 @@ function init() {
       stopProgression();
       stopDrill();
       stopDojo();
+      stopSolo();
     },
   });
   initDojo({
@@ -1004,6 +1019,7 @@ function init() {
       stopProgression();
       stopDrill();
       stopStandards();
+      stopSolo();
     },
   });
   initMode();

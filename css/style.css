@@ -138,6 +138,7 @@ body[data-mode="dojo"] .tagline .tag-dojo { display: inline; }
 body[data-mode="dojo"] .load-row,
 body[data-mode="dojo"] .video-col,
 body[data-mode="dojo"] .timeline-section,
+body[data-mode="dojo"] .solo-section,
 body[data-mode="dojo"] .lyrics-section,
 body[data-mode="dojo"] .check-section { display: none; }
 body[data-mode="dojo"] main { grid-template-columns: 1fr; }
@@ -495,4 +496,42 @@ footer { margin-top: 26px; color: var(--muted); font-size: 12.5px; }
 kbd {
   background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;
   padding: 1px 5px; font-size: 11.5px;
+}
+
+/* ---------- solo transcription room ---------- */
+.solo-section { margin-top: 14px; }
+.solo-detected {
+  font-size: 15px; font-weight: 600; margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.solo-detected.role-chord { color: var(--diatonic); }
+.solo-detected.role-tension { color: var(--secondary); }
+.solo-detected.role-approach { color: var(--outside); }
+.solo-roll {
+  position: relative; margin-top: 10px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--panel); overflow-x: auto; overflow-y: hidden;
+}
+.solo-roll .empty { color: var(--muted); font-size: 14px; padding: 22px 14px; }
+.solo-canvas { position: relative; }
+.solo-band {
+  position: absolute; top: 0; bottom: 0;
+  border-left: 1px solid var(--border); background: var(--panel2); opacity: 0.45;
+}
+.solo-band span {
+  position: absolute; top: 3px; left: 4px; font-size: 11px; font-weight: 700;
+  color: var(--muted); opacity: 0.9;
+}
+.solo-note {
+  position: absolute; border-radius: 4px; border: 1.5px solid var(--muted);
+  background: var(--panel2); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden; box-sizing: border-box;
+}
+.solo-note .lbl { font-size: 10.5px; font-weight: 700; line-height: 1; }
+.solo-note.role-chord   { border-color: var(--diatonic); color: var(--diatonic); }
+.solo-note.role-tension { border-color: var(--secondary); color: var(--secondary); }
+.solo-note.role-approach{ border-color: var(--outside); color: var(--outside); }
+.solo-note.playing, .solo-note.now { box-shadow: 0 0 0 2px var(--accent); z-index: 2; }
+.solo-summary { margin-top: 8px; font-size: 13px; color: var(--text); }
+#solo-mic.on, #solo-along.on, #solo-play.on {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
 }

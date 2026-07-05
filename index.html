@@ -139,6 +139,27 @@
     <div id="timeline" class="timeline"></div>
   </section>
 
+  <section class="solo-section">
+    <div class="section-head">
+      <h2>solo</h2>
+      <button id="solo-log" title="log the note you're playing/humming at the current video time (n)">+ note @ playhead</button>
+      <button id="solo-mic" title="hum or sing the line — the mic names the pitch so you can log it without an instrument">🎤 hum to note</button>
+      <button id="solo-play" title="play the transcribed line back through the synth">▶ line</button>
+      <button id="solo-along" title="sound each logged note as the video reaches it — check the line against the record">along: off</button>
+      <button id="solo-clear" title="delete every logged note">clear</button>
+      <span id="solo-detected" class="solo-detected">—</span>
+    </div>
+    <p class="drill-hint">Transcribe a single line — a solo, a riff, a melody. Play or
+      hum one note, hit <kbd>n</kbd> to log it at the playhead. Each note is placed on
+      the roll over the chord of the moment and labeled with its role: a
+      <span class="tag-diatonic">chord tone</span>, a
+      <span class="tag-secondary">tension</span>, or an
+      <span class="tag-outside">approach note</span>. Log the changes above first so
+      the line has harmony to sit on.</p>
+    <div id="solo-roll" class="solo-roll"></div>
+    <div id="solo-summary" class="solo-summary"></div>
+  </section>
+
   <section class="lyrics-section">
     <div class="section-head">
       <h2>lyrics</h2>
