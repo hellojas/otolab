@@ -901,6 +901,23 @@ async function doLoad() {
     }, 1500);
   });
   if (!id) { showVideoError('couldn’t parse a YouTube link or video id'); return; }
+  $('#yt-player').style.display = '';
+  if (player.mediaElement.parentNode) player.mediaElement.remove();
+  loadSaved(id);
+}
+
+// transcribe a local audio file — the lab, timeline and solo room all run on
+// player's unified api, so a dropped mp3 uses the exact same workflow as a video.
+async function doLoadLocal(file) {
+  if (!file) return;
+  ensureCtx();
+  showVideoError('');
+  const frame = $('.video-frame');
+  const el = player.mediaElement;
+  el.classList.add('local-audio');
+  if (el.parentNode !== frame) frame.appendChild(el);
+  $('#yt-player').style.display = 'none';
+  const id = await player.loadLocal(file, () => setTimeout(save, 300));
   loadSaved(id);
 }
 
@@ -943,6 +960,7 @@ function renderLoopStatus() {
 function initTransport() {
   $('#load-btn').addEventListener('click', doLoad);
   $('#video-url').addEventListener('keydown', e => { if (e.key === 'Enter') doLoad(); });
+  $('#audio-file').addEventListener('change', e => { if (e.target.files[0]) doLoadLocal(e.target.files[0]); });
   $('#speed').addEventListener('change', e => player.setRate(Number(e.target.value)));
   $('#back5').addEventListener('click', () => player.nudge(-5));
   $('#fwd5').addEventListener('click', () => player.nudge(5));
