@@ -507,6 +507,17 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "in-a-mellow-tone",
+    title: "In a Mellow Tone",
+    composer: "Duke Ellington",
+    year: 1939,
+    tonic: 8, mode: "major", bpb: 4, style: "swing", bpm: 168,
+    sections: [
+      { name: "A", bars: ['Bb7', 'Eb7', 'Abmaj7', 'Abmaj7', 'Ebm7', 'Ab7', 'Dbmaj7', 'Dbmaj7', 'Db', 'Ddim7', 'Abmaj7', 'F7', 'Bb7', 'Bb7', 'Eb7', 'F7'] },
+      { name: "B", bars: ['Bb7', 'Eb7', 'Abmaj7', 'Abmaj7', 'Ebm7', 'Ab7', 'Dbmaj7', 'Db7', 'Db7', 'Ddim7', 'Abmaj7', 'F7', 'Bb7', 'Eb7', 'Ab', 'Ab'] },
+    ],
+  },
+  {
     id: "in-a-sentimental-mood",
     title: "In a Sentimental Mood",
     composer: "Duke Ellington",
@@ -624,6 +635,18 @@ const SONGS_EXTRA = [
     ],
   },
   {
+    id: "meditation",
+    title: "Meditation (Meditação)",
+    composer: "Antônio Carlos Jobim",
+    year: 1957,
+    tonic: 0, mode: "major", bpb: 4, style: "bossa", bpm: 140,
+    sections: [
+      { name: "A", bars: ['C6', 'C6', 'Bb7', 'B7', 'C6', 'C6', 'A7', 'A7', 'Dm7', 'Dm7', 'Bb7', 'Bb7', 'Em7', 'A7b9', 'Dm7', 'G7'] },
+      { name: "B", bars: ['Fmaj7', 'Fmaj7', 'Bb7', 'Bb7', 'Em7', 'Ebdim7', 'Dm7', 'G7'] },
+      { name: "C", bars: ['Bb7', 'A7b9 Ab7', 'G7b9', 'C6', 'Dm7 G7'] },
+    ],
+  },
+  {
     id: "milestones",
     title: "Milestones",
     composer: "Miles Davis",
@@ -735,6 +758,17 @@ const SONGS_EXTRA = [
       { name: "A", bars: ['C6', 'E7', 'F6', 'G7', 'C6 Am7', 'D7', 'Dm7 G7', 'C6'] },
       { name: "B", bars: ['Gm7', 'C7', 'Fmaj7', 'Fmaj7', 'Am7', 'D7', 'Dm7', 'G7'] },
       { name: "A", bars: ['C6', 'E7', 'F6', 'G7', 'C6 Am7', 'D7', 'Dm7 G7', 'C6'] },
+    ],
+  },
+  {
+    id: "once-i-loved",
+    title: "Once I Loved (O Amor em Paz)",
+    composer: "Antônio Carlos Jobim",
+    year: 1963,
+    tonic: 2, mode: "minor", bpb: 4, style: "bossa", bpm: 150,
+    sections: [
+      { name: "A", bars: ['Gm7', 'C7#5', 'Fmaj7', 'F#dim7', 'Gm7', 'G#dim7', 'Am7', 'Am7', 'Fm7', 'Bb7#5', 'Ebmaj7', 'Ebmaj7', 'Em7b5', 'A7b9', 'Dmaj7', 'Dbdim7'] },
+      { name: "B", bars: ['Dmaj7', 'G7', 'Cmaj7', 'F7', 'Bbmaj7', 'Bbmaj7', 'Bdim7', 'Bbm6', 'Am6', 'Ab7', 'G7', 'Gm7', 'Dm6', 'Dm6'] },
     ],
   },
   {
