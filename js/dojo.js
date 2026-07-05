@@ -54,7 +54,7 @@ const DRILL_TABS = {
   form:      { tab: 'form',      start: 'form-new' },
   modal:     { tab: 'modal',     start: 'modal-new' },
   tension:   { tab: 'tension',   start: 'tens-new' },
-  songs:     { tab: 'songs',     start: 'song-new' },
+  songs:     { tab: 'changes',   start: 'changes-new' },
   bass:      { tab: 'bass',      start: 'bass-new' },
 };
 
@@ -528,13 +528,22 @@ function initDojo(opts = {}) {
     isActive: tab => panelActive(tab),
   });
 
-  // ---- song quiz ----
-  const songQuiz = makeQuiz('song', 'session');
+  // ---- changes: the unified progression quiz (built-in collection + paste) ----
+  const changesQuiz = makeQuiz('changes', 'session');
   let lastSongId = null;
 
-  $('song-new').onclick = () => {
-    const genre = $('song-genre').value;
-    const diff = $('song-diff').value;
+  const setChangesSource = src => {
+    document.getElementById('panel-changes').dataset.source = src;
+    $('changes-src-library').classList.toggle('on', src === 'library');
+    $('changes-src-paste').classList.toggle('on', src === 'paste');
+  };
+  $('changes-src-library').onclick = () => setChangesSource('library');
+  $('changes-src-paste').onclick = () => setChangesSource('paste');
+
+  $('changes-new').onclick = () => {
+    setChangesSource('library');
+    const genre = $('changes-genre').value;
+    const diff = $('changes-diff').value;
     let pool = SONGS.filter(s =>
       (genre === 'all' || s.genre === genre) &&
       (diff === 'all' || s.difficulty === Number(diff)));
@@ -543,16 +552,14 @@ function initDojo(opts = {}) {
     const s = pick(pool);
     lastSongId = s.id;
     const key = parseKey(s.key);
-    songQuiz.setSong(buildQuizSong(
+    changesQuiz.setSong(buildQuizSong(
       { title: s.title, artist: s.artist, genre: s.genre, tempo: s.tempo, note: s.note },
       s.bars, key));
   };
 
-  // ---- paste a tab ----
-  const pasteQuiz = makeQuiz('paste', 'session');
-
-  $('paste-make').onclick = () => {
-    const text = $('paste-input').value;
+  $('changes-make').onclick = () => {
+    setChangesSource('paste');
+    const text = $('changes-input').value;
     const bars = [];
     const hasBarlines = text.includes('|');
     for (const rawLine of text.split('\n')) {
@@ -570,13 +577,13 @@ function initDojo(opts = {}) {
     }
     const parsed = bars.flat().map(parseChord);
     if (parsed.length < 2) {
-      $('paste-status').textContent = 'no chords found — paste a chord line like  | Dm7 | G7 | Cmaj7 |';
+      $('changes-status').textContent = 'no chords found — paste a chord line like  | Dm7 | G7 | Cmaj7 |';
       return;
     }
     const key = guessKey(parsed);
-    $('paste-status').textContent =
+    $('changes-status').textContent =
       `${parsed.length} chords parsed · guessed key: ${keyName(key)}`;
-    pasteQuiz.setSong(buildQuizSong({ tempo: 96 }, bars, key));
+    changesQuiz.setSong(buildQuizSong({ tempo: 96 }, bars, key));
   };
 
   // ---- bassline drill ----
@@ -1612,6 +1619,7 @@ function initDojo(opts = {}) {
     btn.onclick = () => {
       stopDojo();
       stopDojoMic();
+      opts.stopStandards?.();   // standards is now a tab — stop its audio on leave
       rhyState.recording = false; rhyClearTimers();
       document.querySelectorAll('#dojo-tabs button').forEach(b =>
         b.classList.toggle('active', b === btn));
@@ -1625,7 +1633,7 @@ function initDojo(opts = {}) {
   }
 
   // start with a song loaded so the first click can just be ▶
-  $('song-new').click();
+  $('changes-new').click();
 }
 
 export { initDojo, stopDojo, stopDojoMic };

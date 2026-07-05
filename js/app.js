@@ -787,6 +787,30 @@ function initSettings() {
   });
 }
 
+// ---------- progress drawer (reachable in both lab & dojo) ----------
+function initProgressDrawer() {
+  const btn = $('#progress-btn');
+  const drawer = $('#progress-drawer');
+  const backdrop = $('#progress-backdrop');
+  const open = () => {
+    drawer.hidden = false;
+    backdrop.hidden = false;
+    btn.classList.add('on');
+    // #stats-refresh is wired by initDojo to renderStats(); reuse it so the
+    // drawer always shows a freshly computed picture.
+    $('#stats-refresh')?.click();
+  };
+  const close = () => {
+    drawer.hidden = true;
+    backdrop.hidden = true;
+    btn.classList.remove('on');
+  };
+  btn.addEventListener('click', () => (drawer.hidden ? open() : close()));
+  $('#progress-close').addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawer.hidden) close(); });
+}
+
 // ---------- transport & wiring ----------
 
 function showVideoError(msg) {
@@ -975,6 +999,7 @@ function initImportExport() {
 function init() {
   initTheme();
   initSettings();
+  initProgressDrawer();
   buildPiano($('#piano'));
   initComputerKeyboard(oct => { $('#kb-octave').textContent = `C${oct}`; });
   initTransport();
@@ -1006,6 +1031,7 @@ function init() {
       stopStandards();
       stopSolo();
     },
+    stopStandards,
   });
   initMode();
   player.onError(showVideoError);

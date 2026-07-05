@@ -24,6 +24,7 @@
       <button class="theme-dot" data-theme="washi" title="washi 和紙 — paper &amp; indigo"></button>
       <button class="theme-dot" data-theme="kissa" title="kissa 喫茶 — jazz-café amber"></button>
     </div>
+    <button id="progress-btn" class="progress-btn" title="your practice progress — streak, accuracy & weak spots (works in both modes)">◔ progress</button>
     <div class="settings-wrap">
       <button id="settings-btn" title="settings — synth voice &amp; volume">⚙</button>
       <div id="settings-panel" class="settings-panel" hidden>
@@ -221,8 +222,8 @@
         <div class="tab-group">
           <span class="tab-group-label">3 · repertoire</span>
           <div class="tab-group-btns">
-            <button data-tab="songs">song quiz</button>
-            <button data-tab="paste">paste a tab</button>
+            <button data-tab="changes">changes</button>
+            <button data-tab="standards">standards</button>
             <button data-tab="form">form</button>
           </div>
         </div>
@@ -236,9 +237,8 @@
           </div>
         </div>
         <div class="tab-group tab-group-util">
-          <span class="tab-group-label">track</span>
+          <span class="tab-group-label">guide</span>
           <div class="tab-group-btns">
-            <button data-tab="stats">progress</button>
             <button data-tab="guide">how to practice</button>
           </div>
         </div>
@@ -262,79 +262,61 @@
       <div id="curr-path" class="curr-path"></div>
     </section>
 
-    <section id="panel-songs" class="dj-panel">
-      <p class="blurb">A famous progression plays on the synth (from the
-        groundtruth collection). Fill in the roman numerals from the chips.
-        The title stays hidden until you check.</p>
+    <section id="panel-changes" class="dj-panel" data-source="library">
+      <p class="blurb">Name the changes by ear. A progression plays on the
+        synth; fill the roman numerals from the chips — the title &amp; key stay
+        hidden until you check. Pull one from the built-in collection, or
+        <b>paste a tab</b> to turn any song you're learning into the same quiz.</p>
       <div class="dj-row">
-        <select id="song-genre">
+        <span class="seg" role="tablist" aria-label="progression source">
+          <button id="changes-src-library" class="seg-btn on">collection</button>
+          <button id="changes-src-paste" class="seg-btn">paste a tab</button>
+        </span>
+      </div>
+      <div class="dj-row src-only src-library">
+        <select id="changes-genre">
           <option value="all">all genres</option>
           <option value="pop">pop / rock</option>
           <option value="jazz">jazz</option>
           <option value="blues">blues</option>
         </select>
-        <select id="song-diff">
+        <select id="changes-diff">
           <option value="all">any difficulty</option>
           <option value="1">easy · diatonic</option>
           <option value="2">medium · one surprise</option>
           <option value="3">hard · jazz changes</option>
         </select>
-        <button id="song-new" class="primary">new song</button>
-        <button id="song-play">▶ play</button>
-        <button id="song-stop">■ stop</button>
-        <select id="song-speed">
+        <button id="changes-new" class="primary">new song</button>
+      </div>
+      <div class="src-only src-paste">
+        <textarea id="changes-input" rows="4" spellcheck="false"
+          placeholder="| Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7 | Em7 | Em7 |&#10;&#10;or just:  C  G  Am  F"></textarea>
+        <div class="dj-row">
+          <button id="changes-make" class="primary">make a quiz</button>
+          <span id="changes-status" class="dj-meta"></span>
+        </div>
+      </div>
+      <div class="dj-row">
+        <button id="changes-play">▶ play</button>
+        <button id="changes-stop">■ stop</button>
+        <select id="changes-speed">
           <option value="1">full speed</option>
           <option value="0.75">0.75×</option>
           <option value="0.5">0.5×</option>
         </select>
-        <button id="song-cadence">hear the key</button>
-        <label class="check"><input type="checkbox" id="song-showkey" checked> name the key</label>
+        <button id="changes-cadence">hear the key</button>
+        <label class="check"><input type="checkbox" id="changes-showkey" checked> name the key</label>
       </div>
-      <div id="song-meta" class="dj-meta"></div>
-      <div id="song-slots" class="slots"></div>
-      <div id="song-chips" class="chips"></div>
+      <div id="changes-meta" class="dj-meta"></div>
+      <div id="changes-slots" class="slots"></div>
+      <div id="changes-chips" class="chips"></div>
       <div class="dj-row">
-        <button id="song-undo">undo</button>
-        <button id="song-clear">clear</button>
-        <button id="song-check" class="primary">check</button>
-        <button id="song-reveal">reveal</button>
-        <span id="song-result" class="dj-result"></span>
-        <span id="song-score" class="dj-score"></span>
-      </div>
-    </section>
-
-    <section id="panel-paste" class="dj-panel">
-      <p class="blurb">Copy chords from any tab or chord site and paste them
-        here. Bar lines <code>|</code> are respected; lyric lines are ignored.
-        The app guesses the key, plays the synth version, and quizzes you the
-        same way — turn any song you're learning into an ear-training exercise.</p>
-      <textarea id="paste-input" rows="5" spellcheck="false"
-        placeholder="| Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7 | Em7 | Em7 |&#10;&#10;or just:  C  G  Am  F"></textarea>
-      <div class="dj-row">
-        <button id="paste-make" class="primary">make a quiz</button>
-        <span id="paste-status" class="dj-meta"></span>
-      </div>
-      <div class="dj-row">
-        <button id="paste-play">▶ play</button>
-        <button id="paste-stop">■ stop</button>
-        <select id="paste-speed">
-          <option value="1">full speed</option>
-          <option value="0.75">0.75×</option>
-          <option value="0.5">0.5×</option>
-        </select>
-        <button id="paste-cadence">hear the key</button>
-        <label class="check"><input type="checkbox" id="paste-showkey" checked> name the key</label>
-      </div>
-      <div id="paste-meta" class="dj-meta"></div>
-      <div id="paste-slots" class="slots"></div>
-      <div id="paste-chips" class="chips"></div>
-      <div class="dj-row">
-        <button id="paste-undo">undo</button>
-        <button id="paste-clear">clear</button>
-        <button id="paste-check" class="primary">check</button>
-        <button id="paste-reveal">reveal</button>
-        <span id="paste-result" class="dj-result"></span>
-        <span id="paste-score" class="dj-score"></span>
+        <button id="changes-undo">undo</button>
+        <button id="changes-clear">clear</button>
+        <button id="changes-check" class="primary">check</button>
+        <button id="changes-reveal">reveal</button>
+        <span id="changes-result" class="dj-result"></span>
+        <span id="changes-score" class="dj-score"></span>
       </div>
     </section>
 
@@ -639,18 +621,6 @@
       </div>
     </section>
 
-    <section id="panel-stats" class="dj-panel">
-      <p class="blurb">Ear training only sticks through repetition over time.
-        Every drill here logs to your browser (nothing leaves it); this is the
-        longitudinal picture the app never kept before. Weak items resurface
-        automatically when you tick <b>focus weak</b> in a drill.</p>
-      <div id="stats-body" class="stats-body"></div>
-      <div class="dj-row">
-        <button id="stats-refresh" class="primary">refresh</button>
-        <button id="stats-reset">reset all progress</button>
-      </div>
-    </section>
-
     <section id="panel-guide" class="dj-panel">
       <p class="blurb"><b>What actually helps you figure out chords.</b>
         Naming a progression decomposes into three skills, best trained in order:</p>
@@ -675,19 +645,20 @@
         hunt the bass line degree by degree. Met a song in the wild? Grab its
         chords from a tab site and feed <b>paste a tab</b>.</p>
     </section>
-  </section>
 
-  <section class="standards-section">
-    <div class="section-head">
-      <h2>standards</h2>
-      <select id="std-song" title="pick a tune from the built-in lead-sheet library"></select>
-      <select id="std-key" title="transpose — random key is the real ear workout"></select>
-      <label class="vol-label" title="tempo">
-        <input id="std-tempo" type="range" min="40" max="240" value="120">
-        <span id="std-bpm">120 bpm</span>
-      </label>
-    </div>
-    <div class="std-transport">
+    <section id="panel-standards" class="dj-panel standards-section">
+      <p class="blurb">The built-in lead-sheet library — real tunes with melody
+        and changes. Comp them, play the melody, or hide the chart and
+        transcribe by ear. Transposing to a random key is the real workout.</p>
+      <div class="dj-row">
+        <select id="std-song" title="pick a tune from the built-in lead-sheet library"></select>
+        <select id="std-key" title="transpose — random key is the real ear workout"></select>
+        <label class="vol-label" title="tempo">
+          <input id="std-tempo" type="range" min="40" max="240" value="120">
+          <span id="std-bpm">120 bpm</span>
+        </label>
+      </div>
+      <div class="std-transport">
       <button id="std-play" title="comp the changes (count-in first)">▶ changes</button>
       <button id="std-melody-btn" title="play the melody alone">▶ melody</button>
       <button id="std-both" title="melody over the changes — the full lead sheet">▶ both</button>
@@ -717,7 +688,25 @@
       <div id="std-melody-result" class="grade-result"></div>
     </div>
     <span id="std-quiz-status" class="std-quiz-status"></span>
+    </section>
   </section>
+
+  <div id="progress-backdrop" class="progress-backdrop" hidden></div>
+  <aside id="progress-drawer" class="progress-drawer" hidden aria-label="practice progress">
+    <div class="progress-drawer-head">
+      <h2>progress</h2>
+      <button id="progress-close" title="close">✕</button>
+    </div>
+    <p class="blurb">Ear training only sticks through repetition over time.
+      Every drill logs to your browser (nothing leaves it); this is the
+      longitudinal picture. Weak items resurface automatically when you tick
+      <b>focus weak</b> in a drill.</p>
+    <div id="stats-body" class="stats-body"></div>
+    <div class="dj-row">
+      <button id="stats-refresh" class="primary">refresh</button>
+      <button id="stats-reset">reset all progress</button>
+    </div>
+  </aside>
 
   <footer>
     <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>n</kbd> log solo note · <kbd>b</kbd> tap tempo</p>

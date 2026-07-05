@@ -149,8 +149,7 @@ body[data-mode="dojo"] main { grid-template-columns: 1fr; }
 
 /* lab = transcribe over a recording. The standards library is a no-video
    practice room, so it lives in the dojo (per the tagline), not here. */
-body[data-mode="lab"] .dojo-section,
-body[data-mode="lab"] .standards-section { display: none; }
+body[data-mode="lab"] .dojo-section { display: none; }
 
 .theme-picker { display: flex; gap: 7px; align-items: center; align-self: center; }
 .theme-dot {
@@ -162,6 +161,26 @@ body[data-mode="lab"] .standards-section { display: none; }
 .theme-dot[data-theme="sumi"]  { background: linear-gradient(135deg, #171512 50%, #e2593f 50%); }
 .theme-dot[data-theme="washi"] { background: linear-gradient(135deg, #f3eee4 50%, #35507a 50%); }
 .theme-dot[data-theme="kissa"] { background: linear-gradient(135deg, #1d1611 50%, #dd9e3e 50%); }
+
+.progress-btn { align-self: center; font-size: 13px; padding: 4px 12px; color: var(--muted); }
+.progress-btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+/* global progress drawer — reachable from the header in both modes */
+.progress-backdrop {
+  position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0.4);
+}
+.progress-backdrop[hidden] { display: none; }
+.progress-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 61; width: min(440px, 92vw);
+  background: var(--panel); border-left: 1px solid var(--border);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3); padding: 18px 20px; overflow-y: auto;
+}
+.progress-drawer[hidden] { display: none; }
+.progress-drawer-head {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+}
+.progress-drawer-head h2 { margin: 0; }
+#progress-close { padding: 3px 10px; font-size: 15px; line-height: 1.3; }
 
 .settings-wrap { position: relative; align-self: center; }
 #settings-btn { padding: 3px 9px; font-size: 15px; line-height: 1.4; }
@@ -432,6 +451,14 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 .dj-result { font-size: 13.5px; }
 .dj-score { color: var(--muted); font-size: 13px; margin-left: auto; }
 
+/* segmented source switch on the unified "changes" quiz */
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.seg-btn { border: none; border-radius: 0; background: transparent; color: var(--muted); padding: 4px 14px; font-size: 13px; }
+.seg-btn.on { background: var(--accent); color: var(--accent-ink); }
+.seg-btn:hover { border-color: transparent; }
+#panel-changes[data-source="library"] .src-paste,
+#panel-changes[data-source="paste"] .src-library { display: none; }
+
 .slots { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 4px; min-height: 30px; }
 .slot {
   min-width: 56px; padding: 6px 10px; text-align: center; background: var(--panel2);
@@ -455,7 +482,6 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 .guide-list { color: var(--text); font-size: 14px; padding-left: 20px; margin: 0 0 12px; }
 .guide-list li { margin-bottom: 8px; }
 
-.standards-section { margin-top: 18px; }
 .standards-section #std-song { max-width: 320px; }
 #std-tempo { width: 110px; accent-color: var(--accent); }
 #std-bpm { font-variant-numeric: tabular-nums; }
