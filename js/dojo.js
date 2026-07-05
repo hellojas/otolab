@@ -23,6 +23,18 @@ const STD_SONGS = [...STD_CORE, ...STD_EXTRA];
 const $ = id => document.getElementById(id);
 const rand = n => Math.floor(Math.random() * n);
 const pick = arr => arr[rand(arr.length)];
+
+// timestamp for response-time capture (monotonic clock where available)
+const nowT = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+// record an attempt with response time + the actual (wrong) answer, so the
+// store can build confusion pairs and time-weight the spacing. askedAt is when
+// the target last sounded; guess is the chip the learner picked.
+function recordTimed(cat, answer, ok, guess, askedAt) {
+  const meta = {};
+  if (guess != null) meta.guess = guess;
+  if (askedAt) meta.ms = nowT() - askedAt;
+  record(cat, answer, ok, meta);
+}
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -727,6 +739,7 @@ function initDojo(opts = {}) {
   function degPlayChord() {
     const c = degState.chord;
     if (!c) return;
+    degState.askedAt = nowT();
     playSequence([{ notes: compNotes(c.root, c.quality), bass: nearestBass(c.root, null), beats: 3 }], 90);
   }
 
@@ -749,7 +762,7 @@ function initDojo(opts = {}) {
         degState.answered = true;
         const ok = p.roman === degState.chord.roman;
         degScore.add(ok ? 1 : 0);
-        record('degrees', degState.chord.roman, ok);
+        recordTimed('degrees', degState.chord.roman, ok, p.roman, degState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
         const flats = useFlats(degState.key.tonic, degState.key.mode);
         $('deg-result').textContent = (ok ? '✓ ' : '✗ that was ') +
@@ -775,6 +788,7 @@ function initDojo(opts = {}) {
 
   function qualPlay() {
     if (qualState.quality == null) return;
+    qualState.askedAt = nowT();
     playSequence([{ notes: compNotes(qualState.root, qualState.quality),
                     bass: nearestBass(qualState.root, null), beats: 3 }], 80);
   }
@@ -789,7 +803,7 @@ function initDojo(opts = {}) {
         qualState.answered = true;
         const ok = q === qualState.quality;
         qualScore.add(ok ? 1 : 0);
-        record('qualities', qualState.quality || 'maj', ok);
+        recordTimed('qualities', qualState.quality || 'maj', ok, q || 'maj', qualState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
         $('qual-result').textContent = ok
           ? `✓ ${qualLabel(q)}`
@@ -820,6 +834,7 @@ function initDojo(opts = {}) {
 
   function intPlay() {
     if (!intState.iv) return;
+    intState.askedAt = nowT();
     const a = intState.low, b = intState.low + intState.iv.semis;
     const seq = intState.harmonic
       ? [{ notes: [a, b], beats: 2.5 }]
@@ -841,7 +856,7 @@ function initDojo(opts = {}) {
         intState.answered = true;
         const ok = iv.name === intState.iv.name;
         intScore.add(ok ? 1 : 0);
-        record('intervals', intState.iv.name, ok);
+        recordTimed('intervals', intState.iv.name, ok, iv.name, intState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
         $('int-result').textContent = ok ? `✓ ${iv.name}` : `✗ that was ${intState.iv.name}`;
         setTimeout(() => $('int-new').click(), 1100);
@@ -879,6 +894,7 @@ function initDojo(opts = {}) {
 
   function mdegPlay(withCadence) {
     const { key } = mdegState;
+    mdegState.askedAt = nowT();
     const tonicMidi = 60 + key.tonic;
     const noteEv = [{ notes: [tonicMidi], beats: 1 }, { beats: 0.35 }, { notes: [mdegNoteMidi()], beats: 2 }];
     if (withCadence) playSequence([...cadenceEvents(key), { beats: 1 }, ...noteEv], 100);
@@ -905,7 +921,7 @@ function initDojo(opts = {}) {
         mdegState.answered = true;
         const ok = d === mdegState.deg;
         mdegScore.add(ok ? 1 : 0);
-        record('mdeg', mdegState.deg, ok);
+        recordTimed('mdeg', mdegState.deg, ok, d, mdegState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
         $('mdeg-result').textContent = ok ? `✓ ${mdegState.deg}` : `✗ that was ${mdegState.deg}`;
         setTimeout(() => { if (panelActive('melodic')) $('mdeg-new').click(); }, 1300);
@@ -1363,6 +1379,7 @@ function initDojo(opts = {}) {
   function cadPlay() {
     const { cad, key } = cadState;
     if (!cad) return;
+    cadState.askedAt = nowT();
     const t = key.tonic;
     let prev = null;
     const evs = cad.degs.map(([d, q], i) => {
@@ -1391,7 +1408,7 @@ function initDojo(opts = {}) {
         cadState.answered = true;
         const ok = c.id === cadState.cad.id;
         cadScore.add(ok ? 1 : 0);
-        record('cadence', cadState.cad.id, ok);
+        recordTimed('cadence', cadState.cad.id, ok, c.id, cadState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
         $('cad-result').textContent = ok ? `✓ ${cadState.cad.label}` : `✗ that was ${cadState.cad.label}`;
         setTimeout(() => { if (panelActive('cadence')) $('cad-new').click(); }, 1500);
@@ -1489,6 +1506,7 @@ function initDojo(opts = {}) {
   function modalPlay() {
     const m = modalState.mode;
     if (!m) return;
+    modalState.askedAt = nowT();
     const base = 60 + modalState.tonic;
     const q = modeTonicQuality(m.scale);
     const vamp = { notes: compNotes(modalState.tonic, q), bass: nearestBass(modalState.tonic, null), beats: 2 };
@@ -1517,7 +1535,7 @@ function initDojo(opts = {}) {
         modalState.answered = true;
         const ok = id === modalState.mode.id;
         modalScore.add(ok ? 1 : 0);
-        record('modal', modalState.mode.id, ok);
+        recordTimed('modal', modalState.mode.id, ok, id, modalState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
         $('modal-result').textContent = ok ? `✓ ${modalState.mode.label}` : `✗ that was ${modalState.mode.label}`;
         setTimeout(() => { if (panelActive('modal')) $('modal-new').click(); }, 1500);
@@ -1538,6 +1556,7 @@ function initDojo(opts = {}) {
 
   function tensPlay() {
     const { root, quality, iv } = tensState;
+    tensState.askedAt = nowT();
     const chord = compNotes(root, quality);
     const bass = nearestBass(root, null);
     let tn = 72 + root + iv;
@@ -1571,7 +1590,7 @@ function initDojo(opts = {}) {
         tensState.answered = true;
         const ok = lbl === TENSION_LBL[tensState.iv];
         tensScore.add(ok ? 1 : 0);
-        record('tension', TENSION_LBL[tensState.iv], ok);
+        recordTimed('tension', TENSION_LBL[tensState.iv], ok, lbl, tensState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
         $('tens-result').textContent = ok ? `✓ ${lbl}` : `✗ that was ${TENSION_LBL[tensState.iv]}`;
         setTimeout(() => { if (panelActive('tension')) $('tens-new').click(); }, 1500);
@@ -1593,6 +1612,9 @@ function initDojo(opts = {}) {
     overall.appendChild(el('h4', null, 'overall'));
     overall.appendChild(line('attempts logged', s.overall.seen));
     overall.appendChild(line('accuracy', s.overall.seen ? s.overall.pct + '%' : '—'));
+    let msSum = 0, msCount = 0;
+    for (const c of Object.values(s.byCat)) { msSum += c.msSum || 0; msCount += c.msCount || 0; }
+    if (msCount) overall.appendChild(line('avg response', (msSum / msCount / 1000).toFixed(1) + 's'));
     overall.appendChild(line('items due for review', s.dueCount));
     box.appendChild(overall);
 
@@ -1636,10 +1658,23 @@ function initDojo(opts = {}) {
     for (const w of s.weak) {
       const r = el('div', 'stats-line');
       const label = w.id.replace(/^[a-z]+:/, ''), cat = w.id.split(':')[0];
-      r.innerHTML = `<span>${esc(label)} <small>${cat}</small></span><b>${w.pct}% · ${w.seen}</b>`;
+      const t = w.avgMs ? ` · ${(w.avgMs / 1000).toFixed(1)}s` : '';
+      r.innerHTML = `<span>${esc(label)} <small>${cat}</small></span><b>${w.pct}% · ${w.seen}${t}</b>`;
       weak.appendChild(r);
     }
     box.appendChild(weak);
+
+    // confusion pairs — what you answer when you miss ("you hear X as Y")
+    if (s.confusions && s.confusions.length) {
+      const conf = el('div', 'stats-block');
+      conf.appendChild(el('h4', null, 'most confused'));
+      for (const c of s.confusions) {
+        const r = el('div', 'stats-line');
+        r.innerHTML = `<span>heard <b>${esc(c.answer)}</b> as <b>${esc(c.guess)}</b> <small>${esc(c.cat)}</small></span><b>×${c.n}</b>`;
+        conf.appendChild(r);
+      }
+      box.appendChild(conf);
+    }
   }
   $('stats-refresh').onclick = renderStats;
   $('stats-reset').onclick = () => {

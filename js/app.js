@@ -24,12 +24,18 @@ const $ = sel => document.querySelector(sel);
 // Log a graded chord to the shared progress store under its function in the
 // key — so real transcription in the lab feeds the same SRS/stats the dojo
 // drills use. cat 'transcribe' keeps applied hearing separate from drilled.
-function recordChord(root, quality, key, ok) {
+function recordChord(root, quality, key, ok, guess = null) {
   const a = analyzeFunction(root, quality, key);
   // namespace the id — the store keys on the bare id, and the dojo drills
   // record bare romans (e.g. 'ii7' for degrees); 'transcribe:ii7' keeps the
   // applied bucket from colliding with the drilled one.
-  if (a && a.roman) record('transcribe', `transcribe:${a.roman}`, ok);
+  if (!a || !a.roman) return;
+  const meta = {};
+  if (guess) { // what the learner actually played, for the confusion table
+    const g = analyzeFunction(guess.root, guess.quality, key);
+    if (g && g.roman) meta.guess = `transcribe:${g.roman}`;
+  }
+  record('transcribe', `transcribe:${a.roman}`, ok, meta);
 }
 
 // Escape strings that reach innerHTML. Chord `quality` is trusted for live
@@ -258,7 +264,7 @@ function checkQuizAnswer(det) {
     if (state.lastWrong !== det.label) {
       state.attempts++;
       state.lastWrong = det.label;
-      recordChord(target.root, target.quality, state.key, false);
+      recordChord(target.root, target.quality, state.key, false, det); // det = what they played
       flashResult(false);
       renderScore();
     }
