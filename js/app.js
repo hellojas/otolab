@@ -15,9 +15,21 @@ import { startListen, stopListen, isListening } from './listen.js';
 import { initStandards, stopStandards } from './standards.js';
 import { initDojo, stopDojo, stopDojoMic } from './dojo.js';
 import { initSolo, soloLog, refreshSolo, stopSolo, stopSoloMic } from './solo.js';
+import { record } from './progress.js';
 import player from './player.js';
 
 const $ = sel => document.querySelector(sel);
+
+// Log a graded chord to the shared progress store under its function in the
+// key — so real transcription in the lab feeds the same SRS/stats the dojo
+// drills use. cat 'transcribe' keeps applied hearing separate from drilled.
+function recordChord(root, quality, key, ok) {
+  const a = analyzeFunction(root, quality, key);
+  // namespace the id — the store keys on the bare id, and the dojo drills
+  // record bare romans (e.g. 'ii7' for degrees); 'transcribe:ii7' keeps the
+  // applied bucket from colliding with the drilled one.
+  if (a && a.roman) record('transcribe', `transcribe:${a.roman}`, ok);
+}
 
 // Escape strings that reach innerHTML. Chord `quality` is trusted for live
 // detection (it comes from our QUALITIES table) but arbitrary for imported
@@ -234,6 +246,7 @@ function checkQuizAnswer(det) {
   if (rootOk && qualOk) {
     state.attempts++; state.correct++;
     state.revealed.add(i);
+    recordChord(target.root, target.quality, state.key, true);
     flashResult(true);
     player.clearLoop();
     renderChords(); renderScore();
@@ -244,6 +257,7 @@ function checkQuizAnswer(det) {
     if (state.lastWrong !== det.label) {
       state.attempts++;
       state.lastWrong = det.label;
+      recordChord(target.root, target.quality, state.key, false);
       flashResult(false);
       renderScore();
     }
@@ -252,6 +266,8 @@ function checkQuizAnswer(det) {
 
 function revealCurrent() {
   if (state.quizIdx == null) return;
+  const target = state.chords[state.quizIdx];
+  if (target) recordChord(target.root, target.quality, state.key, false); // gave up = missed
   state.revealed.add(state.quizIdx);
   state.attempts++;
   player.clearLoop();
@@ -474,6 +490,10 @@ function doGrade() {
   if (!ref.length) { el.innerHTML = '<div class="grade-score">no chords recognized in the reference — try symbols like <b>Fmaj7 | Dm7 G7</b></div>'; return; }
   if (!state.chords.length) { el.innerHTML = '<div class="grade-score">log some chords first, then grade.</div>'; return; }
   const g = gradeProgression(state.chords, ref);
+  // credit each reference chord you got (right root + family or better)
+  for (const p of g.pairs) {
+    if (p.ref) recordChord(p.ref.root, p.ref.quality, state.key, p.score >= 0.75);
+  }
   el.innerHTML = '';
   const head = document.createElement('div');
   head.className = 'grade-score';

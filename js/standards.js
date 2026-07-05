@@ -4,8 +4,9 @@
 // (graded by sequence alignment) or echo a melody back on the keyboard.
 // No video, no internet: the whole "iReal" loop lives in the synth.
 
-import { pcName, useFlats, chordLabel, chordVoicing, midiName } from './theory.js';
+import { pcName, useFlats, chordLabel, chordVoicing, midiName, analyzeFunction } from './theory.js';
 import { parseChordSymbol, parseProgression, gradeProgression, alignSequences } from './reference.js';
+import { record } from './progress.js';
 import { playNoteAt, playChordAt, clickAt, audioNow, ensureCtx } from './audio.js';
 import { onHeldChange } from './input.js';
 import { SONGS as SONGS_CORE } from './standards-data.js';
@@ -304,6 +305,14 @@ function gradeChords() {
     return { root, quality: c.quality, raw: chordLabel(root, c.quality, null, f) };
   }));
   const g = gradeProgression(user, ref);
+  // feed the shared progress store — a standards chord quiz is real applied
+  // hearing, logged under the same 'transcribe' cat as the lab.
+  const key = { tonic: targetTonic(), mode: st.song.mode };
+  for (const p of g.pairs) {
+    if (!p.ref) continue;
+    const a = analyzeFunction(p.ref.root, p.ref.quality, key);
+    if (a && a.roman) record('transcribe', `transcribe:${a.roman}`, p.score >= 0.75);
+  }
   const verdict = g.pct >= 90 ? 'nailed it' : g.pct >= 70 ? 'close' : g.pct >= 40 ? 'getting there' : 'keep listening';
   el.innerHTML = `<div class="grade-score"><b>${g.pct}%</b> — ${verdict}
     <span class="grade-legend">right root counts half · right root + family ¾ · reveal shows the chart</span></div>`;
