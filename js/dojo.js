@@ -71,6 +71,7 @@ const DRILL_TABS = {
   bass:      { tab: 'bass',      start: 'bass-new' },
   inversion: { tab: 'inversion', start: 'inv-new' },
   time:      { tab: 'time',      start: 'time-new' },
+  guide:     { tab: 'guide',     start: 'guide-new' },
 };
 
 function runAssignment(drill, config = {}) {
@@ -1076,6 +1077,18 @@ function initDojo(opts = {}) {
         return { notes: compNotes(c.root, c.q), bass: prev, beats: i === chords.length - 1 ? 2 : 1.5 };
       });
       playSequence(evs, 96);
+    } else if (mode === 'interval') {
+      // sing a named interval above an arbitrary reference — pitch production
+      // untethered from a key or chord, the gap the degree/chord-tone modes left.
+      const IVS = [['m3', 3], ['M3', 4], ['P4', 5], ['P5', 7], ['M6', 9], ['m7', 10], ['M7', 11]];
+      const [name, semis] = pick(IVS.filter(([n]) => n !== singState.lastInt));
+      singState.lastInt = name;
+      const ref = 52 + rand(12); // ~E3–D#4 reference
+      singState.refMidi = ref; singState.intervalSemis = semis;
+      singState.targetMidi = ref + semis; singState.targetPc = singState.targetMidi % 12;
+      singState.item = 'int:' + name;
+      $('sing-meta').textContent = `hear the note, then sing a ${name} above it`;
+      playSequence([{ notes: [ref], beats: 2 }], 90);
     } else { // degree
       const key = { tonic: rand(12), mode: $('sing-keymode').value };
       singState.key = key;
@@ -1095,6 +1108,8 @@ function initDojo(opts = {}) {
     const m = singState.mode;
     if (m === 'match' && singState.targetMidi != null) {
       playSequence([{ notes: [singState.targetMidi], beats: 2 }], 90);
+    } else if (m === 'interval' && singState.refMidi != null) {
+      playSequence([{ notes: [singState.refMidi], beats: 2 }], 90);
     } else if (m === 'chordtone' && singState.chord) {
       playSequence([{ notes: compNotes(singState.chord.root, singState.chord.quality),
                      bass: nearestBass(singState.chord.root, null), beats: 3 }], 84);
@@ -1280,6 +1295,50 @@ function initDojo(opts = {}) {
     timePlay();
   };
   $('time-replay').onclick = () => timePlay();
+
+  // ---- guide-tone ID drill (3rd or 7th on top of the V) ----
+  const guideScore = makeScore('guide-score');
+  const guideState = { chords: null, targets: null, answer: null, answered: true };
+
+  function guidePlay() {
+    if (!guideState.chords) return;
+    let prev = null;
+    const evs = guideState.chords.map((c, i) => {
+      prev = nearestBass(c.root, prev);
+      // double the guide tone on top so the line is the thing you hear
+      return { notes: [...compNotes(c.root, c.q), guideState.targets[i]], bass: prev, beats: i === 2 ? 2 : 1.5 };
+    });
+    playSequence(evs, 96);
+  }
+
+  $('guide-new').onclick = () => {
+    const key = { tonic: rand(12), mode: pick(['major', 'minor']) };
+    const { chords, targets } = guideToneLine(key);
+    guideState.chords = chords; guideState.targets = targets; guideState.answered = false;
+    const V = chords[1];
+    const thirdPc = (V.root + chordToneInterval(V.q, '3')) % 12;
+    guideState.answer = (targets[1] % 12 === thirdPc) ? '3rd' : '7th';
+    $('guide-result').textContent = '';
+    $('guide-meta').textContent = `${keyName(key)} — top note over the V, 3rd or 7th?`;
+    const box = $('guide-answers');
+    box.innerHTML = '';
+    for (const lbl of ['3rd', '7th']) {
+      const chip = el('button', 'chip', lbl);
+      chip.onclick = () => {
+        if (guideState.answered) return;
+        guideState.answered = true;
+        const ok = lbl === guideState.answer;
+        guideScore.add(ok ? 1 : 0);
+        record('guide', guideState.answer, ok);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('guide-result').textContent = ok ? `✓ the ${lbl}` : `✗ that was the ${guideState.answer}`;
+        setTimeout(() => { if (panelActive('guide')) $('guide-new').click(); }, 1500);
+      };
+      box.appendChild(chip);
+    }
+    guidePlay();
+  };
+  $('guide-replay').onclick = () => guidePlay();
 
   // ---- echo drill (call & response / dictation) ----
   const echoScore = makeScore('echo-score');

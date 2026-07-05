@@ -502,6 +502,7 @@
       <div class="dj-row">
         <select id="sing-mode">
           <option value="match">match a note</option>
+          <option value="interval">sing an interval up</option>
           <option value="degree">sing a degree</option>
           <option value="chordtone">sing a chord tone</option>
           <option value="guidetone">sing a guide-tone line</option>
@@ -726,6 +727,21 @@
         ears tire. When a tune beats you, don't reveal — replay at 0.5× and
         hunt the bass line degree by degree. Met a song in the wild? Grab its
         chords from a tab site and feed them to <b>changes → paste a tab</b>.</p>
+      <hr class="guide-sep">
+      <p class="blurb"><b>Guide-tone drill.</b> The 3rd and 7th are what your ear
+        latches onto — they carry the chord quality and voice-lead the changes. A
+        ii–V–I plays with the guide-tone line on top; name whether the top note
+        over the <b>V</b> chord is its 3rd or its 7th.</p>
+      <div class="dj-row">
+        <button id="guide-new" class="primary">hear a ii–V–I</button>
+        <button id="guide-replay">▶ replay</button>
+        <span id="guide-meta" class="dj-meta"></span>
+      </div>
+      <div id="guide-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="guide-result" class="dj-result"></span>
+        <span id="guide-score" class="dj-score"></span>
+      </div>
     </section>
 
     <section id="panel-standards" class="dj-panel standards-section">

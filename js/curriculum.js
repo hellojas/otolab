@@ -165,6 +165,13 @@ const UNITS = [
     blurb: 'A chord with one note on top — is that a ♯11 or a ♭13? The upper structure by ear.',
   },
   {
+    id: 'guide-id', title: 'Advanced · spot the guide tone',
+    drill: 'guide', cat: 'guide', config: {},
+    goalItems: ['3rd', '7th'], goalPct: 68, goalCount: 16,
+    requires: ['deg-major', 'qual-sevenths'], tier: 'advanced',
+    blurb: 'Hear a ii–V–I and pick out whether the 3rd or the 7th sits on top of the V.',
+  },
+  {
     id: 'form-id', title: 'Advanced · hear the form',
     drill: 'form', cat: 'form', config: {},
     goalItems: ['AABA', 'ABAC', '12-bar blues', '16-bar', 'AB'], goalPct: 65, goalCount: 15,
