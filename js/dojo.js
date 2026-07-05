@@ -8,6 +8,7 @@ import { pcName, useFlats, midiName, chordVoicing, paletteForKey, romanFor, gues
 import { playChord, allNotesOff, ensureCtx, clickAt, audioNow } from './audio.js';
 import { startMic, stopMic, isMicOn } from './pitch.js';
 import { record, pickWeighted, stats as progressStats, reset as resetProgress } from './progress.js';
+import { initCurriculum, renderToday as currRenderToday, renderPath as currRenderPath } from './curriculum.js';
 import { SONGS } from '../groundtruth/songs.js';
 import { BASSLINES } from '../groundtruth/basslines.js';
 
@@ -30,6 +31,41 @@ function el(tag, cls, text) {
 const esc = s => String(s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const panelActive = name => !!document.getElementById(`panel-${name}`)?.classList.contains('active');
+
+// Programmatically launch a drill preconfigured — the curriculum's workout and
+// path views drive the existing drills through this. `drill` is a key below;
+// `config` maps raw <select>/<input> ids to the values to set before starting.
+const DRILL_TABS = {
+  intervals: { tab: 'intervals', start: 'int-new' },
+  qualities: { tab: 'qualities', start: 'qual-new' },
+  degrees:   { tab: 'degrees',   start: 'deg-new' },
+  mdeg:      { tab: 'melodic',   start: 'mdeg-new' },
+  sing:      { tab: 'sing',      start: 'sing-new' },
+  rhythm:    { tab: 'rhythm',    start: 'rhy-new' },
+  echo:      { tab: 'echo',      start: 'echo-new' },
+  cadence:   { tab: 'cadence',   start: 'cad-new' },
+  form:      { tab: 'form',      start: 'form-new' },
+  modal:     { tab: 'modal',     start: 'modal-new' },
+  tension:   { tab: 'tension',   start: 'tens-new' },
+  songs:     { tab: 'songs',     start: 'song-new' },
+  bass:      { tab: 'bass',      start: 'bass-new' },
+};
+
+function runAssignment(drill, config = {}) {
+  const info = DRILL_TABS[drill];
+  if (!info) return;
+  const tabBtn = document.querySelector(`#dojo-tabs button[data-tab="${info.tab}"]`);
+  if (tabBtn) tabBtn.click(); // switches panel + stops other audio
+  for (const [id, val] of Object.entries(config)) {
+    const e = document.getElementById(id);
+    if (!e) continue;
+    if (e.type === 'checkbox') e.checked = !!val;
+    else e.value = val;
+    e.dispatchEvent(new Event('change'));
+  }
+  document.getElementById(info.start)?.click();
+  document.querySelector('.dojo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 // Stop the sing-drill microphone and reset its button. Kept out of stopDojo()
 // on purpose — that runs on every drill playback, and singing is graded while
@@ -358,6 +394,12 @@ function buildQuizSong(meta, bars, key) {
 // =====================================================================
 function initDojo(opts = {}) {
   onStartCb = opts.onStart || null;
+
+  // ---- curriculum: the "today" workout + "path" syllabus tabs ----
+  initCurriculum({
+    runAssignment,
+    isActive: tab => panelActive(tab),
+  });
 
   // ---- song quiz ----
   const songQuiz = makeQuiz('song', 'session');
@@ -978,6 +1020,8 @@ function initDojo(opts = {}) {
       document.querySelectorAll('.dj-panel').forEach(p =>
         p.classList.toggle('active', p.id === `panel-${btn.dataset.tab}`));
       if (btn.dataset.tab === 'stats') renderStats();
+      if (btn.dataset.tab === 'today') currRenderToday();
+      if (btn.dataset.tab === 'path') currRenderPath();
     };
   }
 

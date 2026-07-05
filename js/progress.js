@@ -26,6 +26,11 @@ function load() {
 let store = load();
 function persist() { localStorage.setItem(KEY, JSON.stringify(store)); }
 
+// Subscribers fired after every record() — lets the curriculum count attempts
+// live (mark a workout step done, advance a mastery gate) instead of polling.
+const recordSubs = [];
+function onRecord(cb) { recordSubs.push(cb); }
+
 function item(id) {
   return store.items[id] || (store.items[id] =
     { seen: 0, correct: 0, streak: 0, ease: EASE_START, intervalMin: 0, due: 0 });
@@ -54,6 +59,7 @@ function record(cat, id, ok) {
   const d = store.daily[dayStr(t)] || (store.daily[dayStr(t)] = { total: 0, correct: 0 });
   d.total++; if (ok) d.correct++;
   persist();
+  for (const cb of recordSubs) { try { cb(cat, id, ok); } catch (e) { /* isolate */ } }
 }
 
 const accuracy = it => (it.seen ? it.correct / it.seen : null);
@@ -87,6 +93,47 @@ function idOf(cat, raw) { return typeof raw === 'string' ? `${cat}:${raw}` : idF
 function dueCount() {
   const t = nowMs();
   return Object.values(store.items).filter(it => it.seen && it.due <= t).length;
+}
+
+// The specific items due for review right now (weakest first) — the curriculum's
+// review step pulls from these instead of just counting them.
+function dueItems() {
+  const t = nowMs();
+  return Object.entries(store.items)
+    .filter(([, it]) => it.seen && it.due <= t)
+    .map(([id, it]) => ({ id, cat: it.cat || id.split(':')[0], pct: Math.round(100 * accuracy(it)) }))
+    .sort((a, b) => a.pct - b.pct);
+}
+
+// Aggregate accuracy over an explicit set of item ids (as passed to record() —
+// bare ids like 'M3', 'ii7', 'deg:5'), optionally filtered to a cat. Mastery
+// gates read this to decide whether a unit's goal items are learned.
+function catItemStats(cat, ids) {
+  let seen = 0, correct = 0;
+  const perItem = {};
+  for (const id of ids) {
+    const it = store.items[id];
+    if (it && it.seen && (!cat || it.cat === cat)) {
+      seen += it.seen; correct += it.correct;
+      perItem[id] = { seen: it.seen, pct: Math.round(100 * accuracy(it)) };
+    } else {
+      perItem[id] = { seen: 0, pct: null };
+    }
+  }
+  return { seen, correct, pct: seen ? Math.round(100 * correct / seen) : 0, perItem };
+}
+
+// Consecutive-day practice streak, counting back from today. A fresh day with
+// nothing logged yet doesn't break yesterday's streak — it just hasn't extended.
+function streak() {
+  let s = 0;
+  for (let i = 0; ; i++) {
+    const d = store.daily[dayStr(nowMs() - i * DAY)];
+    if (d && d.total > 0) s++;
+    else if (i === 0) continue; // today not practiced yet — keep the run alive
+    else break;
+  }
+  return s;
 }
 
 // aggregate stats for the panel
@@ -126,4 +173,4 @@ function reset() {
   persist();
 }
 
-export { record, pickWeighted, setIdFn, dueCount, stats, reset };
+export { record, pickWeighted, setIdFn, dueCount, dueItems, catItemStats, streak, onRecord, stats, reset };

@@ -191,7 +191,9 @@
     <div class="section-head">
       <h2>dojo</h2>
       <nav id="dojo-tabs">
-        <button data-tab="songs" class="active">song quiz</button>
+        <button data-tab="today" class="active">today</button>
+        <button data-tab="path">path</button>
+        <button data-tab="songs">song quiz</button>
         <button data-tab="paste">paste a tab</button>
         <button data-tab="bass">basslines</button>
         <button data-tab="degrees">degrees</button>
@@ -205,7 +207,24 @@
       </nav>
     </div>
 
-    <section id="panel-songs" class="dj-panel active">
+    <section id="panel-today" class="dj-panel active">
+      <p class="blurb">Your daily workout, assembled from where you are in the
+        <b>path</b>. Four steps: warm up on something you know, drill today's
+        focus unit, review what's due, then apply it on a real tune. Each step
+        launches the right drill preconfigured — do the reps and it ticks itself
+        off. Come back tomorrow to keep the streak.</p>
+      <div id="curr-today" class="curr-today"></div>
+    </section>
+
+    <section id="panel-path" class="dj-panel">
+      <p class="blurb">The syllabus, in order. A unit completes when its goal
+        items hit their accuracy target over enough tries — that unlocks the
+        units that depend on it. Locked units show what to clear first. Nothing
+        here is a wall: you can always practise an open unit early.</p>
+      <div id="curr-path" class="curr-path"></div>
+    </section>
+
+    <section id="panel-songs" class="dj-panel">
       <p class="blurb">A famous progression plays on the synth (from the
         groundtruth collection). Fill in the roman numerals from the chips.
         The title stays hidden until you check.</p>
