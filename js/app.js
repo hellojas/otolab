@@ -1066,6 +1066,7 @@ function init() {
     },
     stopStandards,
     enterDojo: () => setMode('dojo'),
+    enterLab: () => setMode('lab'),
   });
   initMode();
   player.onError(showVideoError);

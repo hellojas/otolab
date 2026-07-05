@@ -203,9 +203,9 @@ function buildWorkout() {
   });
 
   steps.push({
-    key: 'apply', label: 'Apply it', title: 'Changes — a real progression', cat: null,
-    drill: 'changes', config: {}, manual: true,
-    note: 'name a real progression by ear, then check',
+    key: 'apply', label: 'Apply it', title: 'Transcribe a real tune', cat: null,
+    drill: 'lab', config: {}, manual: true,
+    note: 'log the changes of a song by ear in the lab and grade — or a standards quiz. Any graded transcription ticks this off.',
   });
 
   return { cur, steps };
@@ -287,10 +287,9 @@ function renderStep(step) {
   row.appendChild(body);
 
   const btn = el('button', 'curr-start primary', stepDone(step) ? 'again' : 'start');
-  btn.onclick = () => {
-    deps.runAssignment(step.drill, step.config);
-    if (step.manual) { manualDone[step.key] = true; renderToday(); }
-  };
+  // just launch — a drilled step ticks from its reps, the applied step from a
+  // real graded transcription (or the "did it" override below).
+  btn.onclick = () => deps.runAssignment(step.drill, step.config);
   row.appendChild(btn);
 
   if (step.manual) {
@@ -359,6 +358,9 @@ function initCurriculum(d) {
   // count live attempts into the daily tally, then refresh whatever's visible
   onRecord((cat, id, ok) => {
     bumpDaily(cat, ok);
+    // real transcription anywhere (lab quiz/grade, standards quiz) closes the
+    // daily "apply it" step — the bridge from drilling to using the skill.
+    if (cat === 'transcribe') manualDone.apply = true;
     const advanced = reconcile();
     if (deps.isActive('today')) renderToday();
     if (advanced && deps.isActive('path')) renderPath();

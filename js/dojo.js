@@ -60,6 +60,7 @@ const DRILL_TABS = {
 };
 
 function runAssignment(drill, config = {}) {
+  if (drill === 'lab') { enterLabCb?.(); return; } // the applied step sends you to the lab
   const info = DRILL_TABS[drill];
   if (!info) return;
   enterDojoCb?.(); // a curriculum step can launch from the Home surface — switch rooms first
@@ -86,6 +87,7 @@ function stopDojoMic() {
 }
 
 let enterDojoCb = null; // set by initDojo — lets runAssignment switch into dojo mode
+let enterLabCb = null;  // set by initDojo — the applied step launches the lab
 
 let onStartCb = null;
 
@@ -526,6 +528,7 @@ function buildQuizSong(meta, bars, key) {
 function initDojo(opts = {}) {
   onStartCb = opts.onStart || null;
   enterDojoCb = opts.enterDojo || null;
+  enterLabCb = opts.enterLab || null;
 
   // ---- curriculum: the "today" workout (on Home) + "path" syllabus tab ----
   initCurriculum({
