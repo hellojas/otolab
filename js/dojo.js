@@ -4,7 +4,7 @@
 // theory + audio engines so the synth voices and richer chord vocabulary
 // apply here too. Chips in, no keyboard required — works on a phone.
 
-import { pcName, useFlats, midiName, chordVoicing, paletteForKey, romanFor, guessKey } from './theory.js';
+import { pcName, useFlats, midiName, chordVoicing, paletteForKey, romanFor, guessKey, guideTones, qualityIntervals } from './theory.js';
 import { playChord, playNoteAt, playChordAt, allNotesOff, ensureCtx, clickAt, audioNow } from './audio.js';
 import { startMic, stopMic, isMicOn } from './pitch.js';
 import { onHeldChange } from './input.js';
@@ -880,9 +880,41 @@ function initDojo(opts = {}) {
 
   // ---- sing-back drill (mic; audiation) ----
   const singScore = makeScore('sing-score');
-  const singState = { mode: 'match', key: null, targetPc: null, targetMidi: null,
-                      item: 'match', answered: true, holdRun: 0 };
+  const singState = { mode: 'match', key: null, chord: null, targetPc: null, targetMidi: null,
+                      item: 'match', answered: true, holdRun: 0,
+                      sequence: null, seqIdx: 0 };
   const noteNameOf = midi => midiName(midi, false);
+
+  // chord-tone interval (semitones above root) for the root/3rd/5th/7th
+  function chordToneInterval(quality, tone) {
+    const ivs = qualityIntervals(quality);
+    if (tone === 'R') return 0;
+    if (tone === '3') return ivs.find(i => i === 3 || i === 4 || i === 5 || i === 2) ?? 4;
+    if (tone === '5') return ivs.find(i => i === 7 || i === 6 || i === 8) ?? 7;
+    if (tone === '7') return ivs.find(i => i === 10 || i === 11 || i === 9) ?? 10;
+    return 0;
+  }
+  const toneName = t => t === 'R' ? 'root' : t === '3' ? '3rd' : t === '5' ? '5th' : '7th';
+
+  // the guide-tone line over a ii–V–i in a key: one 3rd-or-7th per chord, each
+  // chosen nearest the previous so the line is smooth and singable.
+  function guideToneLine(key) {
+    const chords = key.mode === 'minor'
+      ? [{ root: (key.tonic + 2) % 12, q: 'm7b5' }, { root: (key.tonic + 7) % 12, q: '7' }, { root: key.tonic, q: 'm7' }]
+      : [{ root: (key.tonic + 2) % 12, q: 'm7' }, { root: (key.tonic + 7) % 12, q: '7' }, { root: key.tonic, q: 'maj7' }];
+    let prev = 64; const targets = [];
+    for (const c of chords) {
+      let best = null;
+      for (const gt of guideTones(c.root, c.q)) {
+        let m = prev + ((((gt.pc - prev) % 12) + 12) % 12);
+        if (m - prev > 6) m -= 12;
+        if (best == null || Math.abs(m - prev) < Math.abs(best - prev)) best = m;
+      }
+      if (best == null) best = prev;
+      targets.push(best); prev = best;
+    }
+    return { chords, targets };
+  }
 
   function singNeedle(cents, inTune) {
     const n = $('sing-needle');
@@ -913,7 +945,22 @@ function initDojo(opts = {}) {
     $('sing-result').textContent = ok ? `✓ locked ${noteNameOf(singState.targetMidi)}`
                                       : `✗ target was ${noteNameOf(singState.targetMidi)}`;
     singNeedle(0, ok);
+    // guide-tone line: on a hit, step to the next note in the line instead of
+    // ending the question; only a completed line advances to a new one.
+    if (ok && singState.sequence && singState.seqIdx < singState.sequence.length - 1) {
+      setTimeout(() => { if (panelActive('sing')) singAdvanceSeq(); }, 900);
+      return;
+    }
     if (ok) setTimeout(() => { if (panelActive('sing')) $('sing-new').click(); }, 1400);
+  }
+
+  function singAdvanceSeq() {
+    singState.seqIdx++;
+    singState.targetMidi = singState.sequence[singState.seqIdx];
+    singState.targetPc = singState.targetMidi % 12;
+    singState.answered = false; singState.holdRun = 0;
+    singNeedle(0, false);
+    $('sing-meta').textContent = `guide-tone line — sing note ${singState.seqIdx + 1}/${singState.sequence.length}`;
   }
 
   $('sing-mic').onclick = async () => {
@@ -933,6 +980,7 @@ function initDojo(opts = {}) {
     }
     const mode = $('sing-mode').value;
     singState.mode = mode; singState.answered = false; singState.holdRun = 0;
+    singState.sequence = null; singState.seqIdx = 0;
     singNeedle(0, false);
     $('sing-result').textContent = '';
     if (mode === 'match') {
@@ -940,7 +988,33 @@ function initDojo(opts = {}) {
       singState.targetMidi = midi; singState.targetPc = midi % 12; singState.item = 'match';
       $('sing-meta').textContent = 'sing the note you hear';
       playSequence([{ notes: [midi], beats: 2 }], 90);
-    } else {
+    } else if (mode === 'chordtone') {
+      const q = pick(['maj7', 'm7', '7', 'm7b5']);
+      const root = rand(12);
+      const tone = pick(['R', '3', '5', '7']);
+      singState.chord = { root, quality: q };
+      const targetPc = (root + chordToneInterval(q, tone)) % 12;
+      singState.targetPc = targetPc;
+      singState.targetMidi = 55 + (((targetPc - 55) % 12) + 12) % 12; // a reference in singing range
+      singState.item = 'ct:' + tone;
+      const flats = useFlats(root, 'major');
+      $('sing-meta').textContent = `hear the chord, then sing its ${toneName(tone)} (${pcName(root, flats)}${q})`;
+      playSequence([{ notes: compNotes(root, q), bass: nearestBass(root, null), beats: 3 }], 84);
+    } else if (mode === 'guidetone') {
+      const key = { tonic: rand(12), mode: $('sing-keymode').value };
+      singState.key = key;
+      const { chords, targets } = guideToneLine(key);
+      singState.sequence = targets; singState.seqIdx = 0;
+      singState.targetMidi = targets[0]; singState.targetPc = targets[0] % 12;
+      singState.item = 'gt';
+      $('sing-meta').textContent = `hear the ii–V–i, then sing the guide-tone line — note 1/${targets.length}`;
+      let prev = null;
+      const evs = chords.map((c, i) => {
+        prev = nearestBass(c.root, prev);
+        return { notes: compNotes(c.root, c.q), bass: prev, beats: i === chords.length - 1 ? 2 : 1.5 };
+      });
+      playSequence(evs, 96);
+    } else { // degree
       const key = { tonic: rand(12), mode: $('sing-keymode').value };
       singState.key = key;
       const degs = (key.mode === 'minor' ? MDEG_MINOR : MDEG_MAJOR).map(d => 'deg:' + d);
@@ -956,8 +1030,20 @@ function initDojo(opts = {}) {
   };
 
   $('sing-replay').onclick = () => {
-    if (singState.mode === 'match' && singState.targetMidi != null) {
+    const m = singState.mode;
+    if (m === 'match' && singState.targetMidi != null) {
       playSequence([{ notes: [singState.targetMidi], beats: 2 }], 90);
+    } else if (m === 'chordtone' && singState.chord) {
+      playSequence([{ notes: compNotes(singState.chord.root, singState.chord.quality),
+                     bass: nearestBass(singState.chord.root, null), beats: 3 }], 84);
+    } else if (m === 'guidetone' && singState.key) {
+      const { chords } = guideToneLine(singState.key);
+      let prev = null;
+      const evs = chords.map((c, i) => {
+        prev = nearestBass(c.root, prev);
+        return { notes: compNotes(c.root, c.q), bass: prev, beats: i === chords.length - 1 ? 2 : 1.5 };
+      });
+      playSequence(evs, 96);
     } else if (singState.key) {
       playSequence([...cadenceEvents(singState.key), { beats: 0.8 }, { notes: [60 + singState.key.tonic], beats: 1.5 }], 100);
     }

@@ -25,6 +25,9 @@ let curNote = null;    // last single note seen on keyboard/MIDI (sticky)
 let micMidi = null, micRun = 0, micCents = 0;
 let alongOn = false, lastAlongIdx = -1;
 let playTimer = null;
+let singOverOn = false;                                  // sing-over-the-record coach
+let singTally = { chord: 0, tension: 0, approach: 0 };   // role counts while singing along
+let singScored = null;                                   // last pc scored (debounce sustained notes)
 
 const notes = () => deps.getNotes();
 const flats = () => useFlats(deps.getKey().tonic, deps.getKey().mode);
@@ -210,28 +213,90 @@ player.onTick(t => {
     el.classList.toggle('now', i === cur));
 });
 
-// ---------- mic: hum to note ----------
+// ---------- mic: hum to note · sing over the record ----------
+// One monophonic mic, shared by two features: "hum to note" (name/log the pitch
+// you hum) and "sing over" (score each sung note against the chord under the
+// playhead as the record plays). The mic runs while either is active.
+
+let humOn = false;
+
+function refreshMicButtons() {
+  $('#solo-mic').classList.toggle('on', humOn);
+  $('#solo-sing').classList.toggle('on', singOverOn);
+  $('#solo-sing').textContent = '🎙 sing over: ' + (singOverOn ? 'on' : 'off');
+}
+
+function onMicPitch(p) {
+  if (!p) { micRun = 0; return; }
+  if (p.midi === micMidi) micRun++;
+  else { micMidi = p.midi; micRun = 1; singScored = null; }
+  micCents = p.cents;
+  if (micRun >= 3) {
+    curNote = p.midi;
+    paintReadout(p.midi, p.cents);
+    if (singOverOn) tallySung(p.midi);
+  }
+}
+
+// count each sustained sung pitch once, classified against the chord at the
+// playhead — builds the running chord-tone / tension / approach breakdown
+function tallySung(midi) {
+  if (!player.isReady || !player.playing()) return;
+  const chord = chordAt(player.time());
+  if (!chord) return;
+  const pc = ((midi % 12) + 12) % 12;
+  if (pc === singScored) return;
+  singScored = pc;
+  const nv = noteVsChord(pc, chord);
+  singTally[nv.role] = (singTally[nv.role] || 0) + 1;
+  renderSingTally();
+}
+
+function renderSingTally() {
+  const el = $('#solo-sing-tally');
+  if (!el) return;
+  if (!singOverOn) { el.textContent = ''; return; }
+  const total = singTally.chord + singTally.tension + singTally.approach;
+  if (!total) {
+    el.textContent = '🎙 play the record and sing — each note is scored against the chord under the playhead (log the changes first).';
+    return;
+  }
+  const pct = k => Math.round(100 * singTally[k] / total);
+  el.innerHTML = `sung ${total} note${total > 1 ? 's' : ''} over the changes · `
+    + `<span class="tag-diatonic">${pct('chord')}% chord tones</span> · `
+    + `<span class="tag-secondary">${pct('tension')}% tensions</span> · `
+    + `<span class="tag-outside">${pct('approach')}% approach</span>`;
+}
+
+function onMicStop() {
+  humOn = false; singOverOn = false; micMidi = null; micRun = 0;
+  refreshMicButtons(); renderSingTally();
+}
+async function ensureMic() {
+  if (isMicOn()) return true;
+  try { await startMic(onMicPitch, onMicStop); return true; }
+  catch (e) { $('#solo-detected').textContent = 'mic blocked — allow microphone access to sing'; return false; }
+}
+function maybeStopMic() { if (!humOn && !singOverOn && isMicOn()) stopMic(); }
 
 function stopSoloMic() {
   if (isMicOn()) stopMic();
-  micMidi = null; micRun = 0;
-  $('#solo-mic').classList.remove('on');
+  micMidi = null; micRun = 0; humOn = false; singOverOn = false;
+  refreshMicButtons(); renderSingTally();
 }
 
 async function toggleMic() {
-  if (isMicOn()) { stopSoloMic(); paintReadout(curNote); return; }
-  try {
-    await startMic(p => {
-      if (!p) { micRun = 0; return; }
-      if (p.midi === micMidi) micRun++;
-      else { micMidi = p.midi; micRun = 1; }
-      micCents = p.cents;
-      if (micRun >= 3) { curNote = p.midi; paintReadout(p.midi, p.cents); }
-    }, () => { $('#solo-mic').classList.remove('on'); });
-    $('#solo-mic').classList.add('on');
-  } catch (e) {
-    $('#solo-detected').textContent = 'mic blocked — allow microphone access to hum notes';
-  }
+  if (humOn) { humOn = false; refreshMicButtons(); maybeStopMic(); paintReadout(curNote); return; }
+  if (!(await ensureMic())) return;
+  humOn = true; refreshMicButtons();
+}
+
+async function toggleSingOver() {
+  if (singOverOn) { singOverOn = false; refreshMicButtons(); renderSingTally(); maybeStopMic(); return; }
+  if (!(await ensureMic())) return;
+  singOverOn = true;
+  singTally = { chord: 0, tension: 0, approach: 0 }; singScored = null;
+  refreshMicButtons(); renderSingTally();
 }
 
 // ---------- wiring ----------
@@ -240,6 +305,7 @@ function initSolo(d) {
   deps = d;
   $('#solo-log').addEventListener('click', logNote);
   $('#solo-mic').addEventListener('click', toggleMic);
+  $('#solo-sing').addEventListener('click', toggleSingOver);
   $('#solo-play').addEventListener('click', playLine);
   $('#solo-clear').addEventListener('click', () => {
     if (notes().length && confirm('Delete every logged note in the solo line?')) {

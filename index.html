@@ -144,6 +144,7 @@
       <h2>solo</h2>
       <button id="solo-log" title="log the note you're playing/humming at the current video time (n)">+ note @ playhead</button>
       <button id="solo-mic" title="hum or sing the line — the mic names the pitch so you can log it without an instrument">🎤 hum to note</button>
+      <button id="solo-sing" title="sing along with the record — each sung note is scored against the chord under the playhead (chord tone / tension / approach)">🎙 sing over: off</button>
       <button id="solo-play" title="play the transcribed line back through the synth">▶ line</button>
       <button id="solo-along" title="sound each logged note as the video reaches it — check the line against the record">along: off</button>
       <button id="solo-clear" title="delete every logged note">clear</button>
@@ -158,6 +159,7 @@
       the line has harmony to sit on.</p>
     <div id="solo-roll" class="solo-roll"></div>
     <div id="solo-summary" class="solo-summary"></div>
+    <div id="solo-sing-tally" class="solo-sing-tally"></div>
   </section>
 
   <section class="lyrics-section">
@@ -427,6 +429,8 @@
         <select id="sing-mode">
           <option value="match">match a note</option>
           <option value="degree">sing a degree</option>
+          <option value="chordtone">sing a chord tone</option>
+          <option value="guidetone">sing a guide-tone line</option>
         </select>
         <select id="sing-keymode">
           <option value="major">major</option>

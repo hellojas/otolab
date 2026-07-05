@@ -532,7 +532,8 @@ kbd {
 .solo-note.role-approach{ border-color: var(--outside); color: var(--outside); }
 .solo-note.playing, .solo-note.now { box-shadow: 0 0 0 2px var(--accent); z-index: 2; }
 .solo-summary { margin-top: 8px; font-size: 13px; color: var(--text); }
-#solo-mic.on, #solo-along.on, #solo-play.on {
+.solo-sing-tally { margin-top: 6px; font-size: 13px; color: var(--muted); min-height: 1em; }
+#solo-mic.on, #solo-along.on, #solo-play.on, #solo-sing.on {
   background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
 }
 
