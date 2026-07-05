@@ -1419,6 +1419,130 @@ function initDojo(opts = {}) {
   };
   $('form-replay').onclick = formPlay;
 
+  // ---- modal / scale-color recognition drill ----
+  const MODES = [
+    { id: 'ionian',     label: 'ionian',     scale: [0, 2, 4, 5, 7, 9, 11] },
+    { id: 'dorian',     label: 'dorian',     scale: [0, 2, 3, 5, 7, 9, 10] },
+    { id: 'phrygian',   label: 'phrygian',   scale: [0, 1, 3, 5, 7, 8, 10] },
+    { id: 'lydian',     label: 'lydian',     scale: [0, 2, 4, 6, 7, 9, 11] },
+    { id: 'mixolydian', label: 'mixolydian', scale: [0, 2, 4, 5, 7, 9, 10] },
+    { id: 'aeolian',    label: 'aeolian',    scale: [0, 2, 3, 5, 7, 8, 10] },
+    { id: 'locrian',    label: 'locrian',    scale: [0, 1, 3, 5, 6, 8, 10] },
+  ];
+  const MODE_SETS = {
+    jazz: ['dorian', 'mixolydian', 'lydian'],
+    dark: ['dorian', 'phrygian', 'aeolian', 'locrian'],
+    all: MODES.map(m => m.id),
+  };
+  const modeById = id => MODES.find(m => m.id === id);
+  const modalScore = makeScore('modal-score');
+  const modalState = { mode: null, tonic: 0, answered: true };
+
+  // the tonic chord that carries a mode's colour (quality from its 3rd/5th/7th)
+  function modeTonicQuality(scale) {
+    const third = scale.includes(4) ? 4 : 3;
+    const fifth = scale.includes(7) ? 7 : 6;
+    const seventh = scale.includes(11) ? 11 : 10;
+    if (third === 4) return fifth === 7 ? (seventh === 11 ? 'maj7' : '7') : 'aug';
+    return fifth === 6 ? 'm7b5' : 'm7';
+  }
+
+  function modalPlay() {
+    const m = modalState.mode;
+    if (!m) return;
+    const base = 60 + modalState.tonic;
+    const q = modeTonicQuality(m.scale);
+    const vamp = { notes: compNotes(modalState.tonic, q), bass: nearestBass(modalState.tonic, null), beats: 2 };
+    const scaleUp = m.scale.map(iv => ({ notes: [base + iv], beats: 0.5 }));
+    scaleUp.push({ notes: [base + 12], beats: 1 });
+    playSequence([vamp, { beats: 0.4 }, ...scaleUp, { beats: 0.3 }, vamp], 120);
+  }
+
+  function modalIds() { return MODE_SETS[$('modal-set').value] || MODE_SETS.all; }
+
+  $('modal-new').onclick = () => {
+    const ids = modalIds();
+    const wid = pickWeighted('modal', ids);
+    modalState.mode = modeById(wid) || modeById(pick(ids));
+    modalState.tonic = rand(12);
+    modalState.answered = false;
+    $('modal-meta').textContent = 'a tonic vamp, then the scale up — which mode?';
+    $('modal-result').textContent = '';
+    const box = $('modal-answers');
+    box.innerHTML = '';
+    for (const id of ids) {
+      const m = modeById(id);
+      const chip = el('button', 'chip', m.label);
+      chip.onclick = () => {
+        if (modalState.answered) return;
+        modalState.answered = true;
+        const ok = id === modalState.mode.id;
+        modalScore.add(ok ? 1 : 0);
+        record('modal', modalState.mode.id, ok);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('modal-result').textContent = ok ? `✓ ${modalState.mode.label}` : `✗ that was ${modalState.mode.label}`;
+        setTimeout(() => { if (panelActive('modal')) $('modal-new').click(); }, 1500);
+      };
+      box.appendChild(chip);
+    }
+    modalPlay();
+  };
+  $('modal-replay').onclick = modalPlay;
+  $('modal-set').onchange = () => $('modal-new').click();
+
+  // ---- tension-over-chord ID drill ----
+  const TENSIONS_BY_FAM = { major: [2, 6, 9], dom: [1, 2, 3, 6, 8, 9], minor: [2, 5, 9] };
+  const TENSION_LBL = { 1: 'b9', 2: '9', 3: '#9', 5: '11', 6: '#11', 8: 'b13', 9: '13' };
+  const TENSION_CHIPS = ['b9', '9', '#9', '11', '#11', 'b13', '13'];
+  const tensScore = makeScore('tens-score');
+  const tensState = { root: 0, quality: 'maj7', iv: 2, answered: true };
+
+  function tensPlay() {
+    const { root, quality, iv } = tensState;
+    const chord = compNotes(root, quality);
+    const bass = nearestBass(root, null);
+    let tn = 72 + root + iv;
+    while (tn > 86) tn -= 12;
+    while (tn < 74) tn += 12;
+    playSequence([
+      { notes: chord, bass, beats: 1.5 },
+      { beats: 0.3 },
+      { notes: [tn], beats: 1.2 },
+      { beats: 0.2 },
+      { notes: [...chord, tn], beats: 2.2 },
+    ], 92);
+  }
+
+  $('tens-new').onclick = () => {
+    const q = pick(['maj7', '7', 'm7']);
+    const fam = q === 'maj7' ? 'major' : q === '7' ? 'dom' : 'minor';
+    tensState.quality = q;
+    tensState.root = rand(12);
+    tensState.iv = pick(TENSIONS_BY_FAM[fam]);
+    tensState.answered = false;
+    const flats = useFlats(tensState.root, 'major');
+    $('tens-meta').textContent = `${pcName(tensState.root, flats)}${q} + a tension on top — name it`;
+    $('tens-result').textContent = '';
+    const box = $('tens-answers');
+    box.innerHTML = '';
+    for (const lbl of TENSION_CHIPS) {
+      const chip = el('button', 'chip', lbl);
+      chip.onclick = () => {
+        if (tensState.answered) return;
+        tensState.answered = true;
+        const ok = lbl === TENSION_LBL[tensState.iv];
+        tensScore.add(ok ? 1 : 0);
+        record('tension', TENSION_LBL[tensState.iv], ok);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('tens-result').textContent = ok ? `✓ ${lbl}` : `✗ that was ${TENSION_LBL[tensState.iv]}`;
+        setTimeout(() => { if (panelActive('tension')) $('tens-new').click(); }, 1500);
+      };
+      box.appendChild(chip);
+    }
+    tensPlay();
+  };
+  $('tens-replay').onclick = tensPlay;
+
   // ---- progress / stats panel ----
   function renderStats() {
     const s = progressStats();

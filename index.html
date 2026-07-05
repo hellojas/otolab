@@ -206,6 +206,8 @@
         <button data-tab="echo">echo</button>
         <button data-tab="cadence">cadences</button>
         <button data-tab="form">form</button>
+        <button data-tab="modal">modes</button>
+        <button data-tab="tension">tensions</button>
         <button data-tab="rhythm">rhythm</button>
         <button data-tab="licks">licks</button>
         <button data-tab="stats">progress</button>
@@ -518,6 +520,45 @@
       <div class="dj-row">
         <span id="form-result" class="dj-result"></span>
         <span id="form-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-modal" class="dj-panel">
+      <p class="blurb">Scale color — the sound of a mode, not a key. A tonic vamp
+        anchors home, then the scale runs up. Listen for the characteristic
+        note: lydian's raised 4th, phrygian's flat 2nd, mixolydian's flat 7th.
+        Name the mode.</p>
+      <div class="dj-row">
+        <select id="modal-set">
+          <option value="jazz">jazz 3 — dorian · mixo · lydian</option>
+          <option value="dark">dark 4 — dorian · phrygian · aeolian · locrian</option>
+          <option value="all">all seven</option>
+        </select>
+        <button id="modal-new" class="primary">new mode</button>
+        <button id="modal-replay">▶ replay</button>
+        <span id="modal-meta" class="dj-meta"></span>
+      </div>
+      <div id="modal-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="modal-result" class="dj-result"></span>
+        <span id="modal-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-tension" class="dj-panel">
+      <p class="blurb">The colors on top of a chord. A seventh chord sounds, then
+        a single extension above it, then both together — name the tension:
+        <b>9 · ♭9 · ♯9 · 11 · ♯11 · ♭13 · 13</b>. Which extensions are available
+        depends on the chord, so the quality is a clue.</p>
+      <div class="dj-row">
+        <button id="tens-new" class="primary">new tension</button>
+        <button id="tens-replay">▶ replay</button>
+        <span id="tens-meta" class="dj-meta"></span>
+      </div>
+      <div id="tens-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="tens-result" class="dj-result"></span>
+        <span id="tens-score" class="dj-score"></span>
       </div>
     </section>
 
