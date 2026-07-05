@@ -224,6 +224,12 @@ body[data-mode="lab"] .dojo-section { display: none; }
 .set-row select { font-size: 13px; padding: 4px 8px; }
 #synth-vol { width: 110px; accent-color: var(--accent); }
 .set-preview { font-size: 13px; align-self: flex-end; }
+.set-sep { width: 100%; border: none; border-top: 1px solid var(--border); margin: 2px 0; }
+.set-col { flex-direction: column; align-items: stretch; gap: 4px; }
+.set-btns { justify-content: flex-start; gap: 8px; }
+.set-btns .import-label { display: inline-flex; align-items: center; cursor: pointer; }
+.sync-status { color: var(--muted); font-size: 12px; align-self: flex-start; }
+.sync-status.on { color: var(--good); }
 
 button, select, input[type="text"] {
   background: var(--panel2);

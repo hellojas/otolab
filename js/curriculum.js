@@ -8,7 +8,7 @@
 // dojo's runAssignment(drill, config) helper: set a drill's selects, start it.
 
 import {
-  catItemStats, dueItems, streak, onRecord, stats as progressStats,
+  catItemStats, dueItems, streak, onRecord, onExternalChange, stats as progressStats,
 } from './progress.js';
 
 const KEY = 'otolab:v1:curriculum';
@@ -386,6 +386,14 @@ function initCurriculum(d) {
     const advanced = reconcile();
     if (deps.isActive('today')) renderToday();
     if (advanced && deps.isActive('path')) renderPath();
+  });
+
+  // a bulk change to the store (a cloud sync pulled in, an import, a reset) can
+  // complete units and move the streak — re-derive mastery and repaint.
+  onExternalChange(() => {
+    reconcile();
+    if (deps.isActive('today')) renderToday();
+    if (deps.isActive('path')) renderPath();
   });
 
   reconcile();

@@ -51,6 +51,15 @@
           </select>
         </label>
         <button id="voice-preview" class="set-preview" title="hear the current voice on a Cmaj7">♪ preview</button>
+        <hr class="set-sep">
+        <div class="set-row set-col">
+          <span>progress &amp; backup</span>
+          <span id="sync-status" class="sync-status" title="cloud sync state">local only</span>
+        </div>
+        <div class="set-row set-btns">
+          <button id="backup-btn" class="set-preview" title="download everything — SRS history, streak, curriculum, licks, saved tunes">⬇ back up all</button>
+          <label class="import-label set-preview" title="restore from a backup file (merges into what's here)">⬆ restore<input id="restore-input" type="file" accept=".json" hidden></label>
+        </div>
       </div>
     </div>
   </header>

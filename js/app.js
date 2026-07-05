@@ -15,8 +15,9 @@ import { startListen, stopListen, isListening } from './listen.js';
 import { initStandards, stopStandards } from './standards.js';
 import { initDojo, stopDojo, stopDojoMic } from './dojo.js';
 import { initSolo, soloLog, refreshSolo, stopSolo, stopSoloMic } from './solo.js';
-import { record } from './progress.js';
+import { record, importData as hydrateProgress } from './progress.js';
 import { renderToday } from './curriculum.js';
+import { initSync, getStatus as syncStatus } from './sync.js';
 import player from './player.js';
 
 const $ = sel => document.querySelector(sel);
@@ -1064,6 +1065,71 @@ function initImportExport() {
   });
 }
 
+// ---------- full-state backup / restore + cloud sync ----------
+// The per-video export above only carries one lab session. This backs up the
+// whole install — every otolab:v1:* key: SRS history, streak, curriculum
+// completion, licks and all saved tunes — so a "curriculum" survives a cleared
+// browser or a move to a new machine even without cloud sync configured.
+
+const BACKUP_PREFIX = 'otolab:v1:';
+const PROGRESS_KEY = 'otolab:v1:progress';
+
+function collectBackup() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(BACKUP_PREFIX)) data[k] = localStorage.getItem(k);
+  }
+  return { kind: 'otolab-backup', v: 1, when: new Date().toISOString(), data };
+}
+
+function restoreBackup(obj) {
+  if (!obj || obj.kind !== 'otolab-backup' || !obj.data) throw new Error('not an otolab backup');
+  for (const [k, raw] of Object.entries(obj.data)) {
+    if (k === PROGRESS_KEY) {
+      // merge SRS history rather than clobber — unions attempts across devices
+      try { hydrateProgress(JSON.parse(raw)); } catch (e) { /* skip */ }
+    } else if (localStorage.getItem(k) == null) {
+      localStorage.setItem(k, raw); // additive: never overwrite newer local state
+    }
+  }
+}
+
+function initBackupSync() {
+  const statusEl = $('#sync-status');
+
+  $('#backup-btn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(collectBackup(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `otolab-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+  });
+
+  $('#restore-input').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      restoreBackup(JSON.parse(await file.text()));
+      statusEl.textContent = 'restored — reloading…';
+      setTimeout(() => location.reload(), 400);
+    } catch (err) {
+      statusEl.textContent = `restore failed: ${err.message}`;
+    }
+    e.target.value = '';
+  });
+
+  // cloud sync is a no-op until window.OTOLAB_FIREBASE is provided (see sync.js)
+  const label = { off: 'local only', connecting: 'syncing…', synced: 'synced ✓', error: 'sync error' };
+  initSync({
+    onStatus: (s, detail) => {
+      statusEl.textContent = label[s] || s;
+      statusEl.title = detail || (s === 'off' ? 'add a Firebase config to sync across devices' : 'cloud sync');
+      statusEl.classList.toggle('on', s === 'synced');
+    },
+  });
+}
+
 function init() {
   initTheme();
   initSettings();
@@ -1074,6 +1140,7 @@ function init() {
   initKeyControls();
   initShortcuts();
   initImportExport();
+  initBackupSync();
   initLyrics();
   initCheck();
   initGrid();

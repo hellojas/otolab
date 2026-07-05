@@ -294,6 +294,7 @@ function importData(d) {
 function reset() {
   store = blank();
   persist();
+  notifyChange();
 }
 
 export {
