@@ -11,8 +11,21 @@ function useFlats(tonicPc, mode) {
   return mode === 'minor' ? FLAT_MINOR_TONICS.has(tonicPc) : FLAT_MAJOR_TONICS.has(tonicPc);
 }
 
+// Note-naming systems. The internal spelling stays letter-based (C, F#, Bb) —
+// this only restyles what the learner sees, so grading and parsing are
+// untouched. 'german' swaps B↔H (H = B natural, B = B♭); 'solfege' is fixed-do
+// (Do Re Mi …), the naming much of continental Europe learns.
+const LETTER_TO_SOLFEGE = { C: 'Do', D: 'Re', E: 'Mi', F: 'Fa', G: 'Sol', A: 'La', B: 'Si' };
+let noteNaming = 'letters';
+function setNoteNaming(m) { noteNaming = (m === 'german' || m === 'solfege') ? m : 'letters'; }
+function styleName(name) {
+  if (noteNaming === 'german') return name === 'B' ? 'H' : name === 'Bb' ? 'B' : name;
+  if (noteNaming === 'solfege') return (LETTER_TO_SOLFEGE[name[0]] || name[0]) + name.slice(1);
+  return name;
+}
+
 function pcName(pc, flats) {
-  return (flats ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP)[((pc % 12) + 12) % 12];
+  return styleName((flats ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP)[((pc % 12) + 12) % 12]);
 }
 
 function midiName(midi, flats) {
@@ -393,7 +406,7 @@ function noteVsChord(notePc, chord) {
 }
 
 export {
-  NOTE_NAMES_SHARP, NOTE_NAMES_FLAT, useFlats, pcName, midiName,
+  NOTE_NAMES_SHARP, NOTE_NAMES_FLAT, useFlats, setNoteNaming, pcName, midiName,
   detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey, romanFor,
   qualityFamily, chordVoicing, qualityIntervals, guideTones, voiceLeading,
   scaleDegree, noteVsChord,

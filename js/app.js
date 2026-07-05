@@ -2,7 +2,7 @@
 
 import {
   pcName, useFlats, detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey,
-  chordVoicing, voiceLeading,
+  chordVoicing, voiceLeading, setNoteNaming,
 } from './theory.js';
 import { encodeShare, decodeShare, packState, unpackState } from './share.js';
 import {
@@ -322,6 +322,15 @@ function renderKeyDependent() {
   renderPalette();
   renderChords();
   renderScore();
+}
+
+// re-label everything after a note-naming change (letters ↔ solfège ↔ German)
+function refreshNoteNames() {
+  const sel = $('#key-tonic');
+  if (sel) [...sel.options].forEach((opt, pc) => {
+    opt.textContent = `${pcName(pc, false)}${[1, 3, 6, 8, 10].includes(pc) ? ' / ' + pcName(pc, true) : ''}`;
+  });
+  renderKeyDependent();
 }
 
 function renderChords() {
@@ -813,6 +822,16 @@ function initSettings() {
     setMasterVolume(Number(vol.value) / 100);
     localStorage.setItem('otolab:v1:synthvol', vol.value);
   });
+  const nnSel = $('#notename-select');
+  const savedNN = localStorage.getItem('otolab:v1:notenames');
+  if (savedNN) nnSel.value = savedNN;
+  setNoteNaming(nnSel.value); // apply before any labels are built
+  nnSel.addEventListener('change', () => {
+    setNoteNaming(nnSel.value);
+    localStorage.setItem('otolab:v1:notenames', nnSel.value);
+    refreshNoteNames();
+  });
+
   const chSel = $('#challenge-select');
   const savedCh = localStorage.getItem('otolab:v1:challenge');
   if (savedCh != null) chSel.value = savedCh;
