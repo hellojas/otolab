@@ -272,6 +272,32 @@ function getVoice() {
   return currentVoice;
 }
 
+// ---------- ear-challenge: timbre & register ladder ----------
+// The whole app trains on one clean voice in one register — real hearing has to
+// survive different instruments and extreme registers. When the challenge is on,
+// each musical "gesture" (a chord or a short progression — notes within ~1.2s)
+// gets a random voice, and at the top level a random ±octave shift. The shift is
+// answer-preserving (an octave keeps every pitch class, interval and function),
+// and one shift per gesture keeps a progression's bass line and voice leading
+// intact. Level 0 = off (uses the chosen voice), 1 = timbres, 2 = + register.
+const VOICE_IDS = Object.keys(VOICE_DEFS);
+let challenge = 0;
+let chVoice = null, chShift = 0, lastGestureT = -1e9;
+
+function setChallenge(level) { challenge = Math.max(0, Math.min(2, level | 0)); }
+function getChallenge() { return challenge; }
+
+function rollGesture(t) {
+  if (challenge === 0) { chVoice = null; chShift = 0; return; }
+  if (t - lastGestureT > 1.2) {
+    chVoice = VOICE_IDS[Math.floor(Math.random() * VOICE_IDS.length)];
+    chShift = challenge >= 2 ? (Math.floor(Math.random() * 3) - 1) * 12 : 0; // -12 / 0 / +12
+  }
+  lastGestureT = t;
+}
+const challengeVoice = () => (challenge > 0 && chVoice ? chVoice : currentVoice);
+const challengeFreq = midi => midiToFreq(midi + chShift);
+
 // ---------- note lifecycle ----------
 
 function noteOn(midi, velocity = 0.8) {
@@ -279,7 +305,8 @@ function noteOn(midi, velocity = 0.8) {
   noteOff(midi, true);
 
   const t = ctx.currentTime;
-  const v = VOICE_DEFS[currentVoice].build(midiToFreq(midi), velocity, t);
+  rollGesture(t);
+  const v = VOICE_DEFS[challengeVoice()].build(challengeFreq(midi), velocity, t);
 
   voices.set(midi, {
     stop(now = false) {
@@ -315,7 +342,8 @@ function allNotesOff() {
 function playNoteAt(midi, when, dur, velocity = 0.7) {
   ensureCtx();
   const t = Math.max(ctx.currentTime + 0.005, when);
-  const v = VOICE_DEFS[currentVoice].build(midiToFreq(midi), velocity, t);
+  rollGesture(when); // key on musical time so a chord/short progression shares a voice
+  const v = VOICE_DEFS[challengeVoice()].build(challengeFreq(midi), velocity, t);
   const end = t + Math.max(0.06, dur);
   v.gain.gain.setTargetAtTime(0.0001, end, Math.max(0.02, v.rel / 4));
   v.oscs.forEach(o => o.stop(end + v.rel + 0.4));
@@ -349,5 +377,5 @@ function audioNow() {
 export {
   noteOn, noteOff, playChord, allNotesOff, ensureCtx,
   playNoteAt, playChordAt, clickAt, audioNow,
-  VOICES, setVoice, getVoice, setMasterVolume,
+  VOICES, setVoice, getVoice, setChallenge, getChallenge, setMasterVolume,
 };

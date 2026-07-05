@@ -8,7 +8,7 @@ import { encodeShare, decodeShare, packState, unpackState } from './share.js';
 import {
   onHeldChange, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 } from './input.js';
-import { playChord, ensureCtx, VOICES, setVoice, getVoice, setMasterVolume } from './audio.js';
+import { playChord, ensureCtx, VOICES, setVoice, getVoice, setChallenge, setMasterVolume } from './audio.js';
 import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
@@ -813,6 +813,16 @@ function initSettings() {
     setMasterVolume(Number(vol.value) / 100);
     localStorage.setItem('otolab:v1:synthvol', vol.value);
   });
+  const chSel = $('#challenge-select');
+  const savedCh = localStorage.getItem('otolab:v1:challenge');
+  if (savedCh != null) chSel.value = savedCh;
+  setChallenge(Number(chSel.value));
+  chSel.addEventListener('change', () => {
+    setChallenge(Number(chSel.value));
+    localStorage.setItem('otolab:v1:challenge', chSel.value);
+    preview(); // hear the new difficulty immediately
+  });
+
   $('#voice-preview').addEventListener('click', preview);
 
   btn.addEventListener('click', () => {
