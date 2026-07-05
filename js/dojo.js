@@ -1131,7 +1131,12 @@ function initDojo(opts = {}) {
     easy:   [[0,1,2,3], [0,1,1.5,2,3], [0,0.5,1,2,3], [0,1,2,2.5,3], [0,0.5,1,1.5,2,3], [0,1,2,3,3.5]],
     medium: [[0,1.5,2,3], [0,0.5,1.5,2.5,3], [0,1,2.5,3], [0,0.5,2,2.5,3], [0,1.5,2.5,3], [0,0.5,1,2.5]],
     hard:   [[0,0.25,0.5,1,2,3], [0,0.667,1,2,3], [0,1,1.333,1.667,2,3], [0,0.5,0.75,1.5,2,2.5,3], [0,0.333,0.667,1,1.5,2,3]],
+    five:   [[0,1,2,3,4], [0,1,2,2.5,3,4], [0,1.5,2,3,4], [0,1,2,3,3.5,4], [0,2,3,4], [0,1,1.5,2,3,4]],
+    seven:  [[0,1,2,3,4,5,6], [0,2,4,5,6], [0,1,2,4,5,6], [0,1.5,2,3,4,5,6], [0,2,3,4,6], [0,1,2,3,4,6]],
   };
+  // beats per bar for each level — the odd meters make "1" land somewhere new.
+  const RHY_BARS = { easy: 4, medium: 4, hard: 4, five: 5, seven: 7 };
+  const rhyBar = () => RHY_BARS[rhyState.level] || 4;
   const rhyScore = makeScore('rhy-score');
   const rhyState = { pattern: null, bpm: 88, level: 'easy', taps: [],
                      recording: false, perfStart: 0, timers: [] };
@@ -1143,16 +1148,17 @@ function initDojo(opts = {}) {
     box.innerHTML = '';
     if (!rhyState.pattern) return;
     const bar = el('div', 'rhy-bar');
-    for (let b = 0; b <= 4; b++) { const g = el('div', 'rhy-grid'); g.style.left = (b / 4 * 100) + '%'; bar.appendChild(g); }
+    const B = rhyBar();
+    for (let b = 0; b <= B; b++) { const g = el('div', 'rhy-grid'); g.style.left = (b / B * 100) + '%'; bar.appendChild(g); }
     const src = marks.length ? marks : rhyState.pattern.map(on => ({ on, ok: null }));
     for (const m of src) {
       const t = el('div', 'rhy-onset' + (m.ok === true ? ' ok' : m.ok === false ? ' miss' : ''));
-      t.style.left = (m.on / 4 * 100) + '%';
+      t.style.left = (m.on / B * 100) + '%';
       bar.appendChild(t);
     }
     for (const tp of extras) {
       const t = el('div', 'rhy-extra');
-      t.style.left = (Math.max(0, Math.min(4, tp)) / 4 * 100) + '%';
+      t.style.left = (Math.max(0, Math.min(B, tp)) / B * 100) + '%';
       bar.appendChild(t);
     }
     box.appendChild(bar);
@@ -1161,18 +1167,18 @@ function initDojo(opts = {}) {
   function rhyPlay() {
     stopDojo(); ensureCtx();
     if (onStartCb) onStartCb();
-    const spb = rhyBeatSec(), t0 = audioNow() + 0.25;
-    for (let i = 0; i < 4; i++) clickAt(t0 + i * spb, i === 0);         // count-in bar
-    for (const on of rhyState.pattern) clickAt(t0 + (4 + on) * spb, false);
+    const spb = rhyBeatSec(), t0 = audioNow() + 0.25, B = rhyBar();
+    for (let i = 0; i < B; i++) clickAt(t0 + i * spb, i === 0);         // count-in bar
+    for (const on of rhyState.pattern) clickAt(t0 + (B + on) * spb, false);
   }
 
   function rhyRecord() {
     stopDojo(); ensureCtx(); rhyClearTimers();
     if (onStartCb) onStartCb();
     rhyState.taps = []; rhyState.recording = false;
-    const spb = rhyBeatSec(), t0 = audioNow() + 0.25;
-    for (let i = 0; i < 4; i++) clickAt(t0 + i * spb, i === 0);         // count-in for the tapper
-    const openDelay = Math.max(0, (t0 + 4 * spb - audioNow()) * 1000);
+    const spb = rhyBeatSec(), t0 = audioNow() + 0.25, B = rhyBar();
+    for (let i = 0; i < B; i++) clickAt(t0 + i * spb, i === 0);         // count-in for the tapper
+    const openDelay = Math.max(0, (t0 + B * spb - audioNow()) * 1000);
     $('rhy-meta').textContent = 'count in… then tap the pattern';
     rhyState.timers.push(setTimeout(() => {
       rhyState.recording = true;
@@ -1184,7 +1190,7 @@ function initDojo(opts = {}) {
       rhyState.recording = false;
       $('rhy-pad').classList.remove('armed');
       rhyGrade();
-    }, openDelay + 4 * spb * 1000 + 400));
+    }, openDelay + B * spb * 1000 + 400));
   }
 
   function rhyTap() {
@@ -1343,17 +1349,26 @@ function initDojo(opts = {}) {
   // ---- echo drill (call & response / dictation) ----
   const echoScore = makeScore('echo-score');
 
+  // stitch two ii–V–I phrases into one longer line for real-length dictation.
+  function concatPhrases(a, b) {
+    const aBeats = a.chords.reduce((s, c) => s + c.beats, 0);
+    return {
+      ...a, label: `${a.label} → ${b.label}`,
+      chords: [...a.chords, ...b.chords],
+      melody: [...a.melody, ...b.melody.map(n => ({ ...n, beat: n.beat + aBeats }))],
+    };
+  }
+
   function echoNew() {
     const typeSel = $('echo-type').value;
     echoState.mode = $('echo-mode').value;
     echoState.cat = 'echo';
     echoState.item = null;
     echoState.onGraded = null;
-    echoState.phrase = generatePhrase({
-      type: typeSel === 'any' ? null : typeSel,
-      mode: $('echo-keymode').value,
-      difficulty: 2,
-    });
+    const mkOpts = () => ({ type: typeSel === 'any' ? null : typeSel, mode: $('echo-keymode').value, difficulty: 2 });
+    let phrase = generatePhrase(mkOpts());
+    if ($('echo-len').value === 'long') phrase = concatPhrases(phrase, generatePhrase(mkOpts()));
+    echoState.phrase = phrase;
     echoState.recording = false; echoState.recorded = [];
     $('echo-result').innerHTML = '';
     $('echo-save').disabled = false;
