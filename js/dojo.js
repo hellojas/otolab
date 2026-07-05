@@ -12,7 +12,7 @@ import { onHeldChange } from './input.js';
 import { alignSequences } from './reference.js';
 import { generatePhrase, transposePhrase } from './phrases.js';
 import { record, pickWeighted, stats as progressStats, reset as resetProgress } from './progress.js';
-import { initCurriculum, renderToday as currRenderToday, renderPath as currRenderPath } from './curriculum.js';
+import { initCurriculum, renderPath as currRenderPath } from './curriculum.js';
 import { SONGS } from '../groundtruth/songs.js';
 import { BASSLINES } from '../groundtruth/basslines.js';
 import { SONGS as STD_CORE } from './standards-data.js';
@@ -62,6 +62,7 @@ const DRILL_TABS = {
 function runAssignment(drill, config = {}) {
   const info = DRILL_TABS[drill];
   if (!info) return;
+  enterDojoCb?.(); // a curriculum step can launch from the Home surface — switch rooms first
   const tabBtn = document.querySelector(`#dojo-tabs button[data-tab="${info.tab}"]`);
   if (tabBtn) tabBtn.click(); // switches panel + stops other audio
   for (const [id, val] of Object.entries(config)) {
@@ -83,6 +84,8 @@ function stopDojoMic() {
   const mic = document.getElementById('sing-mic');
   if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
 }
+
+let enterDojoCb = null; // set by initDojo — lets runAssignment switch into dojo mode
 
 let onStartCb = null;
 
@@ -522,11 +525,14 @@ function buildQuizSong(meta, bars, key) {
 // =====================================================================
 function initDojo(opts = {}) {
   onStartCb = opts.onStart || null;
+  enterDojoCb = opts.enterDojo || null;
 
-  // ---- curriculum: the "today" workout + "path" syllabus tabs ----
+  // ---- curriculum: the "today" workout (on Home) + "path" syllabus tab ----
   initCurriculum({
     runAssignment,
-    isActive: tab => panelActive(tab),
+    // "today" lives on the Home surface now, so it's visible when in home mode;
+    // path is a dojo tab.
+    isActive: tab => tab === 'today' ? document.body.dataset.mode === 'home' : panelActive(tab),
   });
 
   // ---- changes: the unified progression quiz (built-in collection + paste) ----
@@ -1626,7 +1632,6 @@ function initDojo(opts = {}) {
         b.classList.toggle('active', b === btn));
       document.querySelectorAll('.dj-panel').forEach(p =>
         p.classList.toggle('active', p.id === `panel-${btn.dataset.tab}`));
-      if (btn.dataset.tab === 'today') currRenderToday();
       if (btn.dataset.tab === 'path') currRenderPath();
       if (btn.dataset.tab === 'licks') renderLicks();
     };

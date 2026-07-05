@@ -11,10 +11,12 @@
   <header>
     <h1>otolab</h1>
     <p class="tagline">
+      <span class="tag-home">hear it, play it, name it — your daily ear-training workout</span>
       <span class="tag-lab">loop a song · play what you hear · the app names the chord &amp; its function</span>
       <span class="tag-dojo">the practice hall 道場 — drills, standards &amp; dictation, no video needed</span>
     </p>
-    <div class="mode-toggle" title="lab = transcribe over a YouTube recording · dojo = pure practice, no video">
+    <div class="mode-toggle" title="home = today's workout · lab = transcribe over a YouTube recording · dojo = pure practice, no video">
+      <button data-mode="home">home</button>
       <button data-mode="lab">lab</button>
       <button data-mode="dojo">dojo</button>
     </div>
@@ -38,6 +40,28 @@
       </div>
     </div>
   </header>
+
+  <section class="home-section">
+    <p class="home-lead">Two rooms, one ear. <b>lab</b> transcribes over a
+      YouTube recording; the <b>dojo</b> is the practice hall of drills. Start
+      with today's workout — it pulls from where you are and routes you into the
+      right room.</p>
+    <div id="curr-today" class="curr-today"></div>
+    <div class="home-routes">
+      <button class="home-route" data-goto="dojo">
+        <span class="home-route-t">practice drills →</span>
+        <span class="home-route-s">intervals, function, singing, rhythm — the dojo</span>
+      </button>
+      <button class="home-route" data-goto="lab">
+        <span class="home-route-t">transcribe a song →</span>
+        <span class="home-route-s">loop a recording and name the changes — the lab</span>
+      </button>
+      <button class="home-route" data-goto="path">
+        <span class="home-route-t">see the full path →</span>
+        <span class="home-route-s">the syllabus, unit by unit</span>
+      </button>
+    </div>
+  </section>
 
   <section class="load-row">
     <input id="video-url" type="text" placeholder="paste a YouTube link or video id…">
@@ -197,8 +221,7 @@
         <div class="tab-group">
           <span class="tab-group-label">start</span>
           <div class="tab-group-btns">
-            <button data-tab="today" class="active">today</button>
-            <button data-tab="path">path</button>
+            <button data-tab="path" class="active">path</button>
           </div>
         </div>
         <div class="tab-group">
@@ -245,16 +268,7 @@
       </nav>
     </div>
 
-    <section id="panel-today" class="dj-panel active">
-      <p class="blurb">Your daily workout, assembled from where you are in the
-        <b>path</b>. Four steps: warm up on something you know, drill today's
-        focus unit, review what's due, then apply it on a real tune. Each step
-        launches the right drill preconfigured — do the reps and it ticks itself
-        off. Come back tomorrow to keep the streak.</p>
-      <div id="curr-today" class="curr-today"></div>
-    </section>
-
-    <section id="panel-path" class="dj-panel">
+    <section id="panel-path" class="dj-panel active">
       <p class="blurb">The syllabus, in order. A unit completes when its goal
         items hit their accuracy target over enough tries — that unlocks the
         units that depend on it. Locked units show what to clear first. Nothing

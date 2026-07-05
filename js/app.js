@@ -16,6 +16,7 @@ import { initStandards, stopStandards } from './standards.js';
 import { initDojo, stopDojo, stopDojoMic } from './dojo.js';
 import { initSolo, soloLog, refreshSolo, stopSolo, stopSoloMic } from './solo.js';
 import { record } from './progress.js';
+import { renderToday } from './curriculum.js';
 import player from './player.js';
 
 const $ = sel => document.querySelector(sel);
@@ -728,17 +729,29 @@ function initShare() {
 
 // ---------- lab / dojo mode ----------
 
+let setMode = () => {};
 function initMode() {
   const btns = document.querySelectorAll('.mode-toggle button');
-  const set = m => {
+  setMode = m => {
     document.body.dataset.mode = m;
     localStorage.setItem('otolab:v1:mode', m);
     btns.forEach(b => b.classList.toggle('on', b.dataset.mode === m));
-    if (m === 'dojo') { player.pause?.(); stopSolo(); stopSoloMic(); }
-    else { stopDojo(); stopDojoMic(); }
+    // leaving a room stops its audio; home is silent
+    if (m !== 'lab') { player.pause?.(); stopSolo(); stopSoloMic(); }
+    if (m !== 'dojo') { stopDojo(); stopDojoMic(); }
+    if (m === 'home') renderToday(); // refresh the workout each time you land
   };
-  btns.forEach(b => b.addEventListener('click', () => set(b.dataset.mode)));
-  set(localStorage.getItem('otolab:v1:mode') === 'dojo' ? 'dojo' : 'lab');
+  btns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  // Home routes: jump straight into a room (path opens its dojo tab).
+  document.querySelectorAll('.home-route').forEach(b => b.addEventListener('click', () => {
+    const to = b.dataset.goto;
+    if (to === 'path') { setMode('dojo'); $('#dojo-tabs button[data-tab="path"]')?.click(); }
+    else setMode(to);
+  }));
+
+  const saved = localStorage.getItem('otolab:v1:mode');
+  setMode(saved === 'dojo' || saved === 'lab' ? saved : 'home'); // first visit lands on Home
 }
 
 // ---------- themes ----------
@@ -1052,6 +1065,7 @@ function init() {
       stopSolo();
     },
     stopStandards,
+    enterDojo: () => setMode('dojo'),
   });
   initMode();
   player.onError(showVideoError);

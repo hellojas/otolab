@@ -131,9 +131,24 @@ h2 {
 }
 .mode-toggle button.on { background: var(--accent); color: var(--accent-ink); }
 
-.tagline .tag-dojo { display: none; }
-body[data-mode="dojo"] .tagline .tag-lab { display: none; }
-body[data-mode="dojo"] .tagline .tag-dojo { display: inline; }
+/* the tagline swaps with the active room */
+.tagline span { display: none; }
+body[data-mode="home"] .tag-home,
+body[data-mode="lab"] .tag-lab,
+body[data-mode="dojo"] .tag-dojo { display: inline; }
+
+/* home = the front door: only the daily workout + the room routes show */
+.home-section { display: none; }
+body[data-mode="home"] .home-section { display: block; }
+body[data-mode="home"] .load-row,
+body[data-mode="home"] main,
+body[data-mode="home"] .piano-section,
+body[data-mode="home"] .timeline-section,
+body[data-mode="home"] .solo-section,
+body[data-mode="home"] .lyrics-section,
+body[data-mode="home"] .check-section,
+body[data-mode="home"] .dojo-section,
+body[data-mode="home"] footer { display: none; }
 
 /* dojo = the practice hall: drills, standards & dictation, no video.
    Hide everything tied to transcribing a recording, including the lab
@@ -150,6 +165,17 @@ body[data-mode="dojo"] main { grid-template-columns: 1fr; }
 /* lab = transcribe over a recording. The standards library is a no-video
    practice room, so it lives in the dojo (per the tagline), not here. */
 body[data-mode="lab"] .dojo-section { display: none; }
+
+/* ---- home surface ---- */
+.home-section { margin: 8px 0 4px; }
+.home-lead { color: var(--muted); font-size: 14px; max-width: 720px; margin: 0 0 18px; }
+.home-routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 20px; }
+.home-route {
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
+  text-align: left; padding: 16px 18px; border-radius: 12px; background: var(--panel);
+}
+.home-route-t { font-size: 15px; font-weight: 600; color: var(--text); }
+.home-route-s { font-size: 12.5px; color: var(--muted); }
 
 .theme-picker { display: flex; gap: 7px; align-items: center; align-self: center; }
 .theme-dot {
