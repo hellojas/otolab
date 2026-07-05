@@ -105,6 +105,26 @@ const UNITS = [
 
 const UNIT_BY_ID = Object.fromEntries(UNITS.map(u => [u.id, u]));
 
+// The applied assignment: each unit points at a specific real tune from the
+// groundtruth collection whose changes exercise that unit's skill at roughly
+// its level. The changes quiz plays it and hides the title until you check —
+// so "apply it" is a curated transcription target, not "load anything".
+const APPLY_SONG = {
+  'int-perfect':  'stand-by-me',      // I–vi–IV–V, textbook root motion
+  'int-steps':    'let-it-be',        // stepwise diatonic pop
+  'int-sevenths': 'all-of-me',        // dominant chains, sevenths everywhere
+  'mdeg-major':   'no-woman-no-cry',  // plain diatonic major
+  'mdeg-minor':   'hotel-california',  // an accessible minor-key tune
+  'qual-triads':  'someone-like-you', // clean triads, one per chord
+  'qual-sevenths':'blue-bossa',       // m7 / dom7 / maj7 side by side
+  'deg-major':    'fly-me-to-the-moon', // circle-of-fifths ii–V chains
+  'deg-minor':    'autumn-leaves',    // the definitive minor ii–V–i
+  'sing-degrees': 'creep',            // I–III–IV–iv, sing against the key
+  'rhythm-easy':  'twelve-bar-blues', // the form every ear should own
+  'echo-lines':   'take-the-a-train', // a melodic jazz head
+  'cadence-id':   'girl-from-ipanema', // famous cadence + key shift
+};
+
 // ---- persistent state -----------------------------------------------------
 
 function load() {
@@ -202,10 +222,12 @@ function buildWorkout() {
     note: due.length ? `${due.length} item${due.length > 1 ? 's' : ''} due — resurface the weak ones` : 'keep it warm',
   });
 
+  const applySongId = APPLY_SONG[cur.id];
   steps.push({
     key: 'apply', label: 'Apply it', title: 'Transcribe a real tune', cat: null,
-    drill: 'lab', config: {}, manual: true,
-    note: 'log the changes of a song by ear in the lab and grade — or a standards quiz. Any graded transcription ticks this off.',
+    drill: 'changes', config: applySongId ? { songId: applySongId } : {}, manual: true,
+    note: 'a tune matched to this unit plays — name its changes by ear, then grade. '
+      + 'Title stays hidden until you check; any graded transcription ticks this off.',
   });
 
   return { cur, steps };

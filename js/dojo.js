@@ -66,6 +66,12 @@ function runAssignment(drill, config = {}) {
   enterDojoCb?.(); // a curriculum step can launch from the Home surface — switch rooms first
   const tabBtn = document.querySelector(`#dojo-tabs button[data-tab="${info.tab}"]`);
   if (tabBtn) tabBtn.click(); // switches panel + stops other audio
+  // curated "apply it" assignment: load the specific tune, not a random one
+  if (drill === 'changes' && config.songId) {
+    if (!changesLoadById?.(config.songId)) document.getElementById('changes-new')?.click();
+    document.querySelector('.dojo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   for (const [id, val] of Object.entries(config)) {
     const e = document.getElementById(id);
     if (!e) continue;
@@ -88,6 +94,7 @@ function stopDojoMic() {
 
 let enterDojoCb = null; // set by initDojo — lets runAssignment switch into dojo mode
 let enterLabCb = null;  // set by initDojo — the applied step launches the lab
+let changesLoadById = null; // set by initDojo — load a specific tune into the changes quiz
 
 let onStartCb = null;
 
@@ -482,11 +489,15 @@ function makeQuiz(prefix, scoreLabel) {
     const graded = s.events.map((e, i) => state.guesses[i] === e.roman);
     const right = graded.filter(Boolean).length;
     score.add(right, graded.length);
+    // naming a real progression by ear is applied transcription — log it to the
+    // shared store under the same 'transcribe' cat as the lab & standards quizzes
+    s.events.forEach((e, i) => record('transcribe', `transcribe:${e.roman}`, graded[i]));
     finish(graded);
   };
   ids('reveal').onclick = () => {
     if (!state.song || state.done) return;
     score.add(0, state.song.events.length);
+    state.song.events.forEach(e => record('transcribe', `transcribe:${e.roman}`, false)); // gave up = missed
     finish(null);
   };
 
@@ -550,8 +561,24 @@ function initDojo(opts = {}) {
   $('changes-src-library').onclick = () => setChangesSource('library');
   $('changes-src-paste').onclick = () => setChangesSource('paste');
 
-  $('changes-new').onclick = () => {
+  const loadLibrarySong = s => {
     setChangesSource('library');
+    lastSongId = s.id;
+    const key = parseKey(s.key);
+    changesQuiz.setSong(buildQuizSong(
+      { title: s.title, artist: s.artist, genre: s.genre, tempo: s.tempo, note: s.note },
+      s.bars, key));
+  };
+  // exposed to runAssignment so a curriculum "apply it" step can load its
+  // curated tune; returns false if the id isn't in the collection.
+  changesLoadById = id => {
+    const s = SONGS.find(x => x.id === id);
+    if (!s) return false;
+    loadLibrarySong(s);
+    return true;
+  };
+
+  $('changes-new').onclick = () => {
     const genre = $('changes-genre').value;
     const diff = $('changes-diff').value;
     let pool = SONGS.filter(s =>
@@ -559,12 +586,7 @@ function initDojo(opts = {}) {
       (diff === 'all' || s.difficulty === Number(diff)));
     if (!pool.length) pool = SONGS;
     if (pool.length > 1) pool = pool.filter(s => s.id !== lastSongId);
-    const s = pick(pool);
-    lastSongId = s.id;
-    const key = parseKey(s.key);
-    changesQuiz.setSong(buildQuizSong(
-      { title: s.title, artist: s.artist, genre: s.genre, tempo: s.tempo, note: s.note },
-      s.bars, key));
+    loadLibrarySong(pick(pool));
   };
 
   $('changes-make').onclick = () => {
