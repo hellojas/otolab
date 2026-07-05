@@ -14,6 +14,10 @@ import { record, pickWeighted, stats as progressStats, reset as resetProgress } 
 import { initCurriculum, renderToday as currRenderToday, renderPath as currRenderPath } from './curriculum.js';
 import { SONGS } from '../groundtruth/songs.js';
 import { BASSLINES } from '../groundtruth/basslines.js';
+import { SONGS as STD_CORE } from './standards-data.js';
+import { SONGS_EXTRA as STD_EXTRA } from './standards-data-extra.js';
+
+const STD_SONGS = [...STD_CORE, ...STD_EXTRA];
 
 const $ = id => document.getElementById(id);
 const rand = n => Math.floor(Math.random() * n);
@@ -160,6 +164,31 @@ const INTERVALS = [
 
 // comp voicing without the doubled low root — the bass line covers it
 const compNotes = (root, quality) => chordVoicing(root, quality).slice(1);
+
+// Cadence vocabulary for the cadence-ID drill. `degs` are [semitonesAboveTonic,
+// quality] played after a tonic reference; `mode` sets the key colour.
+const CADENCES = [
+  { id: 'ii-V-I',      label: 'ii–V–I',            mode: 'major', degs: [[2, 'm7'], [7, '7'], [0, 'maj7']] },
+  { id: 'backdoor',    label: 'backdoor bVII7→I',  mode: 'major', degs: [[5, 'm7'], [10, '7'], [0, 'maj7']] },
+  { id: 'tritone-sub', label: 'tritone sub subV→I', mode: 'major', degs: [[2, 'm7'], [1, '7'], [0, 'maj7']] },
+  { id: 'deceptive',   label: 'deceptive V→vi',    mode: 'major', degs: [[7, '7'], [9, 'm7']] },
+  { id: 'plagal',      label: 'plagal IV→I',       mode: 'major', degs: [[5, 'maj7'], [0, 'maj7']] },
+  { id: 'minor-ii-V',  label: 'minor ii–V–i',      mode: 'minor', degs: [[2, 'm7b5'], [7, '7b9'], [0, 'm7']] },
+];
+
+// Classify a standards-library song's form from its section names + bar count.
+// Returns one of the FORM_CHIPS strings, or null when it can't be named cleanly.
+const FORM_CHIPS = ['AABA', 'ABAC', 'AB', '12-bar blues', '16-bar'];
+function songForm(song) {
+  const joined = song.sections.map(s => s.name).join('');
+  const bars = song.sections.reduce((a, s) => a + s.bars.length, 0);
+  if (joined === 'AABA') return 'AABA';
+  if (joined === 'ABAC') return 'ABAC';
+  if (song.sections.length === 1 && bars === 12) return '12-bar blues';
+  if (song.sections.length === 1 && bars === 16) return '16-bar';
+  if (joined === 'AB') return 'AB';
+  return null;
+}
 
 // ---- playback scheduler ----
 // events: [{ notes?, bass?, beats, slot? }] — slot indexes light up while playing.
@@ -1201,6 +1230,108 @@ function initDojo(opts = {}) {
     echoGrade($('licks-drill-result'), null);
     $('licks-drill-record').classList.remove('on'); $('licks-drill-record').textContent = '● record my echo';
   };
+
+  // ---- cadence-type ID drill ----
+  const cadScore = makeScore('cad-score');
+  const cadState = { cad: null, key: null, answered: true };
+
+  function cadPlay() {
+    const { cad, key } = cadState;
+    if (!cad) return;
+    const t = key.tonic;
+    let prev = null;
+    const evs = cad.degs.map(([d, q], i) => {
+      const root = (t + d) % 12;
+      prev = nearestBass(root, prev);
+      return { notes: compNotes(root, q), bass: prev, beats: i === cad.degs.length - 1 ? 3 : 1.5 };
+    });
+    const tonicQ = key.mode === 'minor' ? 'm' : '';
+    const ref = { notes: compNotes(t, tonicQ), bass: nearestBass(t, null), beats: 2 };
+    playSequence([ref, { beats: 1 }, ...evs], 96);
+  }
+
+  $('cad-new').onclick = () => {
+    const wid = pickWeighted('cadence', CADENCES.map(c => c.id));
+    cadState.cad = CADENCES.find(c => c.id === wid) || pick(CADENCES);
+    cadState.key = { tonic: rand(12), mode: cadState.cad.mode };
+    cadState.answered = false;
+    $('cad-meta').textContent = `key: ${keyName(cadState.key)} — tonic first, then the cadence`;
+    $('cad-result').textContent = '';
+    const box = $('cad-answers');
+    box.innerHTML = '';
+    for (const c of CADENCES) {
+      const chip = el('button', 'chip', c.label);
+      chip.onclick = () => {
+        if (cadState.answered) return;
+        cadState.answered = true;
+        const ok = c.id === cadState.cad.id;
+        cadScore.add(ok ? 1 : 0);
+        record('cadence', cadState.cad.id, ok);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('cad-result').textContent = ok ? `✓ ${cadState.cad.label}` : `✗ that was ${cadState.cad.label}`;
+        setTimeout(() => { if (panelActive('cadence')) $('cad-new').click(); }, 1500);
+      };
+      box.appendChild(chip);
+    }
+    cadPlay();
+  };
+  $('cad-replay').onclick = cadPlay;
+
+  // ---- form-recognition drill (uses the standards library) ----
+  const FORM_SONGS = STD_SONGS.filter(s => songForm(s));
+  const formScore = makeScore('form-score');
+  const formState = { song: null, form: null, answered: true, lastId: null };
+
+  function formPlay() {
+    const song = formState.song;
+    if (!song) return;
+    let prev = null;
+    const evs = [];
+    for (const sec of song.sections) {
+      for (const barStr of sec.bars) {
+        const toks = barStr.trim().split(/\s+/);
+        const per = 1 / toks.length; // one "beat" per bar, split across its chords
+        for (const tk of toks) {
+          const c = parseChord(tk);
+          if (!c) continue;
+          prev = nearestBass(c.root, prev);
+          evs.push({ notes: compNotes(c.root, c.quality), bass: prev, beats: per });
+        }
+      }
+    }
+    playSequence(evs, 150); // brisk: ~0.4s per bar so the whole form fits in ~15s
+  }
+
+  $('form-new').onclick = () => {
+    if (!FORM_SONGS.length) { $('form-meta').textContent = 'no classifiable tunes found'; return; }
+    let pool = FORM_SONGS.filter(s => s.id !== formState.lastId);
+    if (!pool.length) pool = FORM_SONGS;
+    formState.song = pick(pool);
+    formState.lastId = formState.song.id;
+    formState.form = songForm(formState.song);
+    formState.answered = false;
+    const bars = formState.song.sections.reduce((a, s) => a + s.bars.length, 0);
+    $('form-meta').textContent = `${bars} bars comping — listen for repeats and the return`;
+    $('form-result').textContent = '';
+    const box = $('form-answers');
+    box.innerHTML = '';
+    for (const f of FORM_CHIPS) {
+      const chip = el('button', 'chip', f);
+      chip.onclick = () => {
+        if (formState.answered) return;
+        formState.answered = true;
+        const ok = f === formState.form;
+        formScore.add(ok ? 1 : 0);
+        record('form', formState.form, ok);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('form-result').textContent = (ok ? '✓ ' : `✗ that was ${formState.form} — `) +
+          `“${formState.song.title}”`;
+      };
+      box.appendChild(chip);
+    }
+    formPlay();
+  };
+  $('form-replay').onclick = formPlay;
 
   // ---- progress / stats panel ----
   function renderStats() {

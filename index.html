@@ -202,6 +202,8 @@
         <button data-tab="melodic">scale degrees</button>
         <button data-tab="sing">sing</button>
         <button data-tab="echo">echo</button>
+        <button data-tab="cadence">cadences</button>
+        <button data-tab="form">form</button>
         <button data-tab="rhythm">rhythm</button>
         <button data-tab="licks">licks</button>
         <button data-tab="stats">progress</button>
@@ -479,6 +481,40 @@
         <span id="echo-score" class="dj-score"></span>
       </div>
       <div id="echo-result" class="grade-result"></div>
+    </section>
+
+    <section id="panel-cadence" class="dj-panel">
+      <p class="blurb">Hear a whole cadence as one gesture, not chord by chord.
+        A tonic chord sets the key, then a short cadence plays — name the type.
+        ii–V–I is home base; the others are the moves that make jazz turn:
+        the backdoor, the tritone sub, the deceptive resolution.</p>
+      <div class="dj-row">
+        <button id="cad-new" class="primary">new cadence</button>
+        <button id="cad-replay">▶ replay</button>
+        <span id="cad-meta" class="dj-meta"></span>
+      </div>
+      <div id="cad-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="cad-result" class="dj-result"></span>
+        <span id="cad-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-form" class="dj-panel">
+      <p class="blurb">Zoom out to the whole tune. A standard comps by at speed —
+        listen for how the sections repeat and return, then name the form. AABA
+        and ABAC are the 32-bar song forms; the blues is 12 bars; some tunes are
+        a plain 16-bar or two-part AB.</p>
+      <div class="dj-row">
+        <button id="form-new" class="primary">new tune</button>
+        <button id="form-replay">▶ replay</button>
+        <span id="form-meta" class="dj-meta"></span>
+      </div>
+      <div id="form-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="form-result" class="dj-result"></span>
+        <span id="form-score" class="dj-score"></span>
+      </div>
     </section>
 
     <section id="panel-rhythm" class="dj-panel">
