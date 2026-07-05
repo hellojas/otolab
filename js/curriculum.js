@@ -38,6 +38,18 @@ const UNITS = [
     blurb: 'The dissonances that name a chord — the tritone inside every dominant.',
   },
   {
+    id: 'time-meter', title: 'Time · count the meter',
+    drill: 'time', cat: 'meter', config: { 'time-mode': 'meter' },
+    goalItems: ['3', '4', '5'], goalPct: 78, goalCount: 15, requires: [],
+    blurb: 'Feel where "1" comes back — 3, 4 or 5. The floor under everything you play.',
+  },
+  {
+    id: 'time-feel', title: 'Time · straight or swung',
+    drill: 'time', cat: 'feel', config: { 'time-mode': 'feel' },
+    goalItems: ['straight', 'swing'], goalPct: 75, goalCount: 12, requires: ['time-meter'],
+    blurb: 'Even eighths vs the long-short triplet lilt — the difference jazz lives in.',
+  },
+  {
     id: 'mdeg-major', title: 'Scale degrees · major',
     drill: 'mdeg', cat: 'mdeg', config: { 'mdeg-mode': 'major', 'mdeg-level': 'diatonic' },
     goalItems: ['1', '2', '3', '4', '5', '6', '7'], goalPct: 80, goalCount: 28, requires: ['int-perfect'],
@@ -50,6 +62,21 @@ const UNITS = [
     blurb: 'The minor scale by ear — the flat third, sixth and seventh that color it.',
   },
   {
+    id: 'mdeg-chromatic', title: 'Scale degrees · chromatic',
+    drill: 'mdeg', cat: 'mdeg', config: { 'mdeg-mode': 'major', 'mdeg-level': 'chromatic' },
+    goalItems: ['b2', 'b5', 'b6'], goalPct: 68, goalCount: 15, requires: ['mdeg-minor'],
+    blurb: 'The notes between the scale — the ♭9, ♯11 and ♭13 colors, heard as degrees.',
+  },
+  {
+    id: 'bass-motion', title: 'Bass · hear the root motion',
+    drill: 'bass', cat: 'bass', config: {},
+    goalItems: ['fifties', 'stand-by-me', 'andalusian', 'pachelbel', 'twelve-bar',
+      'rhythm-changes', 'autumn-leaves', 'fly-me', 'i-will-survive', 'blue-bossa',
+      'hotel-california', 'whiter-shade'],
+    goalPct: 70, goalCount: 14, requires: ['mdeg-major'],
+    blurb: 'The bass tells you the changes — trace a walking root line by scale degree.',
+  },
+  {
     id: 'qual-triads', title: 'Chord qualities · triads',
     drill: 'qualities', cat: 'qualities', config: { 'qual-level': 'triads' },
     goalItems: ['maj', 'm', 'dim', 'aug', 'sus4'], goalPct: 80, goalCount: 20, requires: [],
@@ -60,6 +87,13 @@ const UNITS = [
     drill: 'qualities', cat: 'qualities', config: { 'qual-level': 'sevenths' },
     goalItems: ['maj7', '7', 'm7', 'm7b5'], goalPct: 78, goalCount: 24, requires: ['qual-triads'],
     blurb: 'The four seventh chords jazz is built from — maj7, dom7, m7, ø7.',
+  },
+  {
+    id: 'qual-colors', title: 'Chord qualities · color chords',
+    drill: 'qualities', cat: 'qualities', config: { 'qual-level': 'colors' },
+    goalItems: ['9', 'maj9', 'm9', '7b9', '7#9', '13', '7#11'], goalPct: 68, goalCount: 24,
+    requires: ['qual-sevenths'],
+    blurb: 'Ninths, alterations and the 6/9 — the extended colors on top of the sevenths.',
   },
   {
     id: 'deg-major', title: 'Function · major degrees',
@@ -82,6 +116,19 @@ const UNITS = [
     blurb: 'Audiation: make the pitch, not just name it. Sing a degree cold from the key.',
   },
   {
+    id: 'sing-chordtones', title: 'Produce · sing chord tones',
+    drill: 'sing', cat: 'sing', config: { 'sing-mode': 'chordtone' },
+    goalItems: ['ct:R', 'ct:3', 'ct:5', 'ct:7'], goalPct: 66, goalCount: 16,
+    requires: ['sing-degrees', 'qual-sevenths'],
+    blurb: 'Hear a chord, then sing its 3rd or 7th cold — spelling harmony with your voice.',
+  },
+  {
+    id: 'sing-guides', title: 'Produce · sing the guide-tone line',
+    drill: 'sing', cat: 'sing', config: { 'sing-mode': 'guidetone', 'sing-keymode': 'major' },
+    goalItems: ['gt'], goalPct: 62, goalCount: 10, requires: ['sing-chordtones', 'deg-major'],
+    blurb: 'Sing the 3rds and 7ths through a ii–V–I — the line that voice-leads a tune.',
+  },
+  {
     id: 'rhythm-easy', title: 'Rhythm · tap it back',
     drill: 'rhythm', cat: 'rhythm', config: { 'rhy-level': 'easy' }, launchesReady: false,
     goalItems: ['easy'], goalPct: 70, goalCount: 10, requires: [],
@@ -100,6 +147,38 @@ const UNITS = [
     goalItems: ['ii-V-I', 'backdoor', 'tritone-sub', 'deceptive'], goalPct: 65, goalCount: 16,
     requires: ['deg-major'],
     blurb: 'Hear a whole cadence as one gesture — ii–V–I vs backdoor vs tritone sub.',
+  },
+
+  // ---- advanced tier: hearing structure, not just atoms ----
+  {
+    id: 'modal-color', title: 'Advanced · name the mode',
+    drill: 'modal', cat: 'modal', config: { 'modal-set': 'jazz' },
+    goalItems: ['dorian', 'mixolydian', 'lydian'], goalPct: 70, goalCount: 18,
+    requires: ['mdeg-minor'], tier: 'advanced',
+    blurb: 'A vamp, then the scale — dorian vs mixolydian vs lydian, the modal-jazz palette.',
+  },
+  {
+    id: 'tension-id', title: 'Advanced · name the tension',
+    drill: 'tension', cat: 'tension', config: {},
+    goalItems: ['9', 'b9', '#9', '#11', 'b13', '13'], goalPct: 62, goalCount: 20,
+    requires: ['deg-major', 'qual-colors'], tier: 'advanced',
+    blurb: 'A chord with one note on top — is that a ♯11 or a ♭13? The upper structure by ear.',
+  },
+  {
+    id: 'form-id', title: 'Advanced · hear the form',
+    drill: 'form', cat: 'form', config: {},
+    goalItems: ['AABA', 'ABAC', '12-bar blues', '16-bar', 'AB'], goalPct: 65, goalCount: 15,
+    requires: ['cadence-id'], tier: 'advanced',
+    blurb: 'Zoom out to the whole tune — AABA vs ABAC vs a 12-bar blues from the shape alone.',
+  },
+  {
+    id: 'capstone-transcribe', title: 'Capstone · transcribe real changes',
+    drill: 'lab', cat: 'transcribe',
+    config: {},
+    goalItems: ['transcribe:ii7', 'transcribe:V7', 'transcribe:Imaj7', 'transcribe:vi7', 'transcribe:IVmaj7'],
+    goalPct: 60, goalCount: 12,
+    requires: ['deg-minor', 'tension-id', 'form-id', 'modal-color'], tier: 'advanced',
+    blurb: 'Put it together: pull the changes off a real tune in the lab or a standard by ear.',
   },
 ];
 
@@ -327,11 +406,48 @@ function renderStep(step) {
   return row;
 }
 
+// ---- test-out (placement) -------------------------------------------------
+// A working musician shouldn't have to grind 20 easy reps to unlock the rest.
+// "Test out" launches the unit's drill and watches the live attempt stream:
+// nail ~6 in a row and the unit completes on the spot; miss and you just drop
+// into normal practice. No self-marking — you still have to prove it, fast.
+
+let testOut = null;      // { unitId, seen, correct }
+let pathMsg = '';
+
+function startTestOut(u) {
+  if (done(u.id) || !unlocked(u)) return;
+  testOut = { unitId: u.id, seen: 0, correct: 0 };
+  pathMsg = `testing out of ${u.title} — get 6 of your next answers right`;
+  deps.runAssignment(u.drill, u.config);
+}
+
+// returns true if the attempt was consumed by an active test-out
+function testOutTick(cat, id, ok) {
+  if (!testOut) return false;
+  const u = UNIT_BY_ID[testOut.unitId];
+  if (!u || cat !== u.cat || !u.goalItems.includes(id)) return false;
+  testOut.seen++; if (ok) testOut.correct++;
+  const pct = testOut.correct / testOut.seen;
+  if (testOut.seen >= 6 && pct >= 0.85) {
+    if (!done(u.id)) { cs.completedUnits.push(u.id); persist(); }
+    pathMsg = `tested out of ${u.title} ✓`;
+    testOut = null;
+  } else if (testOut.seen >= 8) {
+    pathMsg = `test-out: ${testOut.correct}/${testOut.seen} — not yet, keep practising`;
+    testOut = null;
+  } else {
+    pathMsg = `test-out: ${testOut.correct}/${testOut.seen} right (need 6 at ≥85%)`;
+  }
+  return true;
+}
+
 function renderPath() {
   const box = els.path;
   if (!box) return;
   reconcile();
   box.innerHTML = '';
+  if (pathMsg) box.appendChild(el('div', 'path-msg', pathMsg));
   for (const u of UNITS) {
     const m = unitMastery(u);
     const state = done(u.id) ? 'done' : (u.id === cs.currentUnit ? 'current' : (unlocked(u) ? 'open' : 'locked'));
@@ -366,6 +482,12 @@ function renderPath() {
       go.onclick = () => deps.runAssignment(u.drill, u.config);
       row.appendChild(go);
     }
+    if ((state === 'current' || state === 'open') && m.seen < u.goalCount) {
+      const t = el('button', 'path-testout', 'test out');
+      t.title = 'already know this? prove it in a few answers';
+      t.onclick = () => { startTestOut(u); renderPath(); };
+      row.appendChild(t);
+    }
     box.appendChild(row);
   }
 }
@@ -383,9 +505,10 @@ function initCurriculum(d) {
     // real transcription anywhere (lab quiz/grade, standards quiz) closes the
     // daily "apply it" step — the bridge from drilling to using the skill.
     if (cat === 'transcribe') manualDone.apply = true;
+    const testing = testOutTick(cat, id, ok);
     const advanced = reconcile();
     if (deps.isActive('today')) renderToday();
-    if (advanced && deps.isActive('path')) renderPath();
+    if ((advanced || testing) && deps.isActive('path')) renderPath();
   });
 
   // a bulk change to the store (a cloud sync pulled in, an import, a reset) can
