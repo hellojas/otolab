@@ -6,7 +6,10 @@ Ear-training over real songs — one app, two rooms:
   a MIDI keyboard (or your computer keys), and the app names the chord and
   tells you its **function in the key** — including when it's *not* diatonic.
   This recreates the "sit at the piano with Spotify, replay the bar, hunt for
-  the bass note" workflow, minus the piano.
+  the bass note" workflow, minus the piano. A **solo** room does the same for a
+  single line — transcribe a melody or improvised solo one note at a time and
+  the app places each note on its chord and names its role (chord tone /
+  tension / approach).
 - **dojo** 道場: the practice hall — no video, no internet. Chip-answered
   drills (song quiz, paste-a-tab, basslines, degrees, qualities, intervals —
   absorbed from the old standalone otodojo app), plus the built-in standards
@@ -92,6 +95,28 @@ time — hover for the raw time. Turn **snap** on and newly logged chords quanti
 to the nearest beat; **snap all** retrofits the ones you already logged. The
 grid saves with the song and travels in exports and share links.
 
+## Solo transcription
+
+Transcribing a single line off a record — a melody, a bass riff, an improvised
+solo — is a different job from transcribing changes, and the **solo** section
+is built for it. Log the chords above first, then:
+
+1. Loop and slow down the phrase (0.25× and the `.`/`,` chord loops help).
+2. Find one note — play it on the keyboard/MIDI, or hit **🎤 hum to note** and
+   sing it (a monophonic pitch detector names what you hum, tuning cents and
+   all — no instrument needed).
+3. Press `n` (or **+ note @ playhead**) to log it at the current video time.
+
+Each logged note lands on a **piano-roll over the chord of the moment** and is
+labeled with its role in that harmony: a `chord tone` (green), a `tension`
+(9/11/13/alterations, amber), or an `approach` note (chromatic/outside, red) —
+plus its scale degree in the key. That note-vs-chord reading is the point: it
+trains you to hear a line as chord tones + tensions + approaches instead of a
+blur of pitches. **▶ line** plays the transcription back; **along** sounds each
+note as the video reaches it so you can check it against the record; the summary
+tallies what percentage of the line is chord tones vs tensions vs approaches.
+The line saves per video and travels in export/import.
+
 ## Voice-leading hints
 
 Toggle **voice leading** in the progression bar and small connectors appear
@@ -129,6 +154,25 @@ in order:
    hidden until you check. **paste a tab** turns any chords you paste — from
    Ultimate Guitar, Chordify, anywhere — into the same quiz, key guessed
    automatically.
+
+The melodic side gets its own tabs:
+
+- **scale degrees** — the single-note foundation under *degrees* (which uses
+  chords). A cadence sets the key, the tonic sounds, then one note plays: which
+  scale degree is it? Diatonic first; add chromatics when the seven are
+  automatic.
+- **sing** — audiation, the skill every method is built on. Enable the mic and
+  either *match a note* the app plays, or *sing a scale degree* from the key
+  with no reference pitch. A live tuner grades you when you lock onto the pitch.
+- **rhythm** — half of transcription and the app trained none of it. Hear a
+  one-bar pattern, tap it back over a count-in (spacebar or the pad), and get
+  scored on how close each hit lands. Eighths → syncopation → triplets.
+
+Every drill (old and new) now logs to a **progress** tab: overall accuracy,
+per-drill bars, a 14-day activity sparkline, and your weakest items. Tick
+**focus weak** in a drill and a spaced-repetition scheduler biases questions
+toward what you keep missing — because ear training only sticks through
+repetition over time. Nothing leaves your browser.
 
 ## Drill: name the degree
 
@@ -209,5 +253,7 @@ transcribe-then-quiz is the model.)
   Georgia on My Mind and On the Sunny Side of the Street are fair game for
   melodies)
 - Walking bass lines and drum feel for the standards comper
-- A spaced-repetition queue for songs/segments/tunes you keep missing
-- Per-song stats over time (accuracy by chord function)
+- Extend the spaced-repetition queue (now driving the dojo drills) to cover
+  songs/segments and standards you keep missing
+- Solo-line export to notation, and pitch-detection transcription straight from
+  shared tab audio (not just the mic)
