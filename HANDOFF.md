@@ -264,12 +264,19 @@ them solo risks wrong changes. They're the right target for a **per-tune agent
 that cross-checks a second source** (web fetch was 403-blocked this session, so
 manual reads only). The library is now **109 tunes**.
 
-**B. Verify all 106 charts against the book.** Never done end-to-end (the agent
-fleet that was going to do it died on a spend limit). One agent per ~14 tunes:
-read each tune's page + errata, compare chords/form, emit one line
-`id | OK/MINOR/MAJOR | detail`. Treat jam-session divergence (6 vs maj7, added
-turnarounds) as MINOR; only a wrong key / wrong form / structurally wrong section
-is MAJOR. Reconcile MAJORs into the data files.
+**B. Verify all 109 charts against the book.** Full blind re-read still not done
+(needs a title→page index the alphabetical scan doesn't give cheaply, and the
+per-tune agent that would do it died on a spend limit before). **Errata slice
+DONE, though** — the highest-value subset. The Real Book ships its own
+"Corrections for Real Book #1" (PDF pp.9–13): the tunes the publisher *admits*
+are wrong. Cross-checked every errata'd tune that's in our library — A Night in
+Tunisia, Angel Eyes, Blue Bossa, Darn That Dream, Four, Lady Bird, All of Me,
+There Will Never Be Another You — against those corrections. Result: **no MAJOR
+errors** (all correct key + form); Four matches the errata exactly; the rest
+differ only by the expected jam-session variety (Gm6 vs Gm D7, G7 vs G7♯9), which
+the rubric counts MINOR. No data fixes required. A full blind pass of the other
+~100 would mostly re-confirm correct charts at high cost — lower priority now.
+One agent per ~14 tunes, emit `id | OK/MINOR/MAJOR | detail`, reconcile MAJORs.
 
 **Both A and B are agent-fleet work** (parallel `Task` subagents). They stalled
 because the Fable-5 monthly spend limit was hit mid-session — every subagent
