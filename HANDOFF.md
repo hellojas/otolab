@@ -2,7 +2,7 @@
 
 Working doc for continuing the ear-training build in a fresh session. Delete it
 when the work is done. Everything here reflects the state of the repo as of the
-last commit on `claude/otolab-jazz-standards-ddgk1e`.
+last commit on `main` (this is now the working branch — see Git below).
 
 ## Where things stand
 
@@ -16,10 +16,12 @@ What's missing is the **connective + productive** layer: a program that
 sequences the drills, and the half of ear training that makes *sound* rather
 than just naming it. This doc specs that work.
 
-Recent commits (branch base is `main` @ `a506514`, a merged PR — see Git below):
+All of this session's work is already merged into `main` (`0b63304`). Recent
+commits:
 - `092a9ff` solo room + noteVsChord/scaleDegree + pitch.js + progress.js
 - `ff17f8a` dojo: scale-degrees, sing, rhythm drills + progress wiring
 - `fa0ba54` docs
+- `0b63304` this handoff
 
 ## Architecture primer (read before touching anything)
 
@@ -219,14 +221,10 @@ themes (yoru/sumi/washi/kissa) all use CSS vars so check at least one dark + lig
 
 ## Git workflow
 
-- Branch: **`claude/otolab-jazz-standards-ddgk1e`**. Develop and push here.
-- **Merged-PR protocol:** PR #1 for this branch was already merged into `main`,
-  so this branch was restarted from `main` (`a506514`) for fresh follow-up work.
-  If the current PR gets merged before you resume, restart again:
-  `git fetch origin main && git checkout -B claude/otolab-jazz-standards-ddgk1e
-  origin/main` (keep unmerged commits by rebasing them onto the new base).
-- Push: `git push -u origin claude/otolab-jazz-standards-ddgk1e` (retry on
-  network errors with backoff).
+- **Work directly on `main`.** The owner asked for everything to live on `main`
+  and to develop there (no feature branch). Commit to `main` and push:
+  `git push origin main` (retry on network errors with backoff).
+- Keep commits small and per-feature. Verify in the browser before committing.
 - Don't open a PR unless asked.
 - Commit message trailers (chat-only identity stays out of commits):
   ```
