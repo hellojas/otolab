@@ -5,8 +5,11 @@
 // apply here too. Chips in, no keyboard required — works on a phone.
 
 import { pcName, useFlats, midiName, chordVoicing, paletteForKey, romanFor, guessKey } from './theory.js';
-import { playChord, allNotesOff, ensureCtx, clickAt, audioNow } from './audio.js';
+import { playChord, playNoteAt, playChordAt, allNotesOff, ensureCtx, clickAt, audioNow } from './audio.js';
 import { startMic, stopMic, isMicOn } from './pitch.js';
+import { onHeldChange } from './input.js';
+import { alignSequences } from './reference.js';
+import { generatePhrase, transposePhrase } from './phrases.js';
 import { record, pickWeighted, stats as progressStats, reset as resetProgress } from './progress.js';
 import { initCurriculum, renderToday as currRenderToday, renderPath as currRenderPath } from './curriculum.js';
 import { SONGS } from '../groundtruth/songs.js';
@@ -189,7 +192,102 @@ function playSequence(events, bpm, { onStep, onDone } = {}) {
 function stopDojo() {
   seqActive = false;
   clearTimeout(seqTimer);
+  clearTimeout(phraseTimer);
   allNotesOff();
+}
+
+// ---- phrase playback + echo capture (echo tab + lick bank) ----
+// Scheduled on the audio clock so melody and comp can sound together. Notes are
+// fire-and-forget (they schedule their own release), so stopDojo can't cut a
+// phrase mid-flight — fine, phrases are only a few bars.
+let phraseTimer = null;
+
+function playPhrase(phrase, bpm = 104, { comp = true, onDone } = {}) {
+  stopDojo(); ensureCtx();
+  if (onStartCb) onStartCb();
+  const spb = 60 / bpm;
+  const t0 = audioNow() + 0.28;
+  let beat = 0;
+  if (comp) {
+    for (const c of phrase.chords) {
+      playChordAt(compNotes(c.root, c.quality), t0 + beat * spb, c.beats * spb * 0.92, 0.22);
+      playNoteAt(nearestBass(c.root, null), t0 + beat * spb, c.beats * spb * 0.9, 0.4);
+      beat += c.beats;
+    }
+  }
+  let end = 0;
+  for (const n of phrase.melody) {
+    playNoteAt(n.midi, t0 + n.beat * spb, n.dur * spb * 0.9, 0.85);
+    end = Math.max(end, n.beat + n.dur);
+  }
+  const ms = (t0 - audioNow() + end * spb) * 1000 + 180;
+  if (onDone) phraseTimer = setTimeout(onDone, ms);
+}
+
+// One shared "active phrase" that recording + grading act on, so the echo tab
+// and the lick-bank transpose drill reuse the same capture engine.
+const echoState = {
+  phrase: null, mode: 'echo', cat: 'echo', item: null,
+  recording: false, recorded: [], prevHeld: new Set(), onGraded: null,
+};
+const melScore = (a, b) => a === b ? 1 : (((a - b) % 12 + 12) % 12 === 0 ? 0.75 : 0);
+
+onHeldChange(notes => {
+  if (!echoState.recording) { echoState.prevHeld = new Set(notes); return; }
+  const cur = new Set(notes);
+  for (const n of cur) if (!echoState.prevHeld.has(n)) echoState.recorded.push(n);
+  echoState.prevHeld = cur;
+  const el = document.getElementById('echo-status');
+  if (el) el.textContent = `recording — ${echoState.recorded.length} note${echoState.recorded.length === 1 ? '' : 's'}`;
+});
+
+function echoArm() {
+  echoState.recorded = [];
+  echoState.recording = true;
+}
+
+function echoGrade(resultEl, scoreObj, revealNames = true) {
+  echoState.recording = false;
+  const ph = echoState.phrase;
+  if (!ph) return null;
+  if (!echoState.recorded.length) {
+    resultEl.innerHTML = '<div class="grade-score">play your echo first — hit ● then reproduce the line.</div>';
+    return null;
+  }
+  const ref = ph.melody.map(n => n.midi);
+  const g = alignSequences(echoState.recorded, ref, melScore);
+  const ok = g.pct >= 70;
+  if (scoreObj) scoreObj.add(ok ? 1 : 0);
+  record(echoState.cat, echoState.item || ph.type, ok);
+  const flats = useFlats(ph.key.tonic, ph.key.mode);
+  const verdict = g.pct >= 90 ? 'nailed it' : g.pct >= 70 ? 'close' : g.pct >= 40 ? 'getting there' : 'keep at it';
+  resultEl.innerHTML = `<div class="grade-score"><b>${g.pct}%</b> — ${verdict}
+    <span class="grade-legend">exact pitch 1 · right note wrong octave ¾</span></div>`;
+  const row = el('div', 'grade-row');
+  for (const p of g.pairs) {
+    const d = el('div', 'grade-pair ' + (p.score >= 0.75 ? 'good' : 'bad'));
+    const refLbl = p.ref != null ? (revealNames ? midiName(p.ref, flats) : '♪') : '·';
+    const usrLbl = p.user != null ? midiName(p.user, flats) : 'missed';
+    d.innerHTML = `<div class="g-ref">${esc(refLbl)}</div>
+                   <div class="g-usr">${esc(p.ref != null ? usrLbl : usrLbl + ' (extra)')}</div>`;
+    row.appendChild(d);
+  }
+  resultEl.appendChild(row);
+  if (echoState.onGraded) echoState.onGraded(ok, g);
+  return { ok, g };
+}
+
+// ---- lick bank storage ----
+const LICKS_KEY = 'otolab:v1:licks';
+function loadLicks() { try { return JSON.parse(localStorage.getItem(LICKS_KEY)) || []; } catch (e) { return []; } }
+function saveLicks(arr) { localStorage.setItem(LICKS_KEY, JSON.stringify(arr)); }
+function addLick(phrase, name) {
+  const licks = loadLicks();
+  const id = 'lk' + Date.now().toString(36) + rand(9999).toString(36);
+  licks.unshift({ id, name: name || phrase.label, type: phrase.type,
+                  key: phrase.key, chords: phrase.chords, melody: phrase.melody, tags: [] });
+  saveLicks(licks);
+  return id;
 }
 
 // Keep bass lines singable: move each bass note to the nearest pitch from the
@@ -945,6 +1043,165 @@ function initDojo(opts = {}) {
     if (e.code === 'Space' && rhyState.recording && panelActive('rhythm')) { e.preventDefault(); rhyTap(); }
   });
 
+  // ---- echo drill (call & response / dictation) ----
+  const echoScore = makeScore('echo-score');
+
+  function echoNew() {
+    const typeSel = $('echo-type').value;
+    echoState.mode = $('echo-mode').value;
+    echoState.cat = 'echo';
+    echoState.item = null;
+    echoState.onGraded = null;
+    echoState.phrase = generatePhrase({
+      type: typeSel === 'any' ? null : typeSel,
+      mode: $('echo-keymode').value,
+      difficulty: 2,
+    });
+    echoState.recording = false; echoState.recorded = [];
+    $('echo-result').innerHTML = '';
+    $('echo-save').disabled = false;
+    $('echo-record').classList.remove('on'); $('echo-record').textContent = '● record my echo';
+    $('echo-meta').textContent = echoState.phrase.label +
+      (echoState.mode === 'dictation' ? ' — plays once, then reconstruct from memory' : ' — hear it, then echo it back');
+    echoPlay(true);
+  }
+
+  function echoPlay(firstTime) {
+    if (!echoState.phrase) return;
+    echoState.recording = false;
+    $('echo-status').textContent = 'listen…';
+    const comp = !(echoState.mode === 'dictation' && !firstTime);
+    playPhrase(echoState.phrase, 104, {
+      comp,
+      onDone: () => {
+        $('echo-status').textContent = echoState.mode === 'dictation'
+          ? 'now reconstruct it from memory — hit ● record' : 'now echo it — hit ● record';
+      },
+    });
+  }
+
+  $('echo-new').onclick = echoNew;
+  $('echo-play').onclick = () => {
+    // dictation only lets you hear it once — replay is disabled there
+    if (echoState.mode === 'dictation') { $('echo-status').textContent = 'dictation: no replay — reconstruct it'; return; }
+    echoPlay(false);
+  };
+  $('echo-record').onclick = () => {
+    if (!echoState.phrase) return;
+    if (echoState.recording) { echoGrade($('echo-result'), echoScore); $('echo-record').classList.remove('on'); $('echo-record').textContent = '● record my echo'; return; }
+    echoArm();
+    $('echo-record').classList.add('on'); $('echo-record').textContent = '■ recording — grade when done';
+    $('echo-status').textContent = 'play the line on keyboard / MIDI / on-screen piano…';
+  };
+  $('echo-grade').onclick = () => {
+    echoGrade($('echo-result'), echoScore);
+    $('echo-record').classList.remove('on'); $('echo-record').textContent = '● record my echo';
+  };
+  $('echo-save').onclick = () => {
+    if (!echoState.phrase) return;
+    addLick(echoState.phrase);
+    $('echo-save').disabled = true;
+    $('echo-status').textContent = 'saved to the lick bank ✓';
+  };
+
+  // ---- lick bank ----
+  const lickState = { drill: null, keyOrder: [], keyIdx: 0 }; // transpose-to-12 drill
+
+  function renderLicks() {
+    const box = $('licks-list');
+    box.innerHTML = '';
+    const licks = loadLicks();
+    if (!licks.length) {
+      box.innerHTML = '<div class="dj-meta">No licks yet — generate a phrase in the <b>echo</b> tab and hit “save to licks”. Saved licks can be played, echoed, and cycled through all 12 keys here.</div>';
+      $('licks-drill').style.display = 'none';
+      return;
+    }
+    for (const lk of licks) {
+      const row = el('div', 'lick-row');
+      const info = el('div', 'lick-info');
+      const flats = useFlats(lk.key.tonic, lk.key.mode);
+      info.appendChild(el('div', 'lick-name', lk.name));
+      info.appendChild(el('div', 'lick-sub',
+        `${lk.type} · ${lk.melody.length} notes · ${pcName(lk.key.tonic, flats)}${lk.key.mode === 'minor' ? 'm' : ''}`));
+      row.appendChild(info);
+
+      const btns = el('div', 'lick-btns');
+      const mk = (label, fn, cls) => { const b = el('button', cls, label); b.onclick = fn; return b; };
+      btns.appendChild(mk('▶', () => playPhrase(lk, 104)));
+      btns.appendChild(mk('echo', () => startLickEcho(lk, 0)));
+      btns.appendChild(mk('12 keys', () => startTranspose(lk)));
+      const del = mk('×', () => {
+        saveLicks(loadLicks().filter(x => x.id !== lk.id));
+        renderLicks();
+      }, 'lick-del');
+      btns.appendChild(del);
+      row.appendChild(btns);
+      box.appendChild(row);
+    }
+  }
+
+  // echo a saved lick (optionally transposed by `semis`) — logs to cat 'licks'
+  function startLickEcho(lick, semis) {
+    const ph = semis ? transposePhrase(lick, semis) : lick;
+    echoState.phrase = ph;
+    echoState.mode = 'echo';
+    echoState.cat = 'licks';
+    echoState.item = lick.id;
+    echoState.recording = false; echoState.recorded = [];
+    echoState.onGraded = null;
+    $('licks-drill').style.display = '';
+    $('licks-drill-result').innerHTML = '';
+    const flats = useFlats(ph.key.tonic, ph.key.mode);
+    $('licks-drill-meta').textContent = `${lick.name} in ${pcName(ph.key.tonic, flats)}${ph.key.mode === 'minor' ? 'm' : ''} — hear it, then echo`;
+    playPhrase(ph, 104, { onDone: () => { $('licks-drill-status').textContent = 'echo it — hit ● record'; } });
+  }
+
+  // cycle a lick through all 12 keys, echoing + grading each
+  function startTranspose(lick) {
+    lickState.drill = lick;
+    lickState.keyOrder = shuffle([...Array(12).keys()]);
+    lickState.keyIdx = 0;
+    $('licks-drill').style.display = '';
+    nextTransposeKey();
+  }
+  function nextTransposeKey() {
+    const lick = lickState.drill;
+    if (!lick) return;
+    if (lickState.keyIdx >= lickState.keyOrder.length) {
+      $('licks-drill-status').textContent = 'all 12 keys done ✓';
+      $('licks-drill-meta').textContent = `${lick.name} — cycle complete`;
+      lickState.drill = null;
+      return;
+    }
+    const semis = ((lickState.keyOrder[lickState.keyIdx] - lick.key.tonic) % 12 + 12) % 12;
+    const ph = transposePhrase(lick, semis);
+    echoState.phrase = ph; echoState.mode = 'echo'; echoState.cat = 'licks'; echoState.item = lick.id;
+    echoState.recording = false; echoState.recorded = [];
+    echoState.onGraded = () => { lickState.keyIdx++; setTimeout(nextTransposeKey, 1600); };
+    const flats = useFlats(ph.key.tonic, ph.key.mode);
+    $('licks-drill-meta').textContent =
+      `key ${lickState.keyIdx + 1}/12 — ${pcName(ph.key.tonic, flats)}${ph.key.mode === 'minor' ? 'm' : ''}`;
+    $('licks-drill-result').innerHTML = '';
+    playPhrase(ph, 104, { onDone: () => { $('licks-drill-status').textContent = 'echo it — hit ● record'; } });
+  }
+
+  $('licks-drill-play').onclick = () => { if (echoState.phrase) playPhrase(echoState.phrase, 104); };
+  $('licks-drill-record').onclick = () => {
+    if (!echoState.phrase) return;
+    if (echoState.recording) {
+      echoGrade($('licks-drill-result'), null);
+      $('licks-drill-record').classList.remove('on'); $('licks-drill-record').textContent = '● record my echo';
+      return;
+    }
+    echoArm();
+    $('licks-drill-record').classList.add('on'); $('licks-drill-record').textContent = '■ recording — grade when done';
+    $('licks-drill-status').textContent = 'play it back…';
+  };
+  $('licks-drill-grade').onclick = () => {
+    echoGrade($('licks-drill-result'), null);
+    $('licks-drill-record').classList.remove('on'); $('licks-drill-record').textContent = '● record my echo';
+  };
+
   // ---- progress / stats panel ----
   function renderStats() {
     const s = progressStats();
@@ -1022,6 +1279,7 @@ function initDojo(opts = {}) {
       if (btn.dataset.tab === 'stats') renderStats();
       if (btn.dataset.tab === 'today') currRenderToday();
       if (btn.dataset.tab === 'path') currRenderPath();
+      if (btn.dataset.tab === 'licks') renderLicks();
     };
   }
 

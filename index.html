@@ -201,7 +201,9 @@
         <button data-tab="intervals">intervals</button>
         <button data-tab="melodic">scale degrees</button>
         <button data-tab="sing">sing</button>
+        <button data-tab="echo">echo</button>
         <button data-tab="rhythm">rhythm</button>
+        <button data-tab="licks">licks</button>
         <button data-tab="stats">progress</button>
         <button data-tab="guide">how to practice</button>
       </nav>
@@ -444,6 +446,41 @@
       </div>
     </section>
 
+    <section id="panel-echo" class="dj-panel">
+      <p class="blurb">Call &amp; response — the productive half of ear training.
+        An idiomatic line plays over a light comp; reproduce it on your
+        keyboard, MIDI, or the on-screen piano. <b>echo</b> lets you replay it;
+        <b>dictation</b> plays it once and you rebuild it from memory. Graded
+        note-by-note. Save a phrase you like to the <b>lick bank</b>.</p>
+      <div class="dj-row">
+        <select id="echo-type">
+          <option value="any">any line</option>
+          <option value="guide">guide-tone line</option>
+          <option value="bebop">bebop run</option>
+          <option value="enclosure">enclosure</option>
+        </select>
+        <select id="echo-mode">
+          <option value="echo">echo · replayable</option>
+          <option value="dictation">dictation · once</option>
+        </select>
+        <select id="echo-keymode">
+          <option value="major">major ii–V–I</option>
+          <option value="minor">minor ii–V–i</option>
+        </select>
+        <button id="echo-new" class="primary">new phrase</button>
+        <button id="echo-play">▶ hear it</button>
+        <span id="echo-meta" class="dj-meta"></span>
+      </div>
+      <div class="dj-row">
+        <button id="echo-record">● record my echo</button>
+        <button id="echo-grade">grade my echo</button>
+        <button id="echo-save" title="save this phrase to the lick bank">save to licks</button>
+        <span id="echo-status" class="dj-meta"></span>
+        <span id="echo-score" class="dj-score"></span>
+      </div>
+      <div id="echo-result" class="grade-result"></div>
+    </section>
+
     <section id="panel-rhythm" class="dj-panel">
       <p class="blurb">Rhythm is half of transcription and the app trained none
         of it. Listen to a one-bar pattern, then tap it back over a count-in —
@@ -468,6 +505,26 @@
       <div class="dj-row">
         <span id="rhy-result" class="dj-result"></span>
         <span id="rhy-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-licks" class="dj-panel">
+      <p class="blurb">Your lick bank — phrases you've banked from the echo tab.
+        Play one, echo it back, or cycle it through all <b>12 keys</b> playing it
+        in each. Transposing a line into every key is how it becomes yours;
+        each echo is graded and logged to your progress.</p>
+      <div id="licks-list" class="licks-list"></div>
+      <div id="licks-drill" class="licks-drill" style="display:none">
+        <div class="dj-row">
+          <span id="licks-drill-meta" class="dj-meta"></span>
+        </div>
+        <div class="dj-row">
+          <button id="licks-drill-play">▶ hear it</button>
+          <button id="licks-drill-record">● record my echo</button>
+          <button id="licks-drill-grade">grade</button>
+          <span id="licks-drill-status" class="dj-meta"></span>
+        </div>
+        <div id="licks-drill-result" class="grade-result"></div>
       </div>
     </section>
 
