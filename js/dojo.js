@@ -69,6 +69,7 @@ const DRILL_TABS = {
   tension:   { tab: 'tension',   start: 'tens-new' },
   changes:   { tab: 'changes',   start: 'changes-new' },
   bass:      { tab: 'bass',      start: 'bass-new' },
+  inversion: { tab: 'inversion', start: 'inv-new' },
 };
 
 function runAssignment(drill, config = {}) {
@@ -722,11 +723,16 @@ function initDojo(opts = {}) {
       bassState.guesses[i] === d ||
       (d === 'b5' && bassState.guesses[i] === '#4') || (d === '#4' && bassState.guesses[i] === 'b5'));
     bassScore.add(graded.filter(Boolean).length, graded.length);
+    // grade to the shared store so basslines feed mastery/SRS like every other
+    // drill (namespaced 'bass:' — bare degrees would collide with scale-degrees)
+    graded.forEach((g, i) => record('bass', `bass:${l.degrees[i]}`, g,
+      { guess: bassState.guesses[i] ? `bass:${bassState.guesses[i]}` : null }));
     bassFinish(graded);
   };
   $('bass-reveal').onclick = () => {
     if (!bassState.line || bassState.done) return;
     bassScore.add(0, bassState.line.degrees.length);
+    bassState.line.degrees.forEach(d => record('bass', `bass:${d}`, false)); // gave up = missed
     bassFinish(null);
   };
 
@@ -1600,6 +1606,59 @@ function initDojo(opts = {}) {
     tensPlay();
   };
   $('tens-replay').onclick = tensPlay;
+
+  // ---- inversion / bass-note drill (hear which chord tone is on the bottom) ----
+  const INV_QUAL = { triads: ['', 'm', 'dim', 'aug'], sevenths: ['maj7', '7', 'm7', 'm7b5'] };
+  const INV_LABEL = { R: 'root', 3: '3rd', 5: '5th', 7: '7th' };
+  const invScore = makeScore('inv-score');
+  const invState = { root: 0, quality: '', tone: 'R', answered: true, askedAt: 0 };
+  const invTones = q => (/7/.test(q) ? ['R', '3', '5', '7'] : ['R', '3', '5']);
+
+  function invBassMidi() {
+    const semi = chordToneInterval(invState.quality, invState.tone);
+    let m = 40 + ((invState.root + semi) % 12);
+    while (m < 43) m += 12;   // keep the bass in a plausible low register
+    return m;
+  }
+  function invPlay() {
+    if (invState.quality == null) return;
+    invState.askedAt = nowT();
+    // upper structure over the chosen bass tone — a root-position chord vs a slash
+    playSequence([{ notes: compNotes(invState.root, invState.quality), bass: invBassMidi(), beats: 3 }], 70);
+  }
+  function invBuild() {
+    const box = $('inv-answers');
+    box.innerHTML = '';
+    for (const t of invTones(invState.quality)) {
+      const chip = el('button', 'chip', INV_LABEL[t]);
+      chip.onclick = () => {
+        if (invState.answered) return;
+        invState.answered = true;
+        const ok = t === invState.tone;
+        invScore.add(ok ? 1 : 0);
+        recordTimed('inversion', `inv:${invState.tone}`, ok, `inv:${t}`, invState.askedAt);
+        chip.classList.add(ok ? 'good' : 'bad');
+        const f = useFlats(invState.root, 'major');
+        $('inv-result').textContent = (ok ? '✓ ' : '✗ ') +
+          `${pcName(invState.root, f)}${qualLabel(invState.quality)} with the ${INV_LABEL[invState.tone]} in the bass`;
+        setTimeout(() => { if (panelActive('inversion')) $('inv-new').click(); }, 1500);
+      };
+      box.appendChild(chip);
+    }
+  }
+  $('inv-new').onclick = () => {
+    invState.quality = pick(INV_QUAL[$('inv-level').value]);
+    invState.root = rand(12);
+    invState.tone = pick(invTones(invState.quality));
+    invState.answered = false;
+    $('inv-result').textContent = '';
+    const f = useFlats(invState.root, 'major');
+    $('inv-meta').textContent = `${pcName(invState.root, f)}${qualLabel(invState.quality)} — which tone is on the bottom?`;
+    invBuild();
+    invPlay();
+  };
+  $('inv-replay').onclick = invPlay;
+  $('inv-level').onchange = () => $('inv-new').click();
 
   // ---- progress / stats panel ----
   function renderStats() {

@@ -229,6 +229,7 @@
           <div class="tab-group-btns">
             <button data-tab="intervals">intervals</button>
             <button data-tab="qualities">qualities</button>
+            <button data-tab="inversion">inversions</button>
             <button data-tab="bass">basslines</button>
           </div>
         </div>
@@ -394,6 +395,27 @@
       <div class="dj-row">
         <span id="qual-result" class="dj-result"></span>
         <span id="qual-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-inversion" class="dj-panel">
+      <p class="blurb">Which note is on the bottom? A chord plays with one of its
+        tones in the bass — root position or an inversion (a slash chord). Name
+        the bass tone. Hearing the bass under a chord is half of reading real
+        changes, and it's what the <b>basslines</b> drill trains in motion.</p>
+      <div class="dj-row">
+        <select id="inv-level">
+          <option value="triads">triads</option>
+          <option value="sevenths">sevenths</option>
+        </select>
+        <button id="inv-new" class="primary">new chord</button>
+        <button id="inv-replay">▶ replay</button>
+        <span id="inv-meta" class="dj-meta"></span>
+      </div>
+      <div id="inv-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="inv-result" class="dj-result"></span>
+        <span id="inv-score" class="dj-score"></span>
       </div>
     </section>
 
