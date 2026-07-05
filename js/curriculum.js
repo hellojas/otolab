@@ -70,10 +70,8 @@ const UNITS = [
   {
     id: 'bass-motion', title: 'Bass · hear the root motion',
     drill: 'bass', cat: 'bass', config: {},
-    goalItems: ['fifties', 'stand-by-me', 'andalusian', 'pachelbel', 'twelve-bar',
-      'rhythm-changes', 'autumn-leaves', 'fly-me', 'i-will-survive', 'blue-bossa',
-      'hotel-california', 'whiter-shade'],
-    goalPct: 70, goalCount: 14, requires: ['mdeg-major'],
+    goalItems: ['bass:1', 'bass:4', 'bass:5', 'bass:6', 'bass:b7', 'bass:b3', 'bass:2'],
+    goalPct: 70, goalCount: 20, requires: ['mdeg-major'],
     blurb: 'The bass tells you the changes — trace a walking root line by scale degree.',
   },
   {

@@ -93,13 +93,14 @@ function persist() {
 
 const externalSubs = [];
 function onExternalChange(cb) { externalSubs.push(cb); }
+function notifyExternal() { for (const cb of externalSubs) { try { cb(); } catch (err) { /* isolate */ } } }
 if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('storage', e => {
     if (e.key !== KEY || !e.newValue) return;
     const disk = rawParse(e.newValue);
     if (!disk) return;
     store = mergeStores(disk, store);
-    for (const cb of externalSubs) { try { cb(); } catch (err) { /* isolate */ } }
+    notifyExternal();
   });
 }
 
@@ -288,13 +289,14 @@ function importData(d) {
   if (!incoming) return false;
   store = mergeStores(store, incoming);
   persist();
+  notifyExternal();   // a sync/restore can complete units — let the curriculum repaint
   return true;
 }
 
 function reset() {
   store = blank();
-  persist();
-  notifyChange();
+  safeSet(JSON.stringify(store)); // write blank directly; persist() would re-merge disk and undo it
+  notifyExternal();
 }
 
 export {
