@@ -186,6 +186,117 @@ Files: `js/phrases.js` (new), `js/dojo.js` (+echo tab, +licks view), `index.html
 Full-band transcription (comping voicings, walking-bass/drums), notation-export
 polish, DAW-style features. Diminishing returns for an ear trainer.
 
+## Content track: the standards library (separate from the drill curriculum)
+
+The build plan above is the **drills/curriculum** track. This is the parallel
+**content** track: growing and verifying the lead-sheet library the standards
+room and the form/comp drills draw on. It's independent — a data problem, not a
+UI one.
+
+### Where the library stands
+- **106 tunes.** `js/standards-data.js` (25: the originals, etudes, and
+  public-domain melody tunes) + `js/standards-data-extra.js` (81: the expansion).
+  Both export `SONGS`; `standards.js` concatenates them.
+- **Schema** (per tune): `{ id, title, composer, year, tonic (pc 0–11),
+  mode:'major'|'minor', bpb:3|4, style:'swing'|'bossa'|'ballad'|'waltz', bpm,
+  sections:[{name, bars:['Cm7','Gm7 C7', …]}], melody? }`. One bar per `bars`
+  element; two chords in a bar = space-separated, split evenly. Form is written
+  **out in full** (no repeats). Chords only, except `melody` (see below).
+- **Chord tokens are a fixed whitelist** — the qualities in `theory.js`
+  `chordVoicing` / `QUALITIES`. No slash chords (write root position). `reference.js`
+  `parseChordSymbol` is the source of truth for what parses.
+- **Copyright line we hold:** chord progressions are uncopyrightable facts, so
+  changes ship freely (iReal-Pro's model). **Melodies only for public-domain /
+  traditional tunes and original otolab etudes** — never copyrighted heads.
+
+### The Real Book is in the repo
+`Real_Book_1_C-compressed.pdf` (5th ed., 511 pages) is committed on `main`. Keep
+it there but **out of the app tree** — it's a 9 MB binary; nothing imports it.
+- **Page offset: PDF page = book page + 12.** Charts start at PDF p.13 (book p.1).
+- **Errata:** PDF pp.9–13 are the book's own "Corrections for Real Book #1" —
+  read them first and apply; the printed charts have known errors.
+- Render/read pages with the Read tool's `pages` param (poppler-utils installed).
+- **Conversion when transcribing:** minor is written `-` (`E-7`=Em7); drop slash
+  basses (`Eb-7/Bb`→`Ebm7`); map exotic labels to the whitelist (`alt`→`7#5`,
+  `-Δ`→`mMaj7`, `Δ`→`maj7`, `ø`→`m7b5`); simplify >2 chords/bar to the two
+  structural ones; write repeats/DS/1st-2nd-endings out in full.
+
+### Two jobs still open
+
+**A. Extract the tunes that were skipped.** The following famous standards are
+in the book but not yet in the library — I skipped them by hand because the
+handwritten charts have 1st/2nd endings, dense harmony, slash chords, or
+genuinely variant published changes, and shipping wrong changes poisons practice.
+They need a **per-tune agent** that reads the page + errata and cross-checks one
+source, or careful manual work:
+
+| tune | book p. | why hard |
+|---|---|---|
+| My Romance | 311 | 1st/2nd endings, variant changes |
+| Sophisticated Lady | 397 | chromatic, dense |
+| 'Round Midnight | 364 | dense, errata-heavy |
+| Naima | 315 | pedal-tone, unusual |
+| Moment's Notice | 299 | fast ii–V chain |
+| Nica's Dream | 319 | multi-section |
+| Joy Spring | 247 | modulating A, ambiguous bars |
+| Once I Loved | 329 | slash chords, endings |
+| Con Alma | 89 | remote modulations |
+| Lullaby of Birdland | 277 | bridge reconstruction |
+| Like Someone in Love | 262 | descending slash chords, endings |
+| Sugar | 414 | (9) extensions, parenthetical alts |
+| Meditation | 288 | uncertain bars 3–4 |
+| In a Mellow Tone | 222 | 16-bar halves, differing endings |
+| Blue Train | 58 | ii–V arrangement, not a plain blues |
+| Sidewinder | 382 | 24-bar, chromatic-approach bars |
+| Here's That Rainy Day | 191 | hard-to-read scan |
+
+The **easy** ones (blues + modal, clean one-chord-per-bar) are already done:
+Foggy Day, One Note Samba, Impressions, Mr. P.C., All Blues, Freddie Freeloader,
+Straight No Chaser, Blue Monk, Bessie's Blues.
+
+**B. Verify all 106 charts against the book.** Never done end-to-end (the agent
+fleet that was going to do it died on a spend limit). One agent per ~14 tunes:
+read each tune's page + errata, compare chords/form, emit one line
+`id | OK/MINOR/MAJOR | detail`. Treat jam-session divergence (6 vs maj7, added
+turnarounds) as MINOR; only a wrong key / wrong form / structurally wrong section
+is MAJOR. Reconcile MAJORs into the data files.
+
+**Both A and B are agent-fleet work** (parallel `Task` subagents). They stalled
+because the Fable-5 monthly spend limit was hit mid-session — every subagent
+died with a 400. Relaunch once budget resets (`/usage-credits`), or grind by
+hand at ~2 tunes / 10 attempts.
+
+### The extraction pipeline (rebuild it in scratchpad — it's ephemeral)
+The drafting/validation harness lived in the session scratchpad and is gone. To
+recreate:
+- **`SPEC.md`** — the schema + hard rules + conversion rules above, handed to each
+  agent verbatim.
+- **`assemble.mjs`** — globs per-tune `*.js` files + `batch*.txt` (```js blocks),
+  `new Function`-evals the object literals, dedupes vs core ids/titles, validates
+  (parseable tokens via `reference.js`, ≤2 chords/bar, 8–96 bars, no slash, no
+  melody), sorts by title, regenerates `standards-data-extra.js`.
+- **`check.mjs`** — imports both data files with
+  `node --experimental-default-type=module`, asserts tonic/bpb/style/bpm ranges,
+  unique ids, every chord parses to a ≥3-note voicing, and (for melody tunes)
+  that melody beats == bars × bpb.
+- Agents that emit chart data trip the **content filter** if they dump big blocks
+  in the final message — have them **write each tune to its own file** and return
+  only a terse id list.
+
+### Library roadmap (content, lower priority than A/B)
+- **Melodies for the now-public-domain tunes** already in the library (anything
+  published ≤1930: Body and Soul, Georgia on My Mind, I Got Rhythm, All of Me,
+  Sweet Georgia Brown, Summertime…). Format: `melody` string of `'Note:beats'` /
+  `'r:beats'` tokens from bar 1 beat 1 (see the etudes in `standards-data.js`);
+  `standards.js parseMelody` + `gradeMelody` already consume it, unlocking the
+  melody-dictation quiz for those tunes.
+- **Comp depth** — walking bass + a drum feel in `standards.js addComp`. (Note:
+  the drill-curriculum handoff lists full-band transcription as out of scope for
+  *drills*; this is different — it's making the standards *playback* groove
+  better, which is low-risk and additive.)
+- More tunes generally; the `paste-a-tab` dojo drill already turns any pasted
+  changes into a quiz, so the library isn't the only path in.
+
 ## Testing recipe
 
 No test suite; verify in a real browser with the pre-installed Chromium.
