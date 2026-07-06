@@ -194,8 +194,8 @@ room and the form/comp drills draw on. It's independent — a data problem, not 
 UI one.
 
 ### Where the library stands
-- **106 tunes.** `js/standards-data.js` (25: the originals, etudes, and
-  public-domain melody tunes) + `js/standards-data-extra.js` (81: the expansion).
+- **120 tunes.** `js/standards-data.js` (25: the originals, etudes, and
+  public-domain melody tunes) + `js/standards-data-extra.js` (95: the expansion).
   Both export `SONGS`; `standards.js` concatenates them.
 - **Schema** (per tune): `{ id, title, composer, year, tonic (pc 0–11),
   mode:'major'|'minor', bpb:3|4, style:'swing'|'bossa'|'ballad'|'waltz', bpm,
@@ -232,39 +232,49 @@ source, or careful manual work:
 
 | tune | book p. | why hard | status |
 |---|---|---|---|
-| My Romance | 311 | 1st/2nd endings, variant changes | read scan; form/ending layout ambiguous — deferred |
-| Sophisticated Lady | 397 | chromatic, dense | not attempted |
-| 'Round Midnight | 364 | dense, errata-heavy | not attempted |
-| Naima | 315 | pedal-tone, unusual | read scan; too chromatic/pedal-dependent to reduce cleanly — deferred |
-| Moment's Notice | 299 | fast ii–V chain | read scan (38-bar, 1st/2nd + coda); too intricate to ship confident — deferred |
-| Nica's Dream | 319 | multi-section | not attempted |
-| Joy Spring | 247 | modulating A, ambiguous bars | not attempted |
+| ~~My Romance~~ | 311 | 1st/2nd endings, variant changes | **DONE** — C major, AABC 32 bars (endings played through, line-cliché A) |
+| ~~Sophisticated Lady~~ | 397 | chromatic, dense | **DONE** — Ab major, AABA 32 bars; chromatic descents reduced to endpoints, bridge in G |
+| ~~'Round Midnight~~ | 364 | dense, errata-heavy | **DONE** — Eb minor, AABA 32 bars; both errata applied; bridge inner bars simplified |
+| Naima | 315 | pedal-tone, unusual | **DEFER (final)** — pedal-slash chords reduce to conflicting changes across sources (RB known-wrong); meaningless without the pedal, would poison practice |
+| ~~Moment's Notice~~ | 299 | fast ii–V chain | **DONE** — Eb major, 38 bars (1st + 2nd ending + iconic Gm7-Fm7/Eb6/9 coda vamp) |
+| ~~Nica's Dream~~ | 319 | multi-section | **DONE** — Bb minor, AABA 64 bars; mMaj7 Latin vamp + bright Db bridge |
+| ~~Joy Spring~~ | 247 | modulating A, ambiguous bars | **DONE** — F major, ABAC 32 bars; errata bar 13 = Bbm7 A7 |
 | ~~Once I Loved~~ | 329 | slash chords, endings | **DONE** — Dm bossa, A(16)+B(14) |
-| Con Alma | 89 | remote modulations | read scan; connective ii–Vs uncertain — deferred |
-| Lullaby of Birdland | 277 | bridge reconstruction | not attempted |
-| Like Someone in Love | 262 | descending slash chords, endings | read scan; bridge modulation unclear — deferred |
-| Sugar | 414 | (9) extensions, parenthetical alts | read scan; 24-bar repeat layout unclear — deferred |
+| Con Alma | 89 | remote modulations | **DEFER (final)** — RB p.101 is a chromatic-bass reharm that can't reduce to the E–C–Ab skeleton without guessing; all cross-check lead sheets 403'd |
+| ~~Lullaby of Birdland~~ | 277 | bridge reconstruction | **DONE** — F minor, AABA 32 bars; bridge Abmaj7 F7 Bbm7 Eb7 |
+| ~~Like Someone in Love~~ | 262 | descending slash chords, endings | **DONE** — Eb major, ABAC 32 bars; slash basses dropped |
+| ~~Sugar~~ | 414 | (9) extensions, parenthetical alts | **DONE** — C minor, 32 bars (16-bar form ×2 w/ 1st+2nd ending); errata Gb7 applied |
 | ~~Meditation~~ | 288 | uncertain bars 3–4 | **DONE** — C bossa, A(16)+B(8)+coda; bars 3–4 set to Bb7 B7 |
 | ~~In a Mellow Tone~~ | 222 | 16-bar halves, differing endings | **DONE** — Ab swing, two 16-bar halves |
-| Blue Train | 58 | ii–V arrangement, not a plain blues | read scan; the RB arrangement is genuinely non-standard — deferred |
-| Sidewinder | 382 | 24-bar, chromatic-approach bars | not attempted |
-| Here's That Rainy Day | 191 | hard-to-read scan | read scan; too illegible to trust — deferred |
+| Blue Train | 58 | ii–V arrangement, not a plain blues | **DEFER (final)** — RB chart is a non-standard Cm reharm that conflicts with the universally-played Eb blues; would teach misleading changes |
+| ~~Sidewinder~~ | 382 | 24-bar, chromatic-approach bars | **DONE** — F major, 24 bars; RB punch chords (D7 Eb7, G7 Ab7…) over the F7 vamp |
+| ~~Here's That Rainy Day~~ | 191 | hard-to-read scan | **DONE** — G major, ABAC 32 bars; commonly-played changes (EbM7-AbM7 interchange) |
 
 The **easy** ones (blues + modal, clean one-chord-per-bar) are already done:
 Foggy Day, One Note Samba, Impressions, Mr. P.C., All Blues, Freddie Freeloader,
 Straight No Chaser, Blue Monk, Bessie's Blues.
 
-**Progress note (this session).** Added **In a Mellow Tone, Once I Loved,
+**Progress note (earlier session).** Added **In a Mellow Tone, Once I Loved,
 Meditation** (all read off the Real Book scans + errata, correct key + form
 guaranteed, transcribed conservatively — a few inner bars are common-practice
-choices, MINOR by the rubric below). The other 14 were each opened and are
-deferred with the reasons above: every remaining tune has a 1st/2nd-ending
-layout, a chromatic/pedal passage, or a scan too rough to trust, so shipping
-them solo risks wrong changes. They're the right target for a **per-tune agent
-that cross-checks a second source** (web fetch was 403-blocked this session, so
-manual reads only). The library is now **109 tunes**.
+choices, MINOR by the rubric below).
 
-**B. Verify all 109 charts against the book.** Full blind re-read still not done
+**Progress note (latest session).** Ran the **per-tune agent fleet** the note
+above called for — one focused agent per deferred tune, each reading its exact
+Real Book page + errata and cross-checking the web (WebSearch works; most
+lead-sheet WebFetches still 403). Added **11 tunes**: Joy Spring, My Romance,
+Sophisticated Lady, 'Round Midnight, Moment's Notice, Nica's Dream, Lullaby of
+Birdland, Like Someone in Love, Sugar, The Sidewinder, Here's That Rainy Day.
+Every chart passes the parser/bar-count validator and browser-comped without
+errors; key + form verified against two sources, inner bars are conservative
+common-practice reductions (MINOR by the rubric). **3 remain deferred (final):
+Naima, Con Alma, Blue Train** — for each, the RB chart either reduces to
+source-conflicting changes (Naima's pedal, Con Alma's reharm) or is a
+non-standard arrangement that would teach misleading changes (Blue Train's Cm
+reharm vs the played Eb blues). The library is now **120 tunes** (25 core + 95
+extra).
+
+**B. Verify all 120 charts against the book.** Full blind re-read still not done
 (needs a title→page index the alphabetical scan doesn't give cheaply, and the
 per-tune agent that would do it died on a spend limit before). **Errata slice
 DONE, though** — the highest-value subset. The Real Book ships its own
