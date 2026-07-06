@@ -1,0 +1,10 @@
+{
+  "name": "otolab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ear-training curriculum — static ES-module app, no build step",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

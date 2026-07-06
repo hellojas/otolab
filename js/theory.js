@@ -11,8 +11,21 @@ function useFlats(tonicPc, mode) {
   return mode === 'minor' ? FLAT_MINOR_TONICS.has(tonicPc) : FLAT_MAJOR_TONICS.has(tonicPc);
 }
 
+// Note-naming systems. The internal spelling stays letter-based (C, F#, Bb) —
+// this only restyles what the learner sees, so grading and parsing are
+// untouched. 'german' swaps B↔H (H = B natural, B = B♭); 'solfege' is fixed-do
+// (Do Re Mi …), the naming much of continental Europe learns.
+const LETTER_TO_SOLFEGE = { C: 'Do', D: 'Re', E: 'Mi', F: 'Fa', G: 'Sol', A: 'La', B: 'Si' };
+let noteNaming = 'letters';
+function setNoteNaming(m) { noteNaming = (m === 'german' || m === 'solfege') ? m : 'letters'; }
+function styleName(name) {
+  if (noteNaming === 'german') return name === 'B' ? 'H' : name === 'Bb' ? 'B' : name;
+  if (noteNaming === 'solfege') return (LETTER_TO_SOLFEGE[name[0]] || name[0]) + name.slice(1);
+  return name;
+}
+
 function pcName(pc, flats) {
-  return (flats ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP)[((pc % 12) + 12) % 12];
+  return styleName((flats ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP)[((pc % 12) + 12) % 12]);
 }
 
 function midiName(midi, flats) {
@@ -298,6 +311,9 @@ function chordVoicing(root, quality) {
     '7': [0,4,7,10], maj7: [0,4,7,11], m7: [0,3,7,10], m7b5: [0,3,6,10], dim7: [0,3,6,9],
     '6': [0,4,7,9], m6: [0,3,7,9], mMaj7: [0,3,7,11], '7sus4': [0,5,7,10],
     '9': [0,4,7,10,14], maj9: [0,4,7,11,14], m9: [0,3,7,10,14],
+    '7b9': [0,4,10,13], '7#9': [0,4,10,15], '7#11': [0,4,10,18], '13': [0,4,10,14,21],
+    '7#5': [0,4,8,10], '7b5': [0,4,6,10], 'maj7#5': [0,4,8,11], 'maj7#11': [0,4,11,18],
+    add9: [0,4,7,14], madd9: [0,3,7,14], '6/9': [0,4,9,14], m11: [0,3,10,14,17],
   }[quality] || [0,4,7];
   const r = 60 + ((root % 12) + 12) % 12;
   const anchor = r > 66 ? r - 12 : r;
@@ -339,8 +355,59 @@ function voiceLeading(prev, cur) {
   return moves;
 }
 
+// ---- melodic analysis: a single note over a chord, and vs the key ----
+
+// Scale-degree name of a pitch class relative to a key tonic (movable-do,
+// number style). `inKey` = member of the major / natural-minor scale.
+const DEGREE_NUMS = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
+const MAJOR_SCALE = new Set([0, 2, 4, 5, 7, 9, 11]);
+const MINOR_SCALE = new Set([0, 2, 3, 5, 7, 8, 10]);
+
+function scaleDegree(notePc, key) {
+  const d = ((notePc - key.tonic) % 12 + 12) % 12;
+  const scale = key.mode === 'minor' ? MINOR_SCALE : MAJOR_SCALE;
+  return { deg: DEGREE_NUMS[d], semis: d, inKey: scale.has(d) };
+}
+
+// Tension-stack reading of an interval above a chord root (default naming).
+const TENSION_LABEL = ['R','b9','9','#9','3','11','#11','5','b13','13','b7','7'];
+
+// noteVsChord(notePc, chord) — chord: { root, quality }. Names the note's role
+// over the chord and classifies it: 'chord' (a chord tone — the safe landing
+// notes), 'tension' (a characteristic color/extension that sounds intentional),
+// or 'approach' (chromatic / outside — usually a passing or approach note).
+function noteVsChord(notePc, chord) {
+  const iv = ((notePc - chord.root) % 12 + 12) % 12;
+  const ch = qualityIntervals(chord.quality || '');
+  const fam = qualityFamily(chord.quality || '');
+  const third   = ch.includes(4) ? 4 : ch.includes(3) ? 3 : ch.includes(5) ? 5 : ch.includes(2) ? 2 : null;
+  const fifth   = ch.includes(7) ? 7 : ch.includes(6) ? 6 : ch.includes(8) ? 8 : null;
+  const seventh = ch.includes(11) ? 11 : ch.includes(10) ? 10 : ch.includes(9) ? 9 : null;
+
+  if (ch.includes(iv)) {
+    let label = 'R';
+    if (iv !== 0) {
+      if (iv === third)   label = iv === 3 ? 'b3' : iv === 5 ? 'sus4' : iv === 2 ? 'sus2' : '3';
+      else if (iv === fifth)   label = iv === 6 ? 'b5' : iv === 8 ? '#5' : '5';
+      else if (iv === seventh) label = iv === 11 ? '7' : iv === 9 ? '6' : 'b7';
+      else label = TENSION_LABEL[iv];
+    }
+    return { iv, label, role: 'chord' };
+  }
+
+  // non-chord tone: is it a characteristic tension for this chord family?
+  const TENSIONS = {
+    dom:   new Set([1, 2, 3, 6, 8, 9]),   // altered + natural extensions all live over dom
+    major: new Set([2, 6, 9]),            // 9, #11, 13
+    minor: new Set([2, 5, 9]),            // 9, 11, 13 (dorian-ish)
+  };
+  const role = (TENSIONS[fam] && TENSIONS[fam].has(iv)) ? 'tension' : 'approach';
+  return { iv, label: TENSION_LABEL[iv], role };
+}
+
 export {
-  NOTE_NAMES_SHARP, NOTE_NAMES_FLAT, useFlats, pcName, midiName,
-  detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey,
+  NOTE_NAMES_SHARP, NOTE_NAMES_FLAT, useFlats, setNoteNaming, pcName, midiName,
+  detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey, romanFor,
   qualityFamily, chordVoicing, qualityIntervals, guideTones, voiceLeading,
+  scaleDegree, noteVsChord,
 };

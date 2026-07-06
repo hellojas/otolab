@@ -10,13 +10,23 @@
 <body>
   <header>
     <h1>otolab</h1>
-    <p class="tagline">loop a song · play what you hear · the app names the chord &amp; its function</p>
+    <p class="tagline">
+      <span class="tag-home">hear it, play it, name it — your daily ear-training workout</span>
+      <span class="tag-lab">loop a song · play what you hear · the app names the chord &amp; its function</span>
+      <span class="tag-dojo">the practice hall 道場 — drills, standards &amp; dictation, no video needed</span>
+    </p>
+    <div class="mode-toggle" title="home = today's workout · lab = transcribe over a YouTube recording · dojo = pure practice, no video">
+      <button data-mode="home">home</button>
+      <button data-mode="lab">lab</button>
+      <button data-mode="dojo">dojo</button>
+    </div>
     <div class="theme-picker">
       <button class="theme-dot" data-theme="yoru" title="yoru 夜 — night indigo"></button>
       <button class="theme-dot" data-theme="sumi" title="sumi 墨 — ink &amp; vermillion"></button>
       <button class="theme-dot" data-theme="washi" title="washi 和紙 — paper &amp; indigo"></button>
       <button class="theme-dot" data-theme="kissa" title="kissa 喫茶 — jazz-café amber"></button>
     </div>
+    <button id="progress-btn" class="progress-btn" title="your practice progress — streak, accuracy & weak spots (works in both modes)">◔ progress</button>
     <div class="settings-wrap">
       <button id="settings-btn" title="settings — synth voice &amp; volume">⚙</button>
       <div id="settings-panel" class="settings-panel" hidden>
@@ -26,14 +36,60 @@
         <label class="set-row">synth volume
           <input id="synth-vol" type="range" min="10" max="100" value="50">
         </label>
+        <label class="set-row" title="note-name system used everywhere labels appear">note names
+          <select id="notename-select">
+            <option value="letters">letters — C D E</option>
+            <option value="solfege">solfège — Do Re Mi</option>
+            <option value="german">German — H = B♮</option>
+          </select>
+        </label>
+        <label class="set-row" title="train your ears to survive different instruments & registers, not just one clean voice">ear challenge
+          <select id="challenge-select">
+            <option value="0">off — clean</option>
+            <option value="1">timbres — random voice</option>
+            <option value="2">hard — + register</option>
+          </select>
+        </label>
         <button id="voice-preview" class="set-preview" title="hear the current voice on a Cmaj7">♪ preview</button>
+        <hr class="set-sep">
+        <div class="set-row set-col">
+          <span>progress &amp; backup</span>
+          <span id="sync-status" class="sync-status" title="cloud sync state">local only</span>
+        </div>
+        <div class="set-row set-btns">
+          <button id="backup-btn" class="set-preview" title="download everything — SRS history, streak, curriculum, licks, saved tunes">⬇ back up all</button>
+          <label class="import-label set-preview" title="restore from a backup file (merges into what's here)">⬆ restore<input id="restore-input" type="file" accept=".json" hidden></label>
+        </div>
       </div>
     </div>
   </header>
 
+  <section class="home-section">
+    <p class="home-lead">Two rooms, one ear. <b>lab</b> transcribes over a
+      YouTube recording; the <b>dojo</b> is the practice hall of drills. Start
+      with today's workout — it pulls from where you are and routes you into the
+      right room.</p>
+    <div id="curr-today" class="curr-today"></div>
+    <div class="home-routes">
+      <button class="home-route" data-goto="dojo">
+        <span class="home-route-t">practice drills →</span>
+        <span class="home-route-s">intervals, function, singing, rhythm — the dojo</span>
+      </button>
+      <button class="home-route" data-goto="lab">
+        <span class="home-route-t">transcribe a song →</span>
+        <span class="home-route-s">loop a recording and name the changes — the lab</span>
+      </button>
+      <button class="home-route" data-goto="path">
+        <span class="home-route-t">see the full path →</span>
+        <span class="home-route-s">the syllabus, unit by unit</span>
+      </button>
+    </div>
+  </section>
+
   <section class="load-row">
     <input id="video-url" type="text" placeholder="paste a YouTube link or video id…">
     <button id="load-btn">load</button>
+    <label id="audio-file-label" class="import-label" title="transcribe a local audio file — no YouTube needed">♪ file<input id="audio-file" type="file" accept="audio/*" hidden></label>
     <div id="recent" class="recent"></div>
   </section>
 
@@ -79,7 +135,7 @@
         <div id="function-line"></div>
         <div class="capture-row">
           <button id="capture-btn" title="Enter">log chord @ current time ⏎</button>
-          <button id="practice-toggle">practice: off</button>
+          <button id="practice-toggle" title="hide the logged chords and quiz yourself against your own transcription">quiz: off</button>
           <button id="reveal-btn" style="display:none">reveal</button>
           <span id="quiz-score"></span>
         </div>
@@ -132,6 +188,29 @@
     <div id="timeline" class="timeline"></div>
   </section>
 
+  <section class="solo-section">
+    <div class="section-head">
+      <h2>solo</h2>
+      <button id="solo-log" title="log the note you're playing/humming at the current video time (n)">+ note @ playhead</button>
+      <button id="solo-mic" title="hum or sing the line — the mic names the pitch so you can log it without an instrument">🎤 hum to note</button>
+      <button id="solo-sing" title="sing along with the record — each sung note is scored against the chord under the playhead (chord tone / tension / approach)">🎙 sing over: off</button>
+      <button id="solo-play" title="play the transcribed line back through the synth">▶ line</button>
+      <button id="solo-along" title="sound each logged note as the video reaches it — check the line against the record">along: off</button>
+      <button id="solo-clear" title="delete every logged note">clear</button>
+      <span id="solo-detected" class="solo-detected">—</span>
+    </div>
+    <p class="drill-hint">Transcribe a single line — a solo, a riff, a melody. Play or
+      hum one note, hit <kbd>n</kbd> to log it at the playhead. Each note is placed on
+      the roll over the chord of the moment and labeled with its role: a
+      <span class="tag-diatonic">chord tone</span>, a
+      <span class="tag-secondary">tension</span>, or an
+      <span class="tag-outside">approach note</span>. Log the changes above first so
+      the line has harmony to sit on.</p>
+    <div id="solo-roll" class="solo-roll"></div>
+    <div id="solo-summary" class="solo-summary"></div>
+    <div id="solo-sing-tally" class="solo-sing-tally"></div>
+  </section>
+
   <section class="lyrics-section">
     <div class="section-head">
       <h2>lyrics</h2>
@@ -159,56 +238,631 @@
     <div id="grade-result" class="grade-result"></div>
   </section>
 
-  <section class="drill-section">
+  <section class="dojo-section">
     <div class="section-head">
-      <h2>drill</h2>
-      <button id="drill-start">start</button>
-      <select id="drill-pool" title="which chords can come up">
-        <option value="diatonic">diatonic 7ths</option>
-        <option value="outside">+ common outside</option>
-      </select>
-      <button id="drill-replay" title="r">replay</button>
-      <button id="drill-cadence" title="hear the key-setting cadence again">cadence</button>
-      <button id="drill-reveal">reveal</button>
-      <span id="drill-status"></span>
-      <span id="drill-score"></span>
+      <h2>dojo</h2>
+      <nav id="dojo-tabs">
+        <div class="tab-group">
+          <span class="tab-group-label">start</span>
+          <div class="tab-group-btns">
+            <button data-tab="path" class="active">path</button>
+          </div>
+        </div>
+        <div class="tab-group">
+          <span class="tab-group-label">1 · foundations</span>
+          <div class="tab-group-btns">
+            <button data-tab="intervals">intervals</button>
+            <button data-tab="qualities">qualities</button>
+            <button data-tab="inversion">inversions</button>
+            <button data-tab="bass">basslines</button>
+          </div>
+        </div>
+        <div class="tab-group">
+          <span class="tab-group-label">2 · function</span>
+          <div class="tab-group-btns">
+            <button data-tab="degrees">degrees</button>
+            <button data-tab="melodic">scale degrees</button>
+            <button data-tab="cadence">cadences</button>
+            <button data-tab="modal">modes</button>
+            <button data-tab="tension">tensions</button>
+          </div>
+        </div>
+        <div class="tab-group">
+          <span class="tab-group-label">3 · repertoire</span>
+          <div class="tab-group-btns">
+            <button data-tab="tunes">tunes</button>
+            <button data-tab="changes">changes</button>
+            <button data-tab="standards">standards</button>
+            <button data-tab="form">form</button>
+          </div>
+        </div>
+        <div class="tab-group">
+          <span class="tab-group-label">produce</span>
+          <div class="tab-group-btns">
+            <button data-tab="sing">sing</button>
+            <button data-tab="voicing">voicings</button>
+            <button data-tab="echo">echo</button>
+            <button data-tab="licks">licks</button>
+            <button data-tab="rhythm">rhythm</button>
+            <button data-tab="time">time feel</button>
+          </div>
+        </div>
+        <div class="tab-group tab-group-util">
+          <span class="tab-group-label">guide</span>
+          <div class="tab-group-btns">
+            <button data-tab="guide">how to practice</button>
+          </div>
+        </div>
+      </nav>
     </div>
-    <p class="drill-hint">functional ear training, no video needed — a cadence sets the key center (picked up top), one chord plays, and you name its degree by clicking a palette chip above or playing the chord on your keyboard.</p>
+
+    <section id="panel-path" class="dj-panel active">
+      <p class="blurb">The syllabus, in order. A unit completes when its goal
+        items hit their accuracy target over enough tries — that unlocks the
+        units that depend on it. Locked units show what to clear first. Nothing
+        here is a wall: you can always practise an open unit early.</p>
+      <div id="curr-path" class="curr-path"></div>
+    </section>
+
+    <section id="panel-tunes" class="dj-panel">
+      <p class="blurb">Jazz is learned one tune at a time. Each standard here is a
+        little project — five steps a musician actually uses to own it: hear the
+        <b>form</b>, transcribe the <b>changes</b>, learn the <b>melody</b>,
+        <b>comp</b> the voicings, then <b>solo</b> over it. Each step drops you
+        into the right drill, scoped to that tune; tick it off and come back.
+        Ordered easy → hard — start at the top.</p>
+      <div id="repertoire-body" class="repertoire-body"></div>
+    </section>
+
+    <section id="panel-changes" class="dj-panel" data-source="library">
+      <p class="blurb">Name the changes by ear. A progression plays on the
+        synth; fill the roman numerals from the chips — the title &amp; key stay
+        hidden until you check. Pull one from the built-in collection, or
+        <b>paste a tab</b> to turn any song you're learning into the same quiz.</p>
+      <div class="dj-row">
+        <span class="seg" role="tablist" aria-label="progression source">
+          <button id="changes-src-library" class="seg-btn on">collection</button>
+          <button id="changes-src-paste" class="seg-btn">paste a tab</button>
+        </span>
+      </div>
+      <div class="dj-row src-only src-library">
+        <select id="changes-genre">
+          <option value="all">all genres</option>
+          <option value="pop">pop / rock</option>
+          <option value="jazz">jazz</option>
+          <option value="blues">blues</option>
+        </select>
+        <select id="changes-diff">
+          <option value="all">any difficulty</option>
+          <option value="1">easy · diatonic</option>
+          <option value="2">medium · one surprise</option>
+          <option value="3">hard · jazz changes</option>
+        </select>
+        <button id="changes-new" class="primary">new song</button>
+      </div>
+      <div class="src-only src-paste">
+        <textarea id="changes-input" rows="4" spellcheck="false"
+          placeholder="| Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7 | Em7 | Em7 |&#10;&#10;or just:  C  G  Am  F"></textarea>
+        <div class="dj-row">
+          <button id="changes-make" class="primary">make a quiz</button>
+          <span id="changes-status" class="dj-meta"></span>
+        </div>
+      </div>
+      <div class="dj-row">
+        <button id="changes-play">▶ play</button>
+        <button id="changes-stop">■ stop</button>
+        <select id="changes-speed">
+          <option value="1">full speed</option>
+          <option value="0.75">0.75×</option>
+          <option value="0.5">0.5×</option>
+        </select>
+        <button id="changes-cadence">hear the key</button>
+        <label class="check"><input type="checkbox" id="changes-showkey" checked> name the key</label>
+      </div>
+      <div id="changes-meta" class="dj-meta"></div>
+      <div id="changes-slots" class="slots"></div>
+      <div id="changes-chips" class="chips"></div>
+      <div class="dj-row">
+        <button id="changes-undo">undo</button>
+        <button id="changes-clear">clear</button>
+        <button id="changes-check" class="primary">check</button>
+        <button id="changes-reveal">reveal</button>
+        <span id="changes-result" class="dj-result"></span>
+        <span id="changes-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-bass" class="dj-panel">
+      <p class="blurb">The real-world move: find the bass first. A cadence
+        establishes the key, then a famous bassline plays low. Name the scale
+        degrees — the reveal tells you whose line it was.</p>
+      <div class="dj-row">
+        <button id="bass-new" class="primary">new line</button>
+        <button id="bass-replay">▶ replay</button>
+        <button id="bass-stop">■ stop</button>
+        <span id="bass-meta" class="dj-meta"></span>
+      </div>
+      <div id="bass-slots" class="slots"></div>
+      <div id="bass-chips" class="chips"></div>
+      <div class="dj-row">
+        <button id="bass-undo">undo</button>
+        <button id="bass-clear">clear</button>
+        <button id="bass-check" class="primary">check</button>
+        <button id="bass-reveal">reveal</button>
+        <span id="bass-result" class="dj-result"></span>
+        <span id="bass-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-degrees" class="dj-panel">
+      <p class="blurb">Functional hearing in random keys, chips only. A cadence
+        sets the key, one diatonic seventh plays: which degree is it? This is
+        the drill the <b>changes</b> quiz rests on — one chord at a time.</p>
+      <div class="dj-row">
+        <select id="deg-mode">
+          <option value="major">major keys</option>
+          <option value="minor">minor keys</option>
+          <option value="both">both</option>
+        </select>
+        <button id="deg-new" class="primary">new question</button>
+        <button id="deg-cadence">replay cadence</button>
+        <button id="deg-chord">replay chord</button>
+        <span id="deg-meta" class="dj-meta"></span>
+      </div>
+      <div id="deg-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="deg-result" class="dj-result"></span>
+        <span id="deg-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-qualities" class="dj-panel">
+      <p class="blurb">One chord, no key. Major or minor? Seventh flavor?
+        Root position, bass note included — the way you'd meet it in a song.</p>
+      <div class="dj-row">
+        <select id="qual-level">
+          <option value="triads">triads &amp; sus</option>
+          <option value="sevenths">sevenths</option>
+          <option value="colors">extensions &amp; colors</option>
+        </select>
+        <button id="qual-new" class="primary">new chord</button>
+        <button id="qual-replay">▶ replay</button>
+      </div>
+      <div id="qual-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="qual-result" class="dj-result"></span>
+        <span id="qual-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-inversion" class="dj-panel">
+      <p class="blurb">Which note is on the bottom? A chord plays with one of its
+        tones in the bass — root position or an inversion (a slash chord). Name
+        the bass tone. Hearing the bass under a chord is half of reading real
+        changes, and it's what the <b>basslines</b> drill trains in motion.</p>
+      <div class="dj-row">
+        <select id="inv-level">
+          <option value="triads">triads</option>
+          <option value="sevenths">sevenths</option>
+        </select>
+        <button id="inv-new" class="primary">new chord</button>
+        <button id="inv-replay">▶ replay</button>
+        <span id="inv-meta" class="dj-meta"></span>
+      </div>
+      <div id="inv-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="inv-result" class="dj-result"></span>
+        <span id="inv-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-intervals" class="dj-panel">
+      <p class="blurb">The atoms. Root motion in a progression is just a chain
+        of intervals — hear P4s and P5s instantly and half of chord hunting is done.</p>
+      <div class="dj-row">
+        <select id="int-set" title="which intervals can come up">
+          <option value="all">all intervals</option>
+          <option value="perfect-thirds">perfect &amp; thirds</option>
+          <option value="steps-sixths">seconds &amp; sixths</option>
+          <option value="sevenths-tt">sevenths &amp; tritone</option>
+        </select>
+        <select id="int-type">
+          <option value="melodic-asc">melodic · up</option>
+          <option value="melodic-desc">melodic · down</option>
+          <option value="melodic-both">melodic · both</option>
+          <option value="harmonic">harmonic</option>
+          <option value="mixed">mixed</option>
+        </select>
+        <button id="int-new" class="primary">new interval</button>
+        <button id="int-replay">▶ replay</button>
+        <label class="check"><input type="checkbox" id="int-drone"> anchor to a tonic drone</label>
+      </div>
+      <div id="int-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="int-result" class="dj-result"></span>
+        <span id="int-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-melodic" class="dj-panel">
+      <p class="blurb">Single-note functional hearing — the melodic foundation
+        the <b>degrees</b> drill (which uses chords) rests on. A cadence sets the
+        key, the tonic sounds, then one note plays: which scale degree is it?
+        Diatonic first; add chromatics when the seven are automatic.</p>
+      <div class="dj-row">
+        <select id="mdeg-mode">
+          <option value="major">major keys</option>
+          <option value="minor">minor keys</option>
+          <option value="both">both</option>
+        </select>
+        <select id="mdeg-level">
+          <option value="diatonic">diatonic — 7 degrees</option>
+          <option value="chromatic">+ chromatic — all 12</option>
+        </select>
+        <button id="mdeg-new" class="primary">new note</button>
+        <button id="mdeg-cadence">replay cadence</button>
+        <button id="mdeg-note">replay note</button>
+        <label class="check"><input type="checkbox" id="mdeg-focus"> focus weak</label>
+        <span id="mdeg-meta" class="dj-meta"></span>
+      </div>
+      <div id="mdeg-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="mdeg-result" class="dj-result"></span>
+        <span id="mdeg-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-voicing" class="dj-panel">
+      <p class="blurb">Solo piano is voicings, not chord names. A target is named —
+        build it on the keyboard (the piano up top, a MIDI controller, or the
+        <kbd>A</kbd>–<kbd>'</kbd> keys) and it grades the moment you're holding
+        the right notes. <b>Shells</b> are the two guide tones (3rd &amp; 7th);
+        <b>rootless</b> stacks the color tones (3-5-7-9) a comping pianist
+        actually plays. Register &amp; octave don't matter — the notes do.</p>
+      <div class="dj-row">
+        <select id="vc-level">
+          <option value="shell">shells — 3rd &amp; 7th</option>
+          <option value="rootless">rootless — 3-5-7-9</option>
+          <option value="triad">triads</option>
+          <option value="seventh">full 7th chords</option>
+        </select>
+        <button id="vc-new" class="primary">new chord</button>
+        <button id="vc-hear">▶ hear it</button>
+        <button id="vc-check">check my notes</button>
+        <button id="vc-reveal">reveal</button>
+        <span id="vc-meta" class="dj-meta"></span>
+      </div>
+      <div id="vc-held" class="vc-held"></div>
+      <div class="dj-row">
+        <span id="vc-result" class="dj-result"></span>
+        <span id="vc-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-sing" class="dj-panel">
+      <p class="blurb">Audiation — the skill every method builds on: hear it,
+        then make it yourself with your voice. Enable the mic and sing.
+        <b>match a note</b> plays a pitch to sing back; <b>sing a degree</b>
+        plays a cadence and names a scale degree to produce from the key, with
+        no reference pitch. Hold the note — it grades when you lock on.</p>
+      <div class="dj-row">
+        <select id="sing-mode">
+          <option value="match">match a note</option>
+          <option value="interval">sing an interval up</option>
+          <option value="degree">sing a degree</option>
+          <option value="chordtone">sing a chord tone</option>
+          <option value="guidetone">sing a guide-tone line</option>
+        </select>
+        <select id="sing-keymode">
+          <option value="major">major</option>
+          <option value="minor">minor</option>
+        </select>
+        <button id="sing-mic" class="primary">enable mic</button>
+        <button id="sing-new">new target</button>
+        <button id="sing-replay">replay</button>
+        <span id="sing-meta" class="dj-meta"></span>
+      </div>
+      <div id="sing-tuner" class="sing-tuner">
+        <div class="sing-target"></div>
+        <div class="sing-needle" id="sing-needle"></div>
+        <span class="sing-read" id="sing-read"></span>
+      </div>
+      <div class="dj-row">
+        <span id="sing-result" class="dj-result"></span>
+        <span id="sing-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-echo" class="dj-panel">
+      <p class="blurb">Call &amp; response — the productive half of ear training.
+        An idiomatic line plays over a light comp; reproduce it on your
+        keyboard, MIDI, or the on-screen piano. <b>echo</b> lets you replay it;
+        <b>dictation</b> plays it once and you rebuild it from memory. Graded
+        note-by-note. Save a phrase you like to the <b>lick bank</b>.</p>
+      <div class="dj-row">
+        <select id="echo-type">
+          <option value="any">any line</option>
+          <option value="guide">guide-tone line</option>
+          <option value="bebop">bebop run</option>
+          <option value="enclosure">enclosure</option>
+        </select>
+        <select id="echo-mode">
+          <option value="echo">echo · replayable</option>
+          <option value="dictation">dictation · once</option>
+        </select>
+        <select id="echo-len" title="phrase length">
+          <option value="short">short · one ii–V–I</option>
+          <option value="long">long · two-phrase line</option>
+        </select>
+        <select id="echo-keymode">
+          <option value="major">major ii–V–I</option>
+          <option value="minor">minor ii–V–i</option>
+        </select>
+        <button id="echo-new" class="primary">new phrase</button>
+        <button id="echo-play">▶ hear it</button>
+        <span id="echo-meta" class="dj-meta"></span>
+      </div>
+      <div class="dj-row">
+        <button id="echo-record">● record my echo</button>
+        <button id="echo-grade">grade my echo</button>
+        <button id="echo-save" title="save this phrase to the lick bank">save to licks</button>
+        <span id="echo-status" class="dj-meta"></span>
+        <span id="echo-score" class="dj-score"></span>
+      </div>
+      <div id="echo-result" class="grade-result"></div>
+    </section>
+
+    <section id="panel-cadence" class="dj-panel">
+      <p class="blurb">Hear a whole cadence as one gesture, not chord by chord.
+        A tonic chord sets the key, then a short cadence plays — name the type.
+        ii–V–I is home base; the others are the moves that make jazz turn:
+        the backdoor, the tritone sub, the deceptive resolution.</p>
+      <div class="dj-row">
+        <button id="cad-new" class="primary">new cadence</button>
+        <button id="cad-replay">▶ replay</button>
+        <span id="cad-meta" class="dj-meta"></span>
+      </div>
+      <div id="cad-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="cad-result" class="dj-result"></span>
+        <span id="cad-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-form" class="dj-panel">
+      <p class="blurb">Zoom out to the whole tune. A standard comps by at speed —
+        listen for how the sections repeat and return, then name the form. AABA
+        and ABAC are the 32-bar song forms; the blues is 12 bars; some tunes are
+        a plain 16-bar or two-part AB.</p>
+      <div class="dj-row">
+        <button id="form-new" class="primary">new tune</button>
+        <button id="form-replay">▶ replay</button>
+        <span id="form-meta" class="dj-meta"></span>
+      </div>
+      <div id="form-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="form-result" class="dj-result"></span>
+        <span id="form-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-modal" class="dj-panel">
+      <p class="blurb">Scale color — the sound of a mode, not a key. A tonic vamp
+        anchors home, then the scale runs up. Listen for the characteristic
+        note: lydian's raised 4th, phrygian's flat 2nd, mixolydian's flat 7th.
+        Name the mode.</p>
+      <div class="dj-row">
+        <select id="modal-set">
+          <option value="jazz">jazz 3 — dorian · mixo · lydian</option>
+          <option value="dark">dark 4 — dorian · phrygian · aeolian · locrian</option>
+          <option value="all">all seven</option>
+        </select>
+        <button id="modal-new" class="primary">new mode</button>
+        <button id="modal-replay">▶ replay</button>
+        <span id="modal-meta" class="dj-meta"></span>
+      </div>
+      <div id="modal-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="modal-result" class="dj-result"></span>
+        <span id="modal-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-tension" class="dj-panel">
+      <p class="blurb">The colors on top of a chord. A seventh chord sounds, then
+        a single extension above it, then both together — name the tension:
+        <b>9 · ♭9 · ♯9 · 11 · ♯11 · ♭13 · 13</b>. Which extensions are available
+        depends on the chord, so the quality is a clue.</p>
+      <div class="dj-row">
+        <button id="tens-new" class="primary">new tension</button>
+        <button id="tens-replay">▶ replay</button>
+        <span id="tens-meta" class="dj-meta"></span>
+      </div>
+      <div id="tens-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="tens-result" class="dj-result"></span>
+        <span id="tens-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-rhythm" class="dj-panel">
+      <p class="blurb">Rhythm is half of transcription and the app trained none
+        of it. Listen to a one-bar pattern, then tap it back over a count-in —
+        spacebar or the pad. Each hit is scored on how close it lands.</p>
+      <div class="dj-row">
+        <select id="rhy-level">
+          <option value="easy">easy · quarters &amp; eighths</option>
+          <option value="medium">medium · rests &amp; syncopation</option>
+          <option value="hard">hard · triplets &amp; sixteenths</option>
+          <option value="five">odd · 5/4</option>
+          <option value="seven">odd · 7/4</option>
+        </select>
+        <label class="vol-label">tempo
+          <input id="rhy-tempo" type="range" min="50" max="150" value="88">
+          <span id="rhy-bpm">88 bpm</span>
+        </label>
+        <button id="rhy-new" class="primary">new pattern</button>
+        <button id="rhy-play">▶ hear it</button>
+        <button id="rhy-go">tap it back</button>
+        <span id="rhy-meta" class="dj-meta"></span>
+      </div>
+      <button id="rhy-pad" class="rhy-pad">tap here (or press space)</button>
+      <div id="rhy-viz" class="rhy-viz"></div>
+      <div class="dj-row">
+        <span id="rhy-result" class="dj-result"></span>
+        <span id="rhy-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-time" class="dj-panel">
+      <p class="blurb">The thing that lets you play <em>with</em> people, and the
+        one skill nothing here trained: feeling time. Hear a groove, then answer.
+        <b>Meter</b> — count the beats per bar (a low downbeat marks each “1”):
+        3, 4 or 5. <b>Feel</b> — are the eighth-notes even (straight) or
+        long-short (swing)?</p>
+      <div class="dj-row">
+        <select id="time-mode">
+          <option value="meter">meter · how many beats per bar?</option>
+          <option value="feel">feel · straight or swung?</option>
+        </select>
+        <button id="time-new" class="primary">new groove</button>
+        <button id="time-replay">▶ replay</button>
+        <span id="time-meta" class="dj-meta"></span>
+      </div>
+      <div id="time-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="time-result" class="dj-result"></span>
+        <span id="time-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-licks" class="dj-panel">
+      <p class="blurb">Your lick bank — phrases you've banked from the echo tab.
+        Play one, echo it back, or cycle it through all <b>12 keys</b> playing it
+        in each. Transposing a line into every key is how it becomes yours;
+        each echo is graded and logged to your progress.</p>
+      <div id="licks-list" class="licks-list"></div>
+      <div id="licks-drill" class="licks-drill" style="display:none">
+        <div class="dj-row">
+          <span id="licks-drill-meta" class="dj-meta"></span>
+        </div>
+        <div class="dj-row">
+          <button id="licks-drill-play">▶ hear it</button>
+          <button id="licks-drill-record">● record my echo</button>
+          <button id="licks-drill-grade">grade</button>
+          <span id="licks-drill-status" class="dj-meta"></span>
+        </div>
+        <div id="licks-drill-result" class="grade-result"></div>
+      </div>
+    </section>
+
+    <section id="panel-guide" class="dj-panel">
+      <p class="blurb"><b>What actually helps you figure out chords.</b>
+        Naming a progression decomposes into three skills, best trained in order:</p>
+      <ol class="guide-list">
+        <li><b>Bass first.</b> The bass is the most isolated pitch in nearly
+          every mix, and root motion <i>is</i> the progression. Train it with
+          <b>intervals</b> (P4/P5/m3 both ways cover most real root motion),
+          then <b>basslines</b> — real songs reduced to exactly this skill.</li>
+        <li><b>Quality second.</b> Given the root, is the color major, minor,
+          dominant, half-diminished? That's <b>qualities</b>. Triads cold
+          before sevenths.</li>
+        <li><b>Function last — the multiplier.</b> Root + quality
+          <i>relative to the key</i> is the roman numeral, and hearing
+          "IV going iv" instead of "C going Cm" is what transfers between
+          songs and keys. Train it with <b>degrees</b>, then apply it on real
+          tunes with the <b>changes</b> quiz and the <b>standards</b>
+          library.</li>
+      </ol>
+      <p class="blurb">A good session: 5 minutes of intervals to warm up,
+        5 of degrees, then <b>changes</b> or a standards transcription until your
+        ears tire. When a tune beats you, don't reveal — replay at 0.5× and
+        hunt the bass line degree by degree. Met a song in the wild? Grab its
+        chords from a tab site and feed them to <b>changes → paste a tab</b>.</p>
+      <hr class="guide-sep">
+      <p class="blurb"><b>Guide-tone drill.</b> The 3rd and 7th are what your ear
+        latches onto — they carry the chord quality and voice-lead the changes. A
+        ii–V–I plays with the guide-tone line on top; name whether the top note
+        over the <b>V</b> chord is its 3rd or its 7th.</p>
+      <div class="dj-row">
+        <button id="guide-new" class="primary">hear a ii–V–I</button>
+        <button id="guide-replay">▶ replay</button>
+        <span id="guide-meta" class="dj-meta"></span>
+      </div>
+      <div id="guide-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="guide-result" class="dj-result"></span>
+        <span id="guide-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-standards" class="dj-panel standards-section">
+      <p class="blurb">The built-in lead-sheet library — real tunes with melody
+        and changes. Comp them, play the melody, or hide the chart and
+        transcribe by ear. Transposing to a random key is the real workout.</p>
+      <div class="dj-row">
+        <select id="std-song" title="pick a tune from the built-in lead-sheet library"></select>
+        <select id="std-key" title="transpose — random key is the real ear workout"></select>
+        <label class="vol-label" title="tempo">
+          <input id="std-tempo" type="range" min="40" max="240" value="120">
+          <span id="std-bpm">120 bpm</span>
+        </label>
+      </div>
+      <div class="std-transport">
+      <button id="std-play" title="comp the changes (count-in first)">▶ changes</button>
+      <button id="std-melody-btn" title="play the melody alone">▶ melody</button>
+      <button id="std-both" title="melody over the changes — the full lead sheet">▶ both</button>
+      <button id="std-stop" title="stop">⏹</button>
+      <button id="std-loop" title="repeat the form until stopped">loop: off</button>
+      <span class="std-quiz-group">
+        <button id="std-quiz-chords" title="hide the chart — transcribe the changes by ear">quiz: chords</button>
+        <button id="std-quiz-melody" title="hear the line, echo it back on your keyboard">quiz: melody</button>
+        <button id="std-reveal">reveal</button>
+      </span>
+      <span id="std-status" class="std-status"></span>
+    </div>
+    <p class="drill-hint" id="std-info"></p>
+    <div id="std-chart" class="std-chart"></div>
+    <div id="std-answer" class="std-answer" hidden>
+      <textarea id="std-answer-input" rows="2" spellcheck="false"
+        placeholder="type the changes you hear — e.g.  Cm7 F7 | Bbmaj7 | Ebmaj7  (bars optional, jazz shorthand welcome)"></textarea>
+      <button id="std-grade">grade me</button>
+      <div id="std-grade-result" class="grade-result"></div>
+    </div>
+    <div id="std-melody-quiz" class="std-answer" hidden>
+      <div class="std-echo-row">
+        <button id="std-echo">● record my echo</button>
+        <button id="std-echo-done">grade my echo</button>
+        <span id="std-echo-status" class="std-status"></span>
+      </div>
+      <div id="std-melody-result" class="grade-result"></div>
+    </div>
+    <span id="std-quiz-status" class="std-quiz-status"></span>
+    </section>
   </section>
 
-  <section class="drill-section interval-section">
-    <div class="section-head">
-      <h2>intervals</h2>
-      <button id="iv-start">start</button>
-      <select id="iv-context" title="how the key center is established under each interval">
-        <option value="drone">drone</option>
-        <option value="triad">triad background</option>
-        <option value="cadence">cadence</option>
-      </select>
-      <select id="iv-dir" title="how the two notes are played">
-        <option value="asc">ascending</option>
-        <option value="desc">descending</option>
-        <option value="harm">harmonic</option>
-      </select>
-      <select id="iv-pool" title="which intervals can come up">
-        <option value="basic">3rds · 5th · 8ve</option>
-        <option value="consonant" selected>consonant</option>
-        <option value="all">all within octave</option>
-      </select>
-      <button id="iv-replay" title="r">replay</button>
-      <button id="iv-context-btn" title="hear the key center again">context</button>
-      <button id="iv-reveal">reveal</button>
-      <span id="iv-status"></span>
-      <span id="iv-score"></span>
+  <div id="progress-backdrop" class="progress-backdrop" hidden></div>
+  <aside id="progress-drawer" class="progress-drawer" hidden aria-label="practice progress">
+    <div class="progress-drawer-head">
+      <h2>progress</h2>
+      <button id="progress-close" title="close">✕</button>
     </div>
-    <div id="iv-choices" class="pal-row iv-choices"></div>
-    <p class="drill-hint">functional interval training à la Functional Ear Trainer — a tonal center is set (a <b>drone</b>, the tonic <b>triad</b> held underneath as a background bed, or a <b>cadence</b>), then two notes play. Name the interval by clicking a chip above or playing both notes on your keyboard. <kbd>r</kbd> replays · <b>context</b> re-grounds the key.</p>
-  </section>
+    <p class="blurb">Ear training only sticks through repetition over time.
+      Every drill logs to your browser (nothing leaves it); this is the
+      longitudinal picture. Weak items resurface automatically when you tick
+      <b>focus weak</b> in a drill.</p>
+    <div id="stats-body" class="stats-body"></div>
+    <div class="dj-row">
+      <button id="stats-refresh" class="primary">refresh</button>
+      <button id="stats-reset">reset all progress</button>
+    </div>
+  </aside>
 
   <footer>
-    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>b</kbd> tap tempo · <kbd>r</kbd> replay drill / interval</p>
+    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>n</kbd> log solo note · <kbd>b</kbd> tap tempo</p>
   </footer>
 
+  <script src="js/firebase-config.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

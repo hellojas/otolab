@@ -2,23 +2,42 @@
 
 import {
   pcName, useFlats, detectChord, chordLabel, analyzeFunction, paletteForKey, guessKey,
-  chordVoicing, voiceLeading,
+  chordVoicing, voiceLeading, setNoteNaming,
 } from './theory.js';
 import { encodeShare, decodeShare, packState, unpackState } from './share.js';
-import { initDrill, isDrillOn, answerDrill, drillReplay, stopDrill } from './drill.js';
-import {
-  initIntervals, isIntervalsOn, answerIntervalNotes, replayInterval, stopIntervals,
-} from './intervals.js';
 import {
   onHeldChange, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 } from './input.js';
-import { playChord, ensureCtx, VOICES, setVoice, getVoice, setMasterVolume } from './audio.js';
+import { playChord, ensureCtx, VOICES, setVoice, getVoice, setChallenge, setMasterVolume } from './audio.js';
 import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
+import { initStandards, stopStandards } from './standards.js';
+import { initDojo, stopDojo, stopDojoMic } from './dojo.js';
+import { initSolo, soloLog, refreshSolo, stopSolo, stopSoloMic } from './solo.js';
+import { record, importData as hydrateProgress } from './progress.js';
+import { renderToday } from './curriculum.js';
+import { initSync, getStatus as syncStatus } from './sync.js';
 import player from './player.js';
 
 const $ = sel => document.querySelector(sel);
+
+// Log a graded chord to the shared progress store under its function in the
+// key — so real transcription in the lab feeds the same SRS/stats the dojo
+// drills use. cat 'transcribe' keeps applied hearing separate from drilled.
+function recordChord(root, quality, key, ok, guess = null) {
+  const a = analyzeFunction(root, quality, key);
+  // namespace the id — the store keys on the bare id, and the dojo drills
+  // record bare romans (e.g. 'ii7' for degrees); 'transcribe:ii7' keeps the
+  // applied bucket from colliding with the drilled one.
+  if (!a || !a.roman) return;
+  const meta = {};
+  if (guess) { // what the learner actually played, for the confusion table
+    const g = analyzeFunction(guess.root, guess.quality, key);
+    if (g && g.roman) meta.guess = `transcribe:${g.roman}`;
+  }
+  record('transcribe', `transcribe:${a.roman}`, ok, meta);
+}
 
 // Escape strings that reach innerHTML. Chord `quality` is trusted for live
 // detection (it comes from our QUALITIES table) but arbitrary for imported
@@ -29,6 +48,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
 const state = {
   key: { tonic: 0, mode: 'major' },
   chords: [],            // { t, root, quality, bass }
+  solo: [],              // { t, midi } — transcribed single-line notes
   grid: null,            // { bpm, t0, bpb, snap } — beat grid for bar-aligned capture
   lyrics: null,          // { artist, track, synced: [{t,text}]|null, plain, offset }
   reference: '',         // pasted reference progression (raw text)
@@ -53,7 +73,7 @@ const storeKey = id => `otolab:v1:${id}`;
 
 function save() {
   if (!player.videoId) return;
-  const data = { key: state.key, chords: state.chords, grid: state.grid,
+  const data = { key: state.key, chords: state.chords, solo: state.solo, grid: state.grid,
                  lyrics: state.lyrics, reference: state.reference,
                  title: player.videoTitle() };
   localStorage.setItem(storeKey(player.videoId), JSON.stringify(data));
@@ -66,12 +86,13 @@ function save() {
 
 function loadSaved(id) {
   const raw = localStorage.getItem(storeKey(id));
-  state.chords = []; state.lyrics = null; state.reference = ''; state.grid = null;
+  state.chords = []; state.solo = []; state.lyrics = null; state.reference = ''; state.grid = null;
   if (raw) {
     try {
       const data = JSON.parse(raw);
       state.key = data.key || state.key;
       state.chords = data.chords || [];
+      state.solo = data.solo || [];
       state.grid = data.grid || null;
       state.lyrics = data.lyrics || null;
       state.reference = data.reference || '';
@@ -92,7 +113,6 @@ function loadSaved(id) {
 onHeldChange(notes => {
   heldNow = notes;
   paintPiano($('#piano'), notes);
-  if (isIntervalsOn() && notes.length === 2) answerIntervalNotes(notes);
   const det = detectChord(notes, flats());
   if (det) {
     $('#detected').textContent = det.label;
@@ -105,7 +125,6 @@ onHeldChange(notes => {
       $('#function-line').innerHTML =
         `<span class="roman tag-${a.tag}">${esc(a.roman)}</span> <span class="detail">${esc(a.detail)}</span>`;
       if (state.practice && state.quizIdx != null) checkQuizAnswer(det);
-      else if (isDrillOn()) answerDrill(det.root, det.quality);
     } else {
       $('#function-line').textContent = '';
     }
@@ -235,6 +254,7 @@ function checkQuizAnswer(det) {
   if (rootOk && qualOk) {
     state.attempts++; state.correct++;
     state.revealed.add(i);
+    recordChord(target.root, target.quality, state.key, true);
     flashResult(true);
     player.clearLoop();
     renderChords(); renderScore();
@@ -245,6 +265,7 @@ function checkQuizAnswer(det) {
     if (state.lastWrong !== det.label) {
       state.attempts++;
       state.lastWrong = det.label;
+      recordChord(target.root, target.quality, state.key, false, det); // det = what they played
       flashResult(false);
       renderScore();
     }
@@ -253,6 +274,8 @@ function checkQuizAnswer(det) {
 
 function revealCurrent() {
   if (state.quizIdx == null) return;
+  const target = state.chords[state.quizIdx];
+  if (target) recordChord(target.root, target.quality, state.key, false); // gave up = missed
   state.revealed.add(state.quizIdx);
   state.attempts++;
   player.clearLoop();
@@ -279,7 +302,6 @@ function renderPalette() {
       b.innerHTML = `<span class="roman">${p.roman}</span><span class="name">${chordLabel(p.root, p.quality, null, f)}</span>`;
       if (p.detail) b.title = p.detail;
       b.addEventListener('click', () => {
-        if (isDrillOn()) answerDrill(p.root, p.quality); // chip click = drill answer
         const voicing = chordVoicing(p.root, p.quality);
         playChord(voicing);
         paintPiano($('#piano'), heldNow, voicing);
@@ -303,9 +325,19 @@ function renderKeyDependent() {
   renderScore();
 }
 
+// re-label everything after a note-naming change (letters ↔ solfège ↔ German)
+function refreshNoteNames() {
+  const sel = $('#key-tonic');
+  if (sel) [...sel.options].forEach((opt, pc) => {
+    opt.textContent = `${pcName(pc, false)}${[1, 3, 6, 8, 10].includes(pc) ? ' / ' + pcName(pc, true) : ''}`;
+  });
+  renderKeyDependent();
+}
+
 function renderChords() {
   renderTimeline();
   renderLyrics();
+  refreshSolo();
 }
 
 // ---------- recent videos ----------
@@ -475,6 +507,10 @@ function doGrade() {
   if (!ref.length) { el.innerHTML = '<div class="grade-score">no chords recognized in the reference — try symbols like <b>Fmaj7 | Dm7 G7</b></div>'; return; }
   if (!state.chords.length) { el.innerHTML = '<div class="grade-score">log some chords first, then grade.</div>'; return; }
   const g = gradeProgression(state.chords, ref);
+  // credit each reference chord you got (right root + family or better)
+  for (const p of g.pairs) {
+    if (p.ref) recordChord(p.ref.root, p.ref.quality, state.key, p.score >= 0.75);
+  }
   el.innerHTML = '';
   const head = document.createElement('div');
   head.className = 'grade-score';
@@ -707,6 +743,33 @@ function initShare() {
   }
 }
 
+// ---------- lab / dojo mode ----------
+
+let setMode = () => {};
+function initMode() {
+  const btns = document.querySelectorAll('.mode-toggle button');
+  setMode = m => {
+    document.body.dataset.mode = m;
+    localStorage.setItem('otolab:v1:mode', m);
+    btns.forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+    // leaving a room stops its audio; home is silent
+    if (m !== 'lab') { player.pause?.(); stopSolo(); stopSoloMic(); }
+    if (m !== 'dojo') { stopDojo(); stopDojoMic(); }
+    if (m === 'home') renderToday(); // refresh the workout each time you land
+  };
+  btns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  // Home routes: jump straight into a room (path opens its dojo tab).
+  document.querySelectorAll('.home-route').forEach(b => b.addEventListener('click', () => {
+    const to = b.dataset.goto;
+    if (to === 'path') { setMode('dojo'); $('#dojo-tabs button[data-tab="path"]')?.click(); }
+    else setMode(to);
+  }));
+
+  const saved = localStorage.getItem('otolab:v1:mode');
+  setMode(saved === 'dojo' || saved === 'lab' ? saved : 'home'); // first visit lands on Home
+}
+
 // ---------- themes ----------
 
 const THEMES = ['yoru', 'sumi', 'washi', 'kissa'];
@@ -760,6 +823,26 @@ function initSettings() {
     setMasterVolume(Number(vol.value) / 100);
     localStorage.setItem('otolab:v1:synthvol', vol.value);
   });
+  const nnSel = $('#notename-select');
+  const savedNN = localStorage.getItem('otolab:v1:notenames');
+  if (savedNN) nnSel.value = savedNN;
+  setNoteNaming(nnSel.value); // apply before any labels are built
+  nnSel.addEventListener('change', () => {
+    setNoteNaming(nnSel.value);
+    localStorage.setItem('otolab:v1:notenames', nnSel.value);
+    refreshNoteNames();
+  });
+
+  const chSel = $('#challenge-select');
+  const savedCh = localStorage.getItem('otolab:v1:challenge');
+  if (savedCh != null) chSel.value = savedCh;
+  setChallenge(Number(chSel.value));
+  chSel.addEventListener('change', () => {
+    setChallenge(Number(chSel.value));
+    localStorage.setItem('otolab:v1:challenge', chSel.value);
+    preview(); // hear the new difficulty immediately
+  });
+
   $('#voice-preview').addEventListener('click', preview);
 
   btn.addEventListener('click', () => {
@@ -771,6 +854,30 @@ function initSettings() {
     panel.hidden = true;
     btn.classList.remove('on');
   });
+}
+
+// ---------- progress drawer (reachable in both lab & dojo) ----------
+function initProgressDrawer() {
+  const btn = $('#progress-btn');
+  const drawer = $('#progress-drawer');
+  const backdrop = $('#progress-backdrop');
+  const open = () => {
+    drawer.hidden = false;
+    backdrop.hidden = false;
+    btn.classList.add('on');
+    // #stats-refresh is wired by initDojo to renderStats(); reuse it so the
+    // drawer always shows a freshly computed picture.
+    $('#stats-refresh')?.click();
+  };
+  const close = () => {
+    drawer.hidden = true;
+    backdrop.hidden = true;
+    btn.classList.remove('on');
+  };
+  btn.addEventListener('click', () => (drawer.hidden ? open() : close()));
+  $('#progress-close').addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawer.hidden) close(); });
 }
 
 // ---------- transport & wiring ----------
@@ -794,6 +901,23 @@ async function doLoad() {
     }, 1500);
   });
   if (!id) { showVideoError('couldn’t parse a YouTube link or video id'); return; }
+  $('#yt-player').style.display = '';
+  if (player.mediaElement.parentNode) player.mediaElement.remove();
+  loadSaved(id);
+}
+
+// transcribe a local audio file — the lab, timeline and solo room all run on
+// player's unified api, so a dropped mp3 uses the exact same workflow as a video.
+async function doLoadLocal(file) {
+  if (!file) return;
+  ensureCtx();
+  showVideoError('');
+  const frame = $('.video-frame');
+  const el = player.mediaElement;
+  el.classList.add('local-audio');
+  if (el.parentNode !== frame) frame.appendChild(el);
+  $('#yt-player').style.display = 'none';
+  const id = await player.loadLocal(file, () => setTimeout(save, 300));
   loadSaved(id);
 }
 
@@ -836,6 +960,7 @@ function renderLoopStatus() {
 function initTransport() {
   $('#load-btn').addEventListener('click', doLoad);
   $('#video-url').addEventListener('keydown', e => { if (e.key === 'Enter') doLoad(); });
+  $('#audio-file').addEventListener('change', e => { if (e.target.files[0]) doLoadLocal(e.target.files[0]); });
   $('#speed').addEventListener('change', e => player.setRate(Number(e.target.value)));
   $('#back5').addEventListener('click', () => player.nudge(-5));
   $('#fwd5').addEventListener('click', () => player.nudge(5));
@@ -921,7 +1046,7 @@ function initShortcuts() {
       case '.':          loopAroundCurrent(0); break;
       case ',':          loopAroundCurrent(1); break;
       case 'b':          tapTempo(); break;
-      case 'r':          drillReplay(); replayInterval(); break;
+      case 'n':          soloLog(); break;
     }
   });
 }
@@ -929,7 +1054,7 @@ function initShortcuts() {
 function initImportExport() {
   $('#export-btn').addEventListener('click', () => {
     const data = { videoId: player.videoId, title: player.videoTitle(),
-                   key: state.key, chords: state.chords, grid: state.grid,
+                   key: state.key, chords: state.chords, solo: state.solo, grid: state.grid,
                    lyrics: state.lyrics, reference: state.reference };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -943,6 +1068,7 @@ function initImportExport() {
     const data = JSON.parse(await file.text());
     state.key = data.key || state.key;
     state.chords = data.chords || [];
+    state.solo = data.solo || [];
     state.grid = data.grid || state.grid;
     state.lyrics = data.lyrics || state.lyrics;
     state.reference = data.reference || state.reference;
@@ -957,36 +1083,112 @@ function initImportExport() {
   });
 }
 
+// ---------- full-state backup / restore + cloud sync ----------
+// The per-video export above only carries one lab session. This backs up the
+// whole install — every otolab:v1:* key: SRS history, streak, curriculum
+// completion, licks and all saved tunes — so a "curriculum" survives a cleared
+// browser or a move to a new machine even without cloud sync configured.
+
+const BACKUP_PREFIX = 'otolab:v1:';
+const PROGRESS_KEY = 'otolab:v1:progress';
+
+function collectBackup() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(BACKUP_PREFIX)) data[k] = localStorage.getItem(k);
+  }
+  return { kind: 'otolab-backup', v: 1, when: new Date().toISOString(), data };
+}
+
+function restoreBackup(obj) {
+  if (!obj || obj.kind !== 'otolab-backup' || !obj.data) throw new Error('not an otolab backup');
+  for (const [k, raw] of Object.entries(obj.data)) {
+    if (k === PROGRESS_KEY) {
+      // merge SRS history rather than clobber — unions attempts across devices
+      try { hydrateProgress(JSON.parse(raw)); } catch (e) { /* skip */ }
+    } else if (localStorage.getItem(k) == null) {
+      localStorage.setItem(k, raw); // additive: never overwrite newer local state
+    }
+  }
+}
+
+function initBackupSync() {
+  const statusEl = $('#sync-status');
+
+  $('#backup-btn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(collectBackup(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `otolab-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+  });
+
+  $('#restore-input').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      restoreBackup(JSON.parse(await file.text()));
+      statusEl.textContent = 'restored — reloading…';
+      setTimeout(() => location.reload(), 400);
+    } catch (err) {
+      statusEl.textContent = `restore failed: ${err.message}`;
+    }
+    e.target.value = '';
+  });
+
+  // cloud sync is a no-op until window.OTOLAB_FIREBASE is provided (see sync.js)
+  const label = { off: 'local only', connecting: 'syncing…', synced: 'synced ✓', error: 'sync error' };
+  initSync({
+    onStatus: (s, detail) => {
+      statusEl.textContent = label[s] || s;
+      statusEl.title = detail || (s === 'off' ? 'add a Firebase config to sync across devices' : 'cloud sync');
+      statusEl.classList.toggle('on', s === 'synced');
+    },
+  });
+}
+
 function init() {
   initTheme();
   initSettings();
+  initProgressDrawer();
   buildPiano($('#piano'));
   initComputerKeyboard(oct => { $('#kb-octave').textContent = `C${oct}`; });
   initTransport();
   initKeyControls();
   initShortcuts();
   initImportExport();
+  initBackupSync();
   initLyrics();
   initCheck();
   initGrid();
   initVoiceLeading();
   initShare();
-  initDrill({
+  initSolo({
     getKey: () => state.key,
+    getChords: () => state.chords,
+    getNotes: () => state.solo,
+    setNotes: arr => { state.solo = arr; save(); },
+    onStart: () => { stopProgression(); },
+  });
+  initStandards({
     onStart: () => {
       stopProgression();
-      stopIntervals();
-      if (state.practice) $('#practice-toggle').click();
+      stopDojo();
+      stopSolo();
     },
   });
-  initIntervals({
-    getKey: () => state.key,
+  initDojo({
     onStart: () => {
       stopProgression();
-      stopDrill();
-      if (state.practice) $('#practice-toggle').click();
+      stopStandards();
+      stopSolo();
     },
+    stopStandards,
+    enterDojo: () => setMode('dojo'),
+    enterLab: () => setMode('lab'),
   });
+  initMode();
   player.onError(showVideoError);
   renderRecent();
   renderGrid();
@@ -1014,9 +1216,9 @@ function init() {
   });
   $('#practice-toggle').addEventListener('click', () => {
     state.practice = !state.practice;
-    if (state.practice) { stopProgression(); stopDrill(); stopIntervals(); }
+    if (state.practice) { stopProgression(); }
     $('#practice-toggle').classList.toggle('on', state.practice);
-    $('#practice-toggle').textContent = state.practice ? 'practice: on' : 'practice: off';
+    $('#practice-toggle').textContent = state.practice ? 'quiz: on' : 'quiz: off';
     resetQuiz();
     renderChords(); renderScore();
   });

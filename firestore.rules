@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// Progress sync (see js/sync.js). Each anonymous user gets one document at
+// /otolab/{uid} and may read/write ONLY their own — request.auth.uid must equal
+// the document id. Everything else is denied by default. Verified: a signed-in
+// user can read/write their own doc and is 403'd on any other uid's doc.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /otolab/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
