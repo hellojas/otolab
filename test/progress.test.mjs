@@ -41,6 +41,24 @@ test('response time weights the spacing: fluent recall earns more', () => {
   assert.equal(s.fast.msSum, 800);
 });
 
+test('catItemStats reports a median response time across a unit\'s items', () => {
+  reset();
+  record('intervals', 'P4', true, { ms: 1000 });
+  record('intervals', 'P5', true, { ms: 3000 });
+  record('intervals', 'M3', true, { ms: 5000 });   // per-item medians: 1000, 3000, 5000
+  const s = catItemStats('intervals', ['P4', 'P5', 'M3']);
+  assert.equal(s.medianMs, 3000);
+  assert.equal(s.pct, 100);
+});
+
+test('catItemStats medianMs is null until response times are logged (back-compat)', () => {
+  reset();
+  record('intervals', 'P4', true);   // no ms
+  record('intervals', 'P5', false);
+  const s = catItemStats('intervals', ['P4', 'P5']);
+  assert.equal(s.medianMs, null);
+});
+
 test('record without meta still works (back-compat)', () => {
   reset();
   record('q', 'maj7', true);
