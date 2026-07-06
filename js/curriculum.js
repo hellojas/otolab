@@ -254,15 +254,33 @@ function reconcile() {
 
 // ---- daily per-cat tally (drives the workout checklist) -------------------
 
-function bumpDaily(cat, ok) {
+function bumpDaily(cat, id, ok) {
   const day = todayStr();
   const d = cs.dailyCat[day] || (cs.dailyCat[day] = {});
-  const c = d[cat] || (d[cat] = { reps: 0, correct: 0 });
+  const c = d[cat] || (d[cat] = { reps: 0, correct: 0, items: {} });
   c.reps++; if (ok) c.correct++;
+  const items = c.items || (c.items = {}); // tolerate older data saved without per-item counts
+  const it = items[id] || (items[id] = { reps: 0, correct: 0 });
+  it.reps++; if (ok) it.correct++;
   persist();
 }
-function todayCat(cat) {
-  return (cs.dailyCat[todayStr()] || {})[cat] || { reps: 0, correct: 0 };
+
+// Today's reps for a workout step, scoped to the step's own graded items when it
+// has them. Several units share one progress category — all three interval units
+// log under "intervals" — so counting by category alone makes warm-up, focus and
+// review advance together. Summing only the step's goalItems keeps them independent.
+function todayStep(step) {
+  const c = (cs.dailyCat[todayStr()] || {})[step.cat];
+  if (!c) return { reps: 0, correct: 0 };
+  if (!step.goalItems || !step.goalItems.length || !c.items) {
+    return { reps: c.reps, correct: c.correct };
+  }
+  let reps = 0, correct = 0;
+  for (const id of step.goalItems) {
+    const it = c.items[id];
+    if (it) { reps += it.reps; correct += it.correct; }
+  }
+  return { reps, correct };
 }
 
 // ---- workout generator ----------------------------------------------------
@@ -272,39 +290,64 @@ function buildWorkout() {
   reconcile();
   const cur = UNIT_BY_ID[cs.currentUnit] || UNITS[0];
   const doneUnits = UNITS.filter(u => done(u.id));
-
-  // warm-up: the mastered unit you're currently weakest on, else the focus unit
-  let warm = doneUnits.slice().sort((a, b) => unitMastery(a).pct - unitMastery(b).pct)[0] || cur;
+  const due = dueItems();
+  const dueForUnit = u => due.filter(d => d.cat === u.cat && u.goalItems.includes(d.id)).length;
 
   const steps = [];
-  steps.push({
-    key: 'warm', label: 'Warm up', title: warm.title, cat: warm.cat,
-    drill: warm.drill, config: warm.config, goalCount: 8, goalPct: 0,
-    note: 'loosen the ears — 8 quick reps',
-  });
-  steps.push({
-    key: 'focus', label: "Today's focus", title: cur.title, cat: cur.cat,
-    drill: cur.drill, config: cur.config, goalCount: Math.min(cur.goalCount, 15),
-    goalPct: cur.goalPct, note: cur.blurb, unitId: cur.id,
-  });
+  const used = new Set();           // unit ids already claimed by a step — no unit fills two slots
+  const claim = u => { used.add(u.id); return u; };
 
-  // review: whichever learned drill owns the most overdue items (focus flag on)
-  const due = dueItems();
-  let review = null;
-  if (due.length) {
-    const byCat = {};
-    for (const d of due) byCat[d.cat] = (byCat[d.cat] || 0) + 1;
-    const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0][0];
-    review = UNITS.find(u => u.cat === topCat && (done(u.id) || u.id === cur.id));
+  // Today's focus: the current unit.
+  claim(cur);
+  const focus = {
+    key: 'focus', label: "Today's focus", title: cur.title, cat: cur.cat,
+    goalItems: cur.goalItems, drill: cur.drill, config: cur.config,
+    goalCount: Math.min(cur.goalCount, 15), goalPct: cur.goalPct,
+    note: cur.blurb, unitId: cur.id,
+  };
+
+  // Warm up: the mastered unit you're currently weakest on, distinct from the
+  // focus. A brand-new learner has nothing learned to loosen up on, so the slot
+  // is skipped rather than duplicating today's focus.
+  const warm = doneUnits
+    .filter(u => !used.has(u.id))
+    .sort((a, b) => unitMastery(a).pct - unitMastery(b).pct)[0];
+  let warmStep = null;
+  if (warm) {
+    claim(warm);
+    warmStep = {
+      key: 'warm', label: 'Warm up', title: warm.title, cat: warm.cat,
+      goalItems: warm.goalItems, drill: warm.drill, config: warm.config,
+      goalCount: 8, goalPct: 0, unitId: warm.id,
+      note: 'loosen the ears — 8 quick reps',
+    };
   }
-  if (!review) review = doneUnits[0] || cur;
-  const reviewConfig = { ...review.config };
-  if (review.drill === 'mdeg') reviewConfig['mdeg-focus'] = true;
-  steps.push({
-    key: 'review', label: 'Review', title: review.title, cat: review.cat,
-    drill: review.drill, config: reviewConfig, goalCount: 10, goalPct: 0,
-    note: due.length ? `${due.length} item${due.length > 1 ? 's' : ''} due — resurface the weak ones` : 'keep it warm',
-  });
+
+  // Review: the learned unit carrying the most overdue items, distinct from the
+  // focus and warm-up; falls back to any other learned unit, and is skipped when
+  // there is none left to surface.
+  const review = doneUnits
+    .filter(u => !used.has(u.id) && dueForUnit(u) > 0)
+    .sort((a, b) => dueForUnit(b) - dueForUnit(a))[0]
+    || doneUnits.find(u => !used.has(u.id));
+  let reviewStep = null;
+  if (review) {
+    claim(review);
+    const reviewConfig = { ...review.config };
+    if (review.drill === 'mdeg') reviewConfig['mdeg-focus'] = true;
+    const nDue = dueForUnit(review);
+    reviewStep = {
+      key: 'review', label: 'Review', title: review.title, cat: review.cat,
+      goalItems: review.goalItems, drill: review.drill, config: reviewConfig,
+      goalCount: 10, goalPct: 0, unitId: review.id,
+      note: nDue ? `${nDue} item${nDue > 1 ? 's' : ''} due — resurface the weak ones` : 'keep it warm',
+    };
+  }
+
+  // order: warm up · today's focus · review · apply it
+  if (warmStep) steps.push(warmStep);
+  steps.push(focus);
+  if (reviewStep) steps.push(reviewStep);
 
   const applySongId = APPLY_SONG[cur.id];
   steps.push({
@@ -320,7 +363,7 @@ function buildWorkout() {
 // a step is "done" when today's reps for its cat reach its goal (and pct, if set)
 function stepDone(step) {
   if (step.manual) return !!(manualDone[step.key]);
-  const t = todayCat(step.cat);
+  const t = todayStep(step);
   if (t.reps < step.goalCount) return false;
   if (step.goalPct && Math.round(100 * t.correct / Math.max(1, t.reps)) < step.goalPct) return false;
   return true;
@@ -383,7 +426,7 @@ function renderStep(step) {
 
   // live progress toward the mini-goal
   if (!step.manual) {
-    const t = todayCat(step.cat);
+    const t = todayStep(step);
     const prog = el('div', 'curr-step-prog');
     const pct = t.reps ? Math.round(100 * t.correct / t.reps) : 0;
     prog.textContent = `${Math.min(t.reps, step.goalCount)}/${step.goalCount} today`
@@ -506,7 +549,7 @@ function initCurriculum(d) {
 
   // count live attempts into the daily tally, then refresh whatever's visible
   onRecord((cat, id, ok) => {
-    bumpDaily(cat, ok);
+    bumpDaily(cat, id, ok);
     // real transcription anywhere (lab quiz/grade, standards quiz) closes the
     // daily "apply it" step — the bridge from drilling to using the skill.
     if (cat === 'transcribe') manualDone.apply = true;
