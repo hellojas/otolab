@@ -159,6 +159,16 @@ function record(cat, id, ok, meta = {}) {
 const accuracy = it => (it.seen ? it.correct / it.seen : null);
 const avgMs = it => (it.msCount ? Math.round(it.msSum / it.msCount) : null);
 
+// Median of a list of numbers (null for empty). Used for a unit's typical
+// response time — robust to the odd very-slow or very-fast outlier in a way a
+// mean isn't, so a fluency gate reads the honest middle of the distribution.
+function median(xs) {
+  if (!xs.length) return null;
+  const s = xs.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+}
+
 // Weighted pick from a list of candidate ids: overdue and low-accuracy items
 // get more weight, unseen items a moderate baseline. `focus` sharpens the bias.
 function pickWeighted(cat, ids, focus = false) {
@@ -206,16 +216,24 @@ function dueItems() {
 function catItemStats(cat, ids) {
   let seen = 0, correct = 0;
   const perItem = {};
+  const rts = [];
   for (const id of ids) {
     const it = store.items[id];
     if (it && it.seen && (!cat || it.cat === cat)) {
       seen += it.seen; correct += it.correct;
-      perItem[id] = { seen: it.seen, pct: Math.round(100 * accuracy(it)) };
+      const ms = avgMs(it);
+      perItem[id] = { seen: it.seen, pct: Math.round(100 * accuracy(it)), ms };
+      if (ms != null) rts.push(ms);
     } else {
-      perItem[id] = { seen: 0, pct: null };
+      perItem[id] = { seen: 0, pct: null, ms: null };
     }
   }
-  return { seen, correct, pct: seen ? Math.round(100 * correct / seen) : 0, perItem };
+  // medianMs is the unit's typical recall speed across its goal items — the
+  // mastery gate uses it so a slow-but-correct learner isn't waved through.
+  return {
+    seen, correct, pct: seen ? Math.round(100 * correct / seen) : 0,
+    medianMs: median(rts), perItem,
+  };
 }
 
 // The learner's top confusions: when the answer was A they most often said B.
