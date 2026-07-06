@@ -859,10 +859,23 @@ function initDojo(opts = {}) {
     if ($('int-drone').checked) playChord([a - 12], 3.0, 0.26);
   }
 
+  // which intervals a set restricts the drill to — so a curriculum unit ("perfect
+  // & thirds") only asks its own intervals instead of all twelve.
+  const INT_SETS = {
+    all: null,
+    'perfect-thirds': ['P4', 'P5', 'M3', 'm3'],
+    'steps-sixths': ['m2', 'M2', 'm6', 'M6'],
+    'sevenths-tt': ['m7', 'M7', 'TT'],
+  };
+  const intPool = () => {
+    const names = INT_SETS[$('int-set') ? $('int-set').value : 'all'];
+    return names ? INTERVALS.filter(iv => names.includes(iv.name)) : INTERVALS;
+  };
+
   function intBuildAnswers() {
     const box = $('int-answers');
     box.innerHTML = '';
-    for (const iv of INTERVALS) {
+    for (const iv of intPool()) {
       const chip = el('button', 'chip', iv.name);
       chip.onclick = () => {
         if (intState.answered) return;
@@ -880,8 +893,9 @@ function initDojo(opts = {}) {
 
   $('int-new').onclick = () => {
     const type = $('int-type').value;
-    const wname = pickWeighted('intervals', INTERVALS.map(i => i.name));
-    intState.iv = INTERVALS.find(i => i.name === wname) || pick(INTERVALS);
+    const pool = intPool();
+    const wname = pickWeighted('intervals', pool.map(i => i.name));
+    intState.iv = pool.find(i => i.name === wname) || pick(pool);
     intState.low = 48 + rand(20);
     intState.harmonic = type === 'harmonic' || (type === 'mixed' && Math.random() < 0.5);
     intState.up = type === 'melodic-asc' ? true
@@ -893,6 +907,7 @@ function initDojo(opts = {}) {
     intPlay();
   };
   $('int-replay').onclick = intPlay;
+  $('int-set').onchange = () => $('int-new').click();
 
   // ---- melodic scale-degree drill (single notes, not chords) ----
   const MDEG_MAJOR = ['1', '2', '3', '4', '5', '6', '7'];

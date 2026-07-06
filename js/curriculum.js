@@ -21,19 +21,19 @@ const KEY = 'otolab:v1:curriculum';
 const UNITS = [
   {
     id: 'int-perfect', title: 'Intervals · perfect & thirds',
-    drill: 'intervals', cat: 'intervals', config: { 'int-type': 'melodic-both' },
+    drill: 'intervals', cat: 'intervals', config: { 'int-type': 'melodic-both', 'int-set': 'perfect-thirds' },
     goalItems: ['P4', 'P5', 'M3', 'm3'], goalPct: 85, goalCount: 20, requires: [],
     blurb: 'P4/P5 and the two thirds — the backbone of root motion and chord color.',
   },
   {
     id: 'int-steps', title: 'Intervals · seconds & sixths',
-    drill: 'intervals', cat: 'intervals', config: { 'int-type': 'melodic-both' },
+    drill: 'intervals', cat: 'intervals', config: { 'int-type': 'melodic-both', 'int-set': 'steps-sixths' },
     goalItems: ['m2', 'M2', 'm6', 'M6'], goalPct: 80, goalCount: 20, requires: ['int-perfect'],
     blurb: 'Steps and their inversions — the leaps that fill melodies in.',
   },
   {
     id: 'int-sevenths', title: 'Intervals · sevenths & tritone',
-    drill: 'intervals', cat: 'intervals', config: { 'int-type': 'mixed' },
+    drill: 'intervals', cat: 'intervals', config: { 'int-type': 'mixed', 'int-set': 'sevenths-tt' },
     goalItems: ['m7', 'M7', 'TT'], goalPct: 78, goalCount: 15, requires: ['int-steps'],
     blurb: 'The dissonances that name a chord — the tritone inside every dominant.',
   },
