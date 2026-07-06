@@ -192,6 +192,35 @@ const INTERVALS = [
   { name: 'M7', semis: 11 }, { name: 'P8', semis: 12 },
 ];
 
+// Reference-song mnemonics — the fastest crutch for a struggling ear. Each
+// interval maps to a widely-known tune that *opens* with it: `up` ascends by
+// that interval, `down` descends. Direction matters (an ascending P4 and a
+// descending P4 sound like different songs), so the drill shows the tune that
+// matches how the interval was just played; where no iconic descending tune
+// fits, it falls back to the ascending anchor — the size is what you're
+// memorizing either way. Curated for recognizability over cleverness.
+const INTERVAL_SONGS = {
+  m2: { up: 'Jaws (theme)',                    down: 'Für Elise (opening)' },
+  M2: { up: 'Happy Birthday',                  down: 'Mary Had a Little Lamb' },
+  m3: { up: 'Greensleeves',                    down: 'Hey Jude' },
+  M3: { up: 'When the Saints Go Marching In',  down: "Beethoven's 5th (da-da-da-DUM)" },
+  P4: { up: 'Here Comes the Bride',            down: "I've Been Working on the Railroad" },
+  TT: { up: 'The Simpsons (theme)',            down: 'Black Sabbath — "Black Sabbath"' },
+  P5: { up: 'Twinkle, Twinkle, Little Star',   down: 'The Flintstones' },
+  m6: { up: 'Chim Chim Cher-ee',               down: 'Love Story — "Where do I begin"' },
+  M6: { up: 'My Bonnie Lies Over the Ocean',   down: null },
+  m7: { up: 'Star Trek (original theme)',      down: null },
+  M7: { up: 'Take On Me — "take ON"',          down: 'Cole Porter — "I Love You"' },
+  P8: { up: 'Somewhere Over the Rainbow',      down: 'Someone to Watch Over Me' },
+};
+// The song matching how the interval was played (descending picks `down`, else
+// the ascending anchor), tagged with an arrow for the direction it moves.
+function songFor(name, descending) {
+  const s = INTERVAL_SONGS[name];
+  if (!s) return '';
+  return descending && s.down ? `${s.down} ↓` : `${s.up} ↑`;
+}
+
 // comp voicing without the doubled low root — the bass line covers it
 const compNotes = (root, quality) => chordVoicing(root, quality).slice(1);
 
@@ -1053,8 +1082,12 @@ function initDojo(opts = {}) {
         intScore.add(ok ? 1 : 0);
         recordTimed('intervals', intState.iv.name, ok, iv.name, intState.askedAt);
         chip.classList.add(ok ? 'good' : 'bad');
-        $('int-result').textContent = ok ? `✓ ${iv.name}` : `✗ that was ${intState.iv.name}`;
-        setTimeout(() => $('int-new').click(), 1100);
+        // reinforce with the reference song every rep — right or wrong, you
+        // walk away with the tune attached to the interval you just heard
+        const song = songFor(intState.iv.name, !intState.harmonic && !intState.up);
+        $('int-result').textContent =
+          (ok ? `✓ ${iv.name}` : `✗ that was ${intState.iv.name}`) + (song ? `  ·  ♪ ${song}` : '');
+        setTimeout(() => $('int-new').click(), song ? 1700 : 1100);
       };
       box.appendChild(chip);
     }
@@ -1076,7 +1109,30 @@ function initDojo(opts = {}) {
     intPlay();
   };
   $('int-replay').onclick = intPlay;
-  $('int-set').onchange = () => $('int-new').click();
+
+  // song-hint cheat sheet: a static chart of the intervals in play and the
+  // tunes that open with them, for studying alongside the drill. Toggle it off
+  // to test yourself for real.
+  function renderIntHints() {
+    const box = $('int-hint-chart');
+    if (!box) return;
+    const on = $('int-hints') && $('int-hints').classList.contains('on');
+    box.hidden = !on;
+    box.innerHTML = '';
+    if (!on) return;
+    for (const iv of intPool()) {
+      const s = INTERVAL_SONGS[iv.name];
+      const row = el('div', 'int-hint-row');
+      row.append(el('b', null, iv.name),
+        el('span', null, s ? s.up + ' ↑' + (s.down ? '  ·  ' + s.down + ' ↓' : '') : ''));
+      box.appendChild(row);
+    }
+  }
+  if ($('int-hints')) $('int-hints').onclick = () => {
+    $('int-hints').classList.toggle('on');
+    renderIntHints();
+  };
+  $('int-set').onchange = () => { renderIntHints(); $('int-new').click(); };
 
   // ---- melodic scale-degree drill (single notes, not chords) ----
   const MDEG_MAJOR = ['1', '2', '3', '4', '5', '6', '7'];

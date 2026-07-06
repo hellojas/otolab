@@ -175,9 +175,14 @@ Naming a progression by ear decomposes into three skills, trained in order:
    context menu holds a tonal center under each interval so you can hear it
    functionally, à la Functional Ear Trainer — a **tonic drone** (the default)
    or the whole **tonic triad bed** underneath, or **no anchor** for the bare
-   interval. The **basslines** drill (famous root-motion lines — the 50s
-   progression, the Andalusian cadence, rhythm changes — played low after a
-   key-setting cadence) trains the same thing over a phrase.
+   interval. Every answer names the interval's **reference song** (direction-
+   aware: an ascending P5 is *Twinkle Twinkle*, a descending P4 is *I've Been
+   Working on the Railroad*), and **♪ song hints** flips on a cheat sheet of
+   the tunes for the intervals in play — leave it on while you're learning the
+   associations, switch it off to test yourself. The **basslines** drill
+   (famous root-motion lines — the 50s progression, the Andalusian cadence,
+   rhythm changes — played low after a key-setting cadence) trains the same
+   thing over a phrase.
 2. **Quality second** — the **qualities** drill: one chord, no key context;
    triads & sus → sevenths → extensions.
 3. **Function last, the multiplier** — the **degrees** drill (a diatonic
