@@ -394,19 +394,77 @@ function makeQuiz(prefix, scoreLabel) {
   const score = makeScore(`${prefix}-score`, scoreLabel);
   const state = {
     song: null,      // { title, artist, key, events, note }
-    guesses: [],
+    guesses: [],     // fixed-length, one entry per slot (null = empty)
+    order: [],       // slot indices in fill order — powers "undo"
+    armedSlot: null, // tap-to-place target (touch), null when nothing armed
+    drag: null,      // in-flight drag: { type:'chip', roman } | { type:'slot', from }
     done: false,
   };
 
   function setSong(song) {
     stopDojo();
     state.song = song;
-    state.guesses = [];
+    state.guesses = new Array(song ? song.events.length : 0).fill(null);
+    state.order = [];
+    state.armedSlot = null;
+    state.drag = null;
     state.done = false;
     ids('result').textContent = '';
     paintMeta();
     paintSlots();
     paintChips();
+  }
+
+  // --- slot bookkeeping (guesses is fixed-length; each slot is independent) ---
+  const firstEmpty = () => state.guesses.findIndex(g => g == null);
+  function placeGuess(i, roman) {
+    state.guesses[i] = roman;
+    state.order = state.order.filter(x => x !== i);
+    state.order.push(i);
+  }
+  function clearGuess(i) {
+    state.guesses[i] = null;
+    state.order = state.order.filter(x => x !== i);
+  }
+
+  // Tap a chip: fill the armed slot if one is armed, else append to the first
+  // empty slot (keeps in-order entry fast on desktop).
+  function tapChip(roman) {
+    if (state.done || !state.song) return;
+    if (state.armedSlot != null) {
+      placeGuess(state.armedSlot, roman);
+      state.armedSlot = null;
+      paintSlots(); paintChips();
+      return;
+    }
+    const i = firstEmpty();
+    if (i !== -1) { placeGuess(i, roman); paintSlots(); }
+  }
+
+  // Tap a slot: clear it if filled, otherwise toggle it as the armed target.
+  function tapSlot(i) {
+    if (state.done) return;
+    if (state.guesses[i] != null) { clearGuess(i); state.armedSlot = null; }
+    else { state.armedSlot = state.armedSlot === i ? null : i; }
+    paintSlots();
+  }
+
+  // Resolve a drop onto slot i: place a dragged chip, or move a chip between
+  // slots (dragging one slot onto another).
+  function applyDrop(i) {
+    const d = state.drag;
+    state.drag = null;
+    if (!d || state.done) return;
+    if (d.type === 'chip') {
+      placeGuess(i, d.roman);
+    } else if (d.type === 'slot' && d.from !== i) {
+      const roman = state.guesses[d.from];
+      if (roman == null) return;
+      placeGuess(i, roman);
+      clearGuess(d.from);
+    }
+    state.armedSlot = null;
+    paintSlots(); paintChips();
   }
 
   function paintMeta() {
@@ -426,21 +484,28 @@ function makeQuiz(prefix, scoreLabel) {
     state.song.events.forEach((e, i) => {
       const slot = el('div', 'slot');
       if (i === highlight) slot.classList.add('now');
-      const top = el('div', 'top', state.done ? e.roman
-        : (state.guesses[i] != null ? state.guesses[i] : '?'));
+      const g = state.guesses[i];
+      const top = el('div', 'top', state.done ? e.roman : (g != null ? g : '?'));
       slot.appendChild(top);
       if (state.done) {
         slot.classList.add(state.graded && !state.graded[i] ? 'bad' : 'good');
-        if (state.graded && !state.graded[i] && state.guesses[i] != null) {
-          slot.appendChild(el('div', 'sub strike', state.guesses[i]));
+        if (state.graded && !state.graded[i] && g != null) {
+          slot.appendChild(el('div', 'sub strike', g));
         }
         slot.appendChild(el('div', 'sub', e.symbol));
-      } else if (state.guesses[i] != null) {
-        slot.classList.add('filled');
+      } else {
+        if (g != null) slot.classList.add('filled');
+        if (i === state.armedSlot) slot.classList.add('armed');
+        slot.ondragover = ev => { ev.preventDefault(); slot.classList.add('drop'); };
+        slot.ondragleave = () => slot.classList.remove('drop');
+        slot.ondrop = ev => { ev.preventDefault(); slot.classList.remove('drop'); applyDrop(i); };
+        if (g != null) {          // a filled slot can be dragged to move/return its chip
+          slot.draggable = true;
+          slot.ondragstart = () => { state.drag = { type: 'slot', from: i }; };
+          slot.ondragend = () => { state.drag = null; };
+        }
+        slot.onclick = () => tapSlot(i);
       }
-      slot.onclick = () => {
-        if (!state.done) { state.guesses = state.guesses.slice(0, i); paintSlots(); }
-      };
       box.appendChild(slot);
     });
   }
@@ -449,15 +514,24 @@ function makeQuiz(prefix, scoreLabel) {
     const box = ids('chips');
     box.innerHTML = '';
     if (!state.song) return;
+    // Dragging a filled slot back onto the palette returns its chip (clears it).
+    box.ondragover = ev => { if (state.drag && state.drag.type === 'slot') ev.preventDefault(); };
+    box.ondrop = ev => {
+      ev.preventDefault();
+      if (!state.done && state.drag && state.drag.type === 'slot') {
+        clearGuess(state.drag.from);
+        state.drag = null;
+        paintSlots();
+      }
+    };
     for (const roman of state.song.chips) {
       const chip = el('button', 'chip', roman);
-      chip.onclick = () => {
-        if (state.done || !state.song) return;
-        if (state.guesses.length < state.song.events.length) {
-          state.guesses.push(roman);
-          paintSlots();
-        }
-      };
+      if (!state.done) {
+        chip.draggable = true;
+        chip.ondragstart = () => { state.drag = { type: 'chip', roman }; };
+        chip.ondragend = () => { state.drag = null; };
+        chip.onclick = () => tapChip(roman);
+      }
       box.appendChild(chip);
     }
   }
@@ -465,7 +539,10 @@ function makeQuiz(prefix, scoreLabel) {
   function finish(graded) {
     state.done = true;
     state.graded = graded;
+    state.armedSlot = null;
+    state.drag = null;
     paintSlots();
+    paintChips();
     const s = state.song;
     const parts = [];
     if (s.title) parts.push(`that was “${s.title}” — ${s.artist}`);
@@ -493,14 +570,25 @@ function makeQuiz(prefix, scoreLabel) {
     if (state.song) playSequence(cadenceEvents(state.song.key), 100);
   };
   ids('showkey').onchange = paintMeta;
-  ids('undo').onclick = () => { if (!state.done) { state.guesses.pop(); paintSlots(); } };
-  ids('clear').onclick = () => { if (!state.done) { state.guesses = []; paintSlots(); } };
+  ids('undo').onclick = () => {
+    if (state.done) return;
+    const i = state.order.pop();      // clear the most recently placed slot
+    if (i != null) { state.guesses[i] = null; state.armedSlot = null; paintSlots(); }
+  };
+  ids('clear').onclick = () => {
+    if (state.done) return;
+    state.guesses = new Array(state.song ? state.song.events.length : 0).fill(null);
+    state.order = [];
+    state.armedSlot = null;
+    paintSlots();
+  };
   ids('check').onclick = () => {
     const s = state.song;
     if (!s || state.done) return;
-    if (state.guesses.length < s.events.length) {
+    const filled = state.guesses.filter(g => g != null).length;
+    if (filled < s.events.length) {
       ids('result').textContent =
-        `fill all ${s.events.length} slots first (${state.guesses.length} so far) — or hit reveal`;
+        `fill all ${s.events.length} slots first (${filled} so far) — or hit reveal`;
       return;
     }
     const graded = s.events.map((e, i) => state.guesses[i] === e.roman);
@@ -640,27 +728,91 @@ function initDojo(opts = {}) {
 
   // ---- bassline drill ----
   const bassScore = makeScore('bass-score');
-  const bassState = { line: null, key: null, guesses: [], done: false };
+  // guesses is fixed-length (one per slot); order powers undo; armedSlot is the
+  // tap-to-place target; drag holds the in-flight chip/slot — same model as the
+  // changes quiz above.
+  const bassState = { line: null, key: null, guesses: [], order: [], armedSlot: null, drag: null, done: false };
+
+  const bassFirstEmpty = () => bassState.guesses.findIndex(g => g == null);
+  function bassPlace(i, d) {
+    bassState.guesses[i] = d;
+    bassState.order = bassState.order.filter(x => x !== i);
+    bassState.order.push(i);
+  }
+  function bassClear(i) {
+    bassState.guesses[i] = null;
+    bassState.order = bassState.order.filter(x => x !== i);
+  }
+  function bassTapChip(d) {
+    if (bassState.done || !bassState.line) return;
+    if (bassState.armedSlot != null) {
+      bassPlace(bassState.armedSlot, d);
+      bassState.armedSlot = null;
+      bassPaintSlots();
+      return;
+    }
+    const i = bassFirstEmpty();
+    if (i !== -1) { bassPlace(i, d); bassPaintSlots(); }
+  }
+  function bassTapSlot(i) {
+    if (bassState.done) return;
+    if (bassState.guesses[i] != null) { bassClear(i); bassState.armedSlot = null; }
+    else { bassState.armedSlot = bassState.armedSlot === i ? null : i; }
+    bassPaintSlots();
+  }
+  function bassApplyDrop(i) {
+    const d = bassState.drag;
+    bassState.drag = null;
+    if (!d || bassState.done) return;
+    if (d.type === 'chip') {
+      bassPlace(i, d.deg);
+    } else if (d.type === 'slot' && d.from !== i) {
+      const deg = bassState.guesses[d.from];
+      if (deg == null) return;
+      bassPlace(i, deg);
+      bassClear(d.from);
+    }
+    bassState.armedSlot = null;
+    bassPaintSlots();
+  }
 
   function bassPaintSlots(highlight = -1) {
     const box = $('bass-slots');
     box.innerHTML = '';
     if (!bassState.line) return;
+    // Dragging a filled slot back onto the palette returns its chip (clears it).
+    const chipBox = $('bass-chips');
+    chipBox.ondragover = ev => { if (bassState.drag && bassState.drag.type === 'slot') ev.preventDefault(); };
+    chipBox.ondrop = ev => {
+      ev.preventDefault();
+      if (!bassState.done && bassState.drag && bassState.drag.type === 'slot') {
+        bassClear(bassState.drag.from);
+        bassState.drag = null;
+        bassPaintSlots();
+      }
+    };
     bassState.line.degrees.forEach((d, i) => {
       const slot = el('div', 'slot');
       if (i === highlight) slot.classList.add('now');
-      slot.appendChild(el('div', 'top', bassState.done ? d
-        : (bassState.guesses[i] != null ? bassState.guesses[i] : '?')));
+      const g = bassState.guesses[i];
+      slot.appendChild(el('div', 'top', bassState.done ? d : (g != null ? g : '?')));
       if (bassState.done) {
         const ok = !bassState.graded || bassState.graded[i];
         slot.classList.add(ok ? 'good' : 'bad');
-        if (!ok && bassState.guesses[i] != null) {
-          slot.appendChild(el('div', 'sub strike', bassState.guesses[i]));
+        if (!ok && g != null) slot.appendChild(el('div', 'sub strike', g));
+      } else {
+        if (g != null) slot.classList.add('filled');
+        if (i === bassState.armedSlot) slot.classList.add('armed');
+        slot.ondragover = ev => { ev.preventDefault(); slot.classList.add('drop'); };
+        slot.ondragleave = () => slot.classList.remove('drop');
+        slot.ondrop = ev => { ev.preventDefault(); slot.classList.remove('drop'); bassApplyDrop(i); };
+        if (g != null) {
+          slot.draggable = true;
+          slot.ondragstart = () => { bassState.drag = { type: 'slot', from: i }; };
+          slot.ondragend = () => { bassState.drag = null; };
         }
-      } else if (bassState.guesses[i] != null) slot.classList.add('filled');
-      slot.onclick = () => {
-        if (!bassState.done) { bassState.guesses = bassState.guesses.slice(0, i); bassPaintSlots(); }
-      };
+        slot.onclick = () => bassTapSlot(i);
+      }
       box.appendChild(slot);
     });
   }
@@ -684,6 +836,8 @@ function initDojo(opts = {}) {
   function bassFinish(graded) {
     bassState.done = true;
     bassState.graded = graded;
+    bassState.armedSlot = null;
+    bassState.drag = null;
     bassPaintSlots();
     const l = bassState.line;
     $('bass-result').textContent = `that was ${l.name} — ${l.hint}`;
@@ -693,7 +847,10 @@ function initDojo(opts = {}) {
     const line = pick(BASSLINES.filter(l => l !== bassState.line));
     bassState.line = line;
     bassState.key = { tonic: rand(12), mode: line.mode };
-    bassState.guesses = [];
+    bassState.guesses = new Array(line.degrees.length).fill(null);
+    bassState.order = [];
+    bassState.armedSlot = null;
+    bassState.drag = null;
     bassState.done = false;
     $('bass-result').textContent = '';
     $('bass-meta').textContent =
@@ -703,27 +860,35 @@ function initDojo(opts = {}) {
     box.innerHTML = '';
     for (const d of DEGREE_CHIPS) {
       const chip = el('button', 'chip', d);
-      chip.onclick = () => {
-        if (bassState.done) return;
-        if (bassState.guesses.length < line.degrees.length) {
-          bassState.guesses.push(d);
-          bassPaintSlots();
-        }
-      };
+      chip.draggable = true;
+      chip.ondragstart = () => { bassState.drag = { type: 'chip', deg: d }; };
+      chip.ondragend = () => { bassState.drag = null; };
+      chip.onclick = () => bassTapChip(d);
       box.appendChild(chip);
     }
     bassPlay();
   };
   $('bass-replay').onclick = bassPlay;
   $('bass-stop').onclick = () => { stopDojo(); bassPaintSlots(); };
-  $('bass-undo').onclick = () => { if (!bassState.done) { bassState.guesses.pop(); bassPaintSlots(); } };
-  $('bass-clear').onclick = () => { if (!bassState.done) { bassState.guesses = []; bassPaintSlots(); } };
+  $('bass-undo').onclick = () => {
+    if (bassState.done) return;
+    const i = bassState.order.pop();
+    if (i != null) { bassState.guesses[i] = null; bassState.armedSlot = null; bassPaintSlots(); }
+  };
+  $('bass-clear').onclick = () => {
+    if (bassState.done) return;
+    bassState.guesses = new Array(bassState.line ? bassState.line.degrees.length : 0).fill(null);
+    bassState.order = [];
+    bassState.armedSlot = null;
+    bassPaintSlots();
+  };
   $('bass-check').onclick = () => {
     const l = bassState.line;
     if (!l || bassState.done) return;
-    if (bassState.guesses.length < l.degrees.length) {
+    const filled = bassState.guesses.filter(g => g != null).length;
+    if (filled < l.degrees.length) {
       $('bass-result').textContent =
-        `fill all ${l.degrees.length} slots first (${bassState.guesses.length} so far)`;
+        `fill all ${l.degrees.length} slots first (${filled} so far)`;
       return;
     }
     const graded = l.degrees.map((d, i) =>
