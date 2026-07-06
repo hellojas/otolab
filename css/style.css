@@ -503,6 +503,10 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 .slot .sub { font-size: 11px; color: var(--muted); }
 .slot .sub.strike { text-decoration: line-through; }
 .slot.filled { border-style: solid; }
+.slot[draggable="true"] { cursor: grab; }
+.slot[draggable="true"]:active { cursor: grabbing; }
+.slot.armed { border-color: var(--accent); border-style: solid; }
+.slot.drop { border-color: var(--accent); border-style: solid; box-shadow: 0 0 0 2px var(--accent) inset; }
 .slot.now { border-color: var(--accent); border-style: solid; box-shadow: 0 0 0 2px var(--accent) inset; }
 .slot.good { border-style: solid; border-color: var(--good); }
 .slot.good .top { color: var(--good); }
@@ -511,6 +515,8 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 
 .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .chip { border-radius: 999px; padding: 5px 13px; font-size: 14px; }
+.chip[draggable="true"] { cursor: grab; }
+.chip[draggable="true"]:active { cursor: grabbing; }
 .vc-held { margin-top: 12px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 22px; }
 
 /* repertoire — the tune-study track */
