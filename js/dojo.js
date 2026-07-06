@@ -1012,20 +1012,32 @@ function initDojo(opts = {}) {
 
   function intPlay() {
     if (!intState.iv) return;
-    intState.askedAt = nowT();
     const a = intState.low, b = intState.low + intState.iv.semis;
     const seq = intState.harmonic
       ? [{ notes: [a, b], beats: 2.5 }]
       : intState.up ? [{ notes: [a], beats: 1 }, { notes: [b], beats: 2 }]
                     : [{ notes: [b], beats: 1 }, { notes: [a], beats: 2 }];
-    playSequence(seq, 84);
-    // an optional tonal anchor under the interval puts it in a functional
-    // context, à la Functional Ear Trainer — hearing "P5 above the key note" is
-    // a different skill than a bare interval. The low note acts as the tonic: a
-    // drone sounds it alone, a triad bed lays the whole major I chord under it.
+    // an optional tonal anchor puts the interval in a functional context, à la
+    // Functional Ear Trainer — hearing "P5 above the key note" is a different
+    // skill than a bare interval. The low note acts as the tonic.
     const anchor = $('int-context') ? $('int-context').value : 'drone';
-    if (anchor === 'drone') playChord([a - 12], 3.0, 0.26);
-    else if (anchor === 'triad') playChord([a - 12, a - 8, a - 5], 3.0, 0.2);
+    // sound the interval; time the response from when it starts, not from the
+    // context that precedes it. A drone holds the tonic alone under it; a triad
+    // bed lays the whole major I chord under it.
+    const playInterval = () => {
+      intState.askedAt = nowT();
+      playSequence(seq, 84);
+      if (anchor === 'drone') playChord([a - 12], 3.0, 0.26);
+      else if (anchor === 'triad') playChord([a - 12, a - 8, a - 5], 3.0, 0.2);
+    };
+    if (anchor === 'cadence') {
+      // FET's signature move: plant the key with a I–IV–V–I in the interval's
+      // key (its low note is the tonic), let it settle, then play the interval.
+      const key = { tonic: ((a % 12) + 12) % 12, mode: 'major' };
+      playSequence([...cadenceEvents(key), { beats: 0.8 }], 100, { onDone: playInterval });
+    } else {
+      playInterval();
+    }
   }
 
   // which intervals a set restricts the drill to — so a curriculum unit ("perfect
