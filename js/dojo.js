@@ -410,7 +410,8 @@ function makeScore(elId, label = 'this session') {
   return {
     add(r, t = 1) { right += r; total += t; this.paint(); },
     paint() {
-      $(elId).textContent = total ? `${label}: ${right}/${total}` : '';
+      const pct = total ? Math.round(100 * right / total) : 0;
+      $(elId).textContent = total ? `${label}: ${right}/${total} · ${pct}%` : '';
     },
   };
 }
