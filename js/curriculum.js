@@ -219,7 +219,7 @@ function load() {
   return { completedUnits: [], currentUnit: UNITS[0].id, dailyCat: {} };
 }
 let cs = load();
-function persist() { localStorage.setItem(KEY, JSON.stringify(cs)); }
+function persist() { try { localStorage.setItem(KEY, JSON.stringify(cs)); } catch (e) { /* private mode etc. */ } }
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
@@ -228,9 +228,32 @@ function todayStr() { return new Date().toISOString().slice(0, 10); }
 const done = id => cs.completedUnits.includes(id);
 const unlocked = u => u.requires.every(done);
 
+// A unit is "mastered" only when the goal items are both accurate AND recalled
+// fluently — a slow, agonised correct isn't ownership. FLUENT_MS is the ceiling
+// on a unit's median response time; a unit may override it with `fluentMs`.
+// (medianMs is null until the learner has logged response times, so pre-timing
+// data and imported v1 stores stay back-compatible — the gate just abstains.)
+const FLUENT_MS = 4500;
+// Hysteresis for decay: once mastered, a unit only slips back when its accuracy
+// falls this many points below its own goal — so a couple of stale misses won't
+// flap a unit in and out of "done".
+const RELOCK_MARGIN = 12;
+
 function unitMastery(u) {
   const s = catItemStats(u.cat, u.goalItems);
-  return { seen: s.seen, pct: s.pct, met: s.seen >= u.goalCount && s.pct >= u.goalPct, perItem: s.perItem };
+  const fluent = s.medianMs == null || s.medianMs <= (u.fluentMs || FLUENT_MS);
+  const met = s.seen >= u.goalCount && s.pct >= u.goalPct && fluent;
+  return { seen: s.seen, pct: s.pct, medianMs: s.medianMs, fluent, met, perItem: s.perItem };
+}
+
+// Whether a already-completed unit still holds up. Looser than the mastery gate
+// (accuracy only, with a margin) so the two don't fight: a unit that decays
+// below this re-locks; one merely hovering near the goal stays done. Units with
+// no evidence yet (seen 0, e.g. after a progress reset) are left untouched.
+function retained(u) {
+  const s = catItemStats(u.cat, u.goalItems);
+  if (!s.seen) return true;
+  return s.pct >= u.goalPct - RELOCK_MARGIN;
 }
 
 // Re-check every unlocked, not-yet-done unit; mark newly-mastered ones complete
@@ -238,6 +261,13 @@ function unitMastery(u) {
 // changed (so the caller can re-render).
 function reconcile() {
   let changed = false;
+  // Decay first: a completed unit whose accuracy has fallen below its goal (with
+  // margin) slips back into the pool, so the path shows current ability, not a
+  // high-water mark. Re-mastering it re-completes it on the next pass.
+  for (let i = cs.completedUnits.length - 1; i >= 0; i--) {
+    const u = UNIT_BY_ID[cs.completedUnits[i]];
+    if (u && !retained(u)) { cs.completedUnits.splice(i, 1); changed = true; }
+  }
   for (const u of UNITS) {
     if (done(u.id) || !unlocked(u)) continue;
     if (unitMastery(u).met) { cs.completedUnits.push(u.id); changed = true; }
@@ -529,4 +559,13 @@ function initCurriculum(d) {
   renderPath();
 }
 
-export { initCurriculum, renderToday, renderPath };
+// Pure progression helpers, exported for tests: masteryOf(id) reports a unit's
+// gate (accuracy + fluency), reconcile() advances/decays completion, and
+// isComplete(id) reads the result. None of these touch the DOM.
+function masteryOf(id) {
+  const u = UNIT_BY_ID[id];
+  return u ? unitMastery(u) : null;
+}
+const isComplete = id => done(id);
+
+export { initCurriculum, renderToday, renderPath, masteryOf, reconcile, isComplete };
