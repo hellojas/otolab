@@ -42,32 +42,72 @@ function osc(type, freq, detune = 0) {
 // { gain, oscs, rel }: the output gain (release rides on it), every source
 // node that needs stopping, and the release time in seconds.
 
-// felt-ish piano: triangle + quiet octave sine through a velocity-tracking
-// lowpass, fast attack, long two-stage decay
+// acoustic piano via additive synthesis: a stack of sine partials tuned with
+// real string inharmonicity (upper partials stretch sharp), each partial given
+// its own exponential decay so highs die faster than the fundamental. A short
+// filtered-noise burst is the hammer strike, and two slightly detuned copies of
+// the low partials beat against each other the way a piano's paired strings do.
+// This is what makes it read as struck-string rather than synth pad.
 function buildPiano(freq, vel, t) {
   const gain = ctx.createGain();
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = Math.min(8000, 1200 + vel * 5000 + freq);
-  filter.Q.value = 0.5;
+  gain.gain.value = 1; // the note's release rides here; per-partial gains shape the body
+  gain.connect(master);
 
-  const o1 = osc('triangle', freq);
-  const o2 = osc('sine', freq * 2);
-  const o2gain = ctx.createGain();
-  o2gain.gain.value = 0.25;
+  const nyq = ctx.sampleRate / 2;
+  const reg = Math.min(1, Math.max(0, (freq - 55) / (1975))); // 0 = bass … 1 = treble
+  const bodyTau = 1.7 - 1.25 * reg;   // fundamental rings ~1.7s in the bass, ~0.45s up top
+  const B = 0.0006 + 0.0012 * reg;    // inharmonicity: stronger in the treble, like real strings
+  const peak = 0.2 * vel;
+  const oscs = [];
 
-  o1.connect(filter);
-  o2.connect(o2gain).connect(filter);
-  filter.connect(gain).connect(master);
+  // struck partials: amplitude rolls off with harmonic number, and low velocity
+  // rolls the upper partials off further (soft strikes are darker)
+  for (let n = 1; n <= 14; n++) {
+    const fn = freq * n * Math.sqrt(1 + B * n * n);
+    if (fn > nyq * 0.9) break;
+    let a = peak * Math.pow(n, -1.15) * Math.pow(vel, (n - 1) * 0.22);
+    if (a < 0.00025) continue;
+    const tau = bodyTau / Math.pow(n, 0.85); // higher partials decay faster
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(a, t + 0.004); // near-instant strike, no click
+    g.gain.setTargetAtTime(0.0001, t + 0.004, tau);
+    const o = osc('sine', fn);
+    o.connect(g).connect(gain);
+    o.start(t);
+    oscs.push(o);
 
-  const peak = 0.28 * vel;
-  gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(peak, t + 0.008);
-  gain.gain.exponentialRampToValueAtTime(peak * 0.35, t + 0.6);
-  gain.gain.exponentialRampToValueAtTime(peak * 0.18, t + 2.5);
+    // pair the low partials with a slightly detuned twin for the shimmer/beat
+    if (n <= 3) {
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0.0001, t);
+      g2.gain.linearRampToValueAtTime(a * 0.6, t + 0.004);
+      g2.gain.setTargetAtTime(0.0001, t + 0.004, tau);
+      const o2 = osc('sine', fn, 3.5); // +3.5 cents
+      o2.connect(g2).connect(gain);
+      o2.start(t);
+      oscs.push(o2);
+    }
+  }
 
-  o1.start(t); o2.start(t);
-  return { gain, oscs: [o1, o2], rel: 0.25 };
+  // hammer thump: a few ms of band-passed noise around the strike zone
+  const nb = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.03), ctx.sampleRate);
+  const nd = nb.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const nsrc = ctx.createBufferSource();
+  nsrc.buffer = nb;
+  const nf = ctx.createBiquadFilter();
+  nf.type = 'bandpass';
+  nf.frequency.value = Math.min(6000, freq * 3 + 900);
+  nf.Q.value = 0.6;
+  const ng = ctx.createGain();
+  ng.gain.setValueAtTime(0.09 * vel, t);
+  ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+  nsrc.connect(nf).connect(ng).connect(gain);
+  nsrc.start(t);
+  oscs.push(nsrc);
+
+  return { gain, oscs, rel: 0.3 };
 }
 
 // Rhodes-ish: sine body plus a bright "tine" partial that dies fast and a
