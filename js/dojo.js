@@ -1019,9 +1019,13 @@ function initDojo(opts = {}) {
       : intState.up ? [{ notes: [a], beats: 1 }, { notes: [b], beats: 2 }]
                     : [{ notes: [b], beats: 1 }, { notes: [a], beats: 2 }];
     playSequence(seq, 84);
-    // an optional tonic drone under the interval puts it in a tonal context —
-    // hearing "P5 above the key note" is a different skill than a bare interval
-    if ($('int-drone').checked) playChord([a - 12], 3.0, 0.26);
+    // an optional tonal anchor under the interval puts it in a functional
+    // context, à la Functional Ear Trainer — hearing "P5 above the key note" is
+    // a different skill than a bare interval. The low note acts as the tonic: a
+    // drone sounds it alone, a triad bed lays the whole major I chord under it.
+    const anchor = $('int-context') ? $('int-context').value : 'drone';
+    if (anchor === 'drone') playChord([a - 12], 3.0, 0.26);
+    else if (anchor === 'triad') playChord([a - 12, a - 8, a - 5], 3.0, 0.2);
   }
 
   // which intervals a set restricts the drill to — so a curriculum unit ("perfect

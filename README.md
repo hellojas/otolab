@@ -171,10 +171,13 @@ The gym had no program, so the **today** and **path** tabs add one:
 Naming a progression by ear decomposes into three skills, trained in order:
 
 1. **Bass first** — root motion *is* the progression. The **intervals** drill
-   (P4/P5/m3 both ways cover most real root motion) and the **basslines**
-   drill (famous root-motion lines — the 50s progression, the Andalusian
-   cadence, rhythm changes — played low after a key-setting cadence) train
-   exactly this.
+   (P4/P5/m3 both ways cover most real root motion) trains exactly this; a
+   context menu holds a tonal center under each interval so you can hear it
+   functionally, à la Functional Ear Trainer — a **tonic drone** (the default)
+   or the whole **tonic triad bed** underneath, or **no anchor** for the bare
+   interval. The **basslines** drill (famous root-motion lines — the 50s
+   progression, the Andalusian cadence, rhythm changes — played low after a
+   key-setting cadence) trains the same thing over a phrase.
 2. **Quality second** — the **qualities** drill: one chord, no key context;
    triads & sus → sevenths → extensions.
 3. **Function last, the multiplier** — the **degrees** drill (a diatonic
