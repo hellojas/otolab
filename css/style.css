@@ -512,6 +512,32 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .chip { border-radius: 999px; padding: 5px 13px; font-size: 14px; }
 .vc-held { margin-top: 12px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 22px; }
+
+/* repertoire — the tune-study track */
+.repertoire-body { display: flex; flex-direction: column; gap: 8px; }
+.rep-tune { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel2); }
+.rep-tune.done { opacity: 0.82; }
+.rep-tune-head {
+  width: 100%; display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 10px 12px; background: transparent; border: none; border-radius: 0;
+}
+.rep-tune-n {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 12px; background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+}
+.rep-tune.done .rep-tune-n { background: var(--good); color: var(--accent-ink); border-color: var(--good); }
+.rep-tune-title { font-weight: 600; font-size: 15px; }
+.rep-tune-why { color: var(--muted); font-size: 12.5px; flex: 1; }
+.rep-tune-prog { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.rep-steps { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.rep-steps[hidden] { display: none; }
+.rep-step { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 14px; }
+.rep-step + .rep-step { border-top: 1px solid var(--border); }
+.rep-step-lab { display: flex; align-items: center; gap: 8px; flex: 1; color: var(--text); font-size: 13.5px; }
+.rep-step.done .rep-step-title { text-decoration: line-through; color: var(--muted); }
+.rep-step-note { color: var(--muted); font-size: 12px; }
+.rep-step-go { flex: none; font-size: 12.5px; padding: 4px 12px; }
+@media (max-width: 640px) { .rep-tune-why, .rep-step-note { display: none; } }
 .chip.good { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
 .chip.bad { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
 

@@ -13,6 +13,7 @@ import { alignSequences } from './reference.js';
 import { generatePhrase, transposePhrase } from './phrases.js';
 import { record, pickWeighted, stats as progressStats, reset as resetProgress } from './progress.js';
 import { initCurriculum, renderPath as currRenderPath } from './curriculum.js';
+import { initRepertoire, renderRepertoire } from './repertoire.js';
 import { SONGS } from '../groundtruth/songs.js';
 import { BASSLINES } from '../groundtruth/basslines.js';
 import { SONGS as STD_CORE } from './standards-data.js';
@@ -564,6 +565,9 @@ function initDojo(opts = {}) {
     // path is a dojo tab.
     isActive: tab => tab === 'today' ? document.body.dataset.mode === 'home' : panelActive(tab),
   });
+
+  // ---- repertoire: the tune-study track (drives standards + voicing) ----
+  initRepertoire({ tuneById: id => STD_SONGS.find(s => s.id === id) });
 
   // ---- changes: the unified progression quiz (built-in collection + paste) ----
   const changesQuiz = makeQuiz('changes', 'session');
@@ -1952,6 +1956,7 @@ function initDojo(opts = {}) {
         p.classList.toggle('active', p.id === `panel-${btn.dataset.tab}`));
       if (btn.dataset.tab === 'path') currRenderPath();
       if (btn.dataset.tab === 'licks') renderLicks();
+      if (btn.dataset.tab === 'tunes') renderRepertoire();
     };
   }
 
