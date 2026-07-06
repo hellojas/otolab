@@ -47,12 +47,23 @@ async function initSync(opts = {}) {
   const cfg = (typeof window !== 'undefined') && window.OTOLAB_FIREBASE;
   if (!cfg || !cfg.projectId) { setStatus('off', 'no firebase config'); return; }
   setStatus('connecting');
+
+  // Loading the SDK from the CDN is the network-fragile step. If it can't load
+  // (offline, blocked network/CSP), that's not an error to alarm the user with —
+  // just stay local. Real problems (auth/rules/config) surface as 'error' below.
+  let initializeApp, authMod, fsMod;
   try {
-    const [{ initializeApp }, authMod, fsMod] = await Promise.all([
+    [{ initializeApp }, authMod, fsMod] = await Promise.all([
       import(`${SDK}/firebase-app.js`),
       import(`${SDK}/firebase-auth.js`),
       import(`${SDK}/firebase-firestore.js`),
     ]);
+  } catch (e) {
+    setStatus('off', 'offline — using local storage only');
+    return;
+  }
+
+  try {
     fb = { ...fsMod };
     const app = initializeApp(cfg);
     const auth = authMod.getAuth(app);
@@ -83,8 +94,9 @@ async function initSync(opts = {}) {
 
 async function signIn(authMod, auth) {
   return new Promise((resolve, reject) => {
-    authMod.onAuthStateChanged(auth, u => { if (u) resolve(u.uid); });
-    authMod.signInAnonymously(auth).catch(reject);
+    const timer = setTimeout(() => reject(new Error('auth timed out')), 15000);
+    authMod.onAuthStateChanged(auth, u => { if (u) { clearTimeout(timer); resolve(u.uid); } });
+    authMod.signInAnonymously(auth).catch(err => { clearTimeout(timer); reject(err); });
   });
 }
 
