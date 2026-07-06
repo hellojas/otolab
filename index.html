@@ -279,6 +279,7 @@
           <span class="tab-group-label">produce</span>
           <div class="tab-group-btns">
             <button data-tab="sing">sing</button>
+            <button data-tab="voicing">voicings</button>
             <button data-tab="echo">echo</button>
             <button data-tab="licks">licks</button>
             <button data-tab="rhythm">rhythm</button>
@@ -491,6 +492,33 @@
       <div class="dj-row">
         <span id="mdeg-result" class="dj-result"></span>
         <span id="mdeg-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-voicing" class="dj-panel">
+      <p class="blurb">Solo piano is voicings, not chord names. A target is named —
+        build it on the keyboard (the piano up top, a MIDI controller, or the
+        <kbd>A</kbd>–<kbd>'</kbd> keys) and it grades the moment you're holding
+        the right notes. <b>Shells</b> are the two guide tones (3rd &amp; 7th);
+        <b>rootless</b> stacks the color tones (3-5-7-9) a comping pianist
+        actually plays. Register &amp; octave don't matter — the notes do.</p>
+      <div class="dj-row">
+        <select id="vc-level">
+          <option value="shell">shells — 3rd &amp; 7th</option>
+          <option value="rootless">rootless — 3-5-7-9</option>
+          <option value="triad">triads</option>
+          <option value="seventh">full 7th chords</option>
+        </select>
+        <button id="vc-new" class="primary">new chord</button>
+        <button id="vc-hear">▶ hear it</button>
+        <button id="vc-check">check my notes</button>
+        <button id="vc-reveal">reveal</button>
+        <span id="vc-meta" class="dj-meta"></span>
+      </div>
+      <div id="vc-held" class="vc-held"></div>
+      <div class="dj-row">
+        <span id="vc-result" class="dj-result"></span>
+        <span id="vc-score" class="dj-score"></span>
       </div>
     </section>
 

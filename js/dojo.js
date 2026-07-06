@@ -8,7 +8,7 @@
 import { pcName, useFlats, midiName, chordVoicing, paletteForKey, romanFor, guessKey, guideTones, qualityIntervals } from './theory.js';
 import { playChord, playNoteAt, playChordAt, allNotesOff, ensureCtx, clickAt, audioNow } from './audio.js';
 import { startMic, stopMic, isMicOn } from './pitch.js';
-import { onHeldChange } from './input.js';
+import { onHeldChange, heldNotes } from './input.js';
 import { alignSequences } from './reference.js';
 import { generatePhrase, transposePhrase } from './phrases.js';
 import { record, pickWeighted, stats as progressStats, reset as resetProgress } from './progress.js';
@@ -70,6 +70,7 @@ const DRILL_TABS = {
   changes:   { tab: 'changes',   start: 'changes-new' },
   bass:      { tab: 'bass',      start: 'bass-new' },
   inversion: { tab: 'inversion', start: 'inv-new' },
+  voicing:   { tab: 'voicing',   start: 'vc-new' },
   time:      { tab: 'time',      start: 'time-new' },
   guide:     { tab: 'guide',     start: 'guide-new' },
 };
@@ -1795,6 +1796,68 @@ function initDojo(opts = {}) {
   };
   $('inv-replay').onclick = invPlay;
   $('inv-level').onchange = () => $('inv-new').click();
+
+  // ---- voicing / comping drill (keyboard-answered — build the named chord) ----
+  const vcScore = makeScore('vc-score');
+  const vcState = { root: 0, quality: 'maj7', type: 'shell', targetPcs: new Set(), answered: true, askedAt: 0 };
+  const VC_TYPE_LABEL = { shell: 'shell (3rd & 7th)', rootless: 'rootless (3-5-7-9)', triad: 'triad', seventh: '7th chord' };
+
+  // the pitch classes a voicing type asks for over a given chord
+  function voicingPcs(root, quality, type) {
+    const ivs = qualityIntervals(quality);
+    const third = ivs.find(i => i === 3 || i === 4) ?? 4;
+    const fifth = ivs.find(i => i === 6 || i === 7 || i === 8) ?? 7;
+    const seventh = ivs.find(i => i === 9 || i === 10 || i === 11) ?? 10;
+    const pc = s => ((root + s) % 12 + 12) % 12;
+    if (type === 'triad') return new Set([pc(0), pc(third), pc(fifth)]);
+    if (type === 'seventh') return new Set([pc(0), pc(third), pc(fifth), pc(seventh)]);
+    if (type === 'shell') return new Set([pc(third), pc(seventh)]);       // guide tones, rootless
+    return new Set([pc(third), pc(fifth), pc(seventh), pc(2)]);           // rootless: 3-5-7-9
+  }
+  const vcPcNames = () => [...vcState.targetPcs].sort((a, b) => a - b)
+    .map(pc => pcName(pc, useFlats(vcState.root, 'major'))).join(' ');
+  function vcPlay() {
+    const midi = [...vcState.targetPcs].sort((a, b) => a - b).map(pc => 60 + pc);
+    playSequence([{ notes: midi, beats: 3 }], 80);
+  }
+  const heldPcs = () => new Set(heldNotes().map(m => ((m % 12) + 12) % 12));
+  const vcMatches = () => {
+    const h = heldPcs();
+    return h.size === vcState.targetPcs.size && [...vcState.targetPcs].every(p => h.has(p));
+  };
+  function vcFinish(ok) {
+    if (vcState.answered) return;
+    vcState.answered = true;
+    vcScore.add(ok ? 1 : 0);
+    recordTimed('voicing', `voice:${vcState.type}:${vcState.quality || 'maj'}`, ok, null, vcState.askedAt);
+    $('vc-result').textContent = ok ? '✓ that’s the voicing' : `✗ it was ${vcPcNames()}`;
+    vcPlay();
+    setTimeout(() => { if (panelActive('voicing')) $('vc-new').click(); }, 1900);
+  }
+  // auto-grade the instant the held notes match the target — hands-free
+  onHeldChange(() => {
+    if (vcState.answered || !panelActive('voicing')) return;
+    $('vc-held').textContent = heldNotes().length
+      ? 'holding: ' + [...heldPcs()].sort((a, b) => a - b).map(pc => pcName(pc, useFlats(vcState.root, 'major'))).join(' ')
+      : 'play the notes…';
+    if (vcMatches()) vcFinish(true);
+  });
+  $('vc-new').onclick = () => {
+    vcState.type = $('vc-level').value;
+    vcState.quality = pick(vcState.type === 'triad' ? ['', 'm', 'dim', 'aug'] : ['maj7', '7', 'm7', 'm7b5']);
+    vcState.root = rand(12);
+    vcState.targetPcs = voicingPcs(vcState.root, vcState.quality, vcState.type);
+    vcState.answered = false;
+    vcState.askedAt = nowT();
+    const f = useFlats(vcState.root, 'major');
+    $('vc-meta').textContent = `play the ${VC_TYPE_LABEL[vcState.type]} of ${pcName(vcState.root, f)}${qualLabel(vcState.quality)}`;
+    $('vc-result').textContent = '';
+    $('vc-held').textContent = 'play the notes…';
+  };
+  $('vc-hear').onclick = () => { if (!vcState.answered) vcPlay(); };
+  $('vc-check').onclick = () => { if (!vcState.answered) vcFinish(vcMatches()); };
+  $('vc-reveal').onclick = () => { if (!vcState.answered) vcFinish(false); };
+  $('vc-level').onchange = () => $('vc-new').click();
 
   // ---- progress / stats panel ----
   function renderStats() {

@@ -511,6 +511,7 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 
 .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .chip { border-radius: 999px; padding: 5px 13px; font-size: 14px; }
+.vc-held { margin-top: 12px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 22px; }
 .chip.good { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
 .chip.bad { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); }
 
