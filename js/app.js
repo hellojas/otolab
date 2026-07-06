@@ -7,6 +7,9 @@ import {
 import { encodeShare, decodeShare, packState, unpackState } from './share.js';
 import { initDrill, isDrillOn, answerDrill, drillReplay, stopDrill } from './drill.js';
 import {
+  initIntervals, isIntervalsOn, answerIntervalNotes, replayInterval, stopIntervals,
+} from './intervals.js';
+import {
   onHeldChange, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 } from './input.js';
 import { playChord, ensureCtx, VOICES, setVoice, getVoice, setMasterVolume } from './audio.js';
@@ -89,6 +92,7 @@ function loadSaved(id) {
 onHeldChange(notes => {
   heldNow = notes;
   paintPiano($('#piano'), notes);
+  if (isIntervalsOn() && notes.length === 2) answerIntervalNotes(notes);
   const det = detectChord(notes, flats());
   if (det) {
     $('#detected').textContent = det.label;
@@ -917,7 +921,7 @@ function initShortcuts() {
       case '.':          loopAroundCurrent(0); break;
       case ',':          loopAroundCurrent(1); break;
       case 'b':          tapTempo(); break;
-      case 'r':          drillReplay(); break;
+      case 'r':          drillReplay(); replayInterval(); break;
     }
   });
 }
@@ -971,6 +975,15 @@ function init() {
     getKey: () => state.key,
     onStart: () => {
       stopProgression();
+      stopIntervals();
+      if (state.practice) $('#practice-toggle').click();
+    },
+  });
+  initIntervals({
+    getKey: () => state.key,
+    onStart: () => {
+      stopProgression();
+      stopDrill();
       if (state.practice) $('#practice-toggle').click();
     },
   });
@@ -1001,7 +1014,7 @@ function init() {
   });
   $('#practice-toggle').addEventListener('click', () => {
     state.practice = !state.practice;
-    if (state.practice) { stopProgression(); stopDrill(); }
+    if (state.practice) { stopProgression(); stopDrill(); stopIntervals(); }
     $('#practice-toggle').classList.toggle('on', state.practice);
     $('#practice-toggle').textContent = state.practice ? 'practice: on' : 'practice: off';
     resetQuiz();

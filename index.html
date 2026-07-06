@@ -176,8 +176,37 @@
     <p class="drill-hint">functional ear training, no video needed — a cadence sets the key center (picked up top), one chord plays, and you name its degree by clicking a palette chip above or playing the chord on your keyboard.</p>
   </section>
 
+  <section class="drill-section interval-section">
+    <div class="section-head">
+      <h2>intervals</h2>
+      <button id="iv-start">start</button>
+      <select id="iv-context" title="how the key center is established under each interval">
+        <option value="drone">drone</option>
+        <option value="triad">triad background</option>
+        <option value="cadence">cadence</option>
+      </select>
+      <select id="iv-dir" title="how the two notes are played">
+        <option value="asc">ascending</option>
+        <option value="desc">descending</option>
+        <option value="harm">harmonic</option>
+      </select>
+      <select id="iv-pool" title="which intervals can come up">
+        <option value="basic">3rds · 5th · 8ve</option>
+        <option value="consonant" selected>consonant</option>
+        <option value="all">all within octave</option>
+      </select>
+      <button id="iv-replay" title="r">replay</button>
+      <button id="iv-context-btn" title="hear the key center again">context</button>
+      <button id="iv-reveal">reveal</button>
+      <span id="iv-status"></span>
+      <span id="iv-score"></span>
+    </div>
+    <div id="iv-choices" class="pal-row iv-choices"></div>
+    <p class="drill-hint">functional interval training à la Functional Ear Trainer — a tonal center is set (a <b>drone</b>, the tonic <b>triad</b> held underneath as a background bed, or a <b>cadence</b>), then two notes play. Name the interval by clicking a chip above or playing both notes on your keyboard. <kbd>r</kbd> replays · <b>context</b> re-grounds the key.</p>
+  </section>
+
   <footer>
-    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>b</kbd> tap tempo · <kbd>r</kbd> replay drill chord</p>
+    <p>shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>[</kbd><kbd>]</kbd> loop points · <kbd>\</kbd> loop on/off · <kbd>.</kbd> loop this chord · <kbd>,</kbd> loop ± one chord · <kbd>⏎</kbd> log chord · <kbd>b</kbd> tap tempo · <kbd>r</kbd> replay drill / interval</p>
   </footer>
 
   <script type="module" src="js/app.js"></script>

@@ -307,7 +307,49 @@ function allNotesOff() {
   for (const m of [...voices.keys()]) noteOff(m, true);
 }
 
+// ---------- sustained pad ----------
+// A continuous drone / chord bed that hangs under the interval trainer,
+// independent of the selected voice (which may decay). Sine + a little
+// triangle body per note, softly faded in and out.
+let pad = null;
+
+function startPad(midiNotes, level = 0.18) {
+  ensureCtx();
+  stopPad(true);
+  const t = ctx.currentTime;
+  const out = ctx.createGain();
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime(level, t + 0.18);
+  out.connect(master);
+
+  const oscs = [];
+  for (const m of midiNotes) {
+    const f = midiToFreq(m);
+    const o1 = osc('sine', f);
+    const o2 = osc('triangle', f, 4);
+    const g2 = ctx.createGain();
+    g2.gain.value = 0.3;
+    o1.connect(out);
+    o2.connect(g2).connect(out);
+    o1.start(t); o2.start(t);
+    oscs.push(o1, o2);
+  }
+  pad = { out, oscs };
+}
+
+function stopPad(now = false) {
+  if (!pad) return;
+  const { out, oscs } = pad;
+  pad = null;
+  const t = ctx.currentTime;
+  const rel = now ? 0.03 : 0.28;
+  out.gain.cancelScheduledValues(t);
+  out.gain.setValueAtTime(Math.max(out.gain.value, 0.0001), t);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + rel);
+  oscs.forEach(o => o.stop(t + rel + 0.05));
+}
+
 export {
   noteOn, noteOff, playChord, allNotesOff, ensureCtx,
-  VOICES, setVoice, getVoice, setMasterVolume,
+  VOICES, setVoice, getVoice, setMasterVolume, startPad, stopPad,
 };

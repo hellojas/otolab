@@ -363,6 +363,24 @@ body:not(.drilling) #drill-cadence,
 body:not(.drilling) #drill-reveal { display: none; }
 body.drilling .palette { outline: 1px dashed var(--accent); outline-offset: 6px; border-radius: 8px; }
 
+.interval-section { margin-top: 14px; }
+.iv-choices { margin-top: 10px; }
+.iv-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  padding: 6px 12px; border-radius: 8px; background: var(--panel);
+  line-height: 1.2; min-width: 56px; cursor: pointer;
+}
+.iv-chip .s { font-weight: 700; font-size: 15px; }
+.iv-chip .full { font-size: 10.5px; color: var(--muted); }
+#iv-status { font-size: 14px; }
+#iv-status.iv-right { color: var(--good); font-weight: 700; }
+#iv-status.iv-wrong { color: var(--bad); }
+#iv-score { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+body:not(.iv-training) #iv-replay,
+body:not(.iv-training) #iv-context-btn,
+body:not(.iv-training) #iv-reveal,
+body:not(.iv-training) .iv-choices { display: none; }
+
 footer { margin-top: 26px; color: var(--muted); font-size: 12.5px; }
 kbd {
   background: var(--panel2); border: 1px solid var(--border); border-radius: 4px;

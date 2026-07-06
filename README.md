@@ -109,6 +109,23 @@ degree by clicking a palette chip or playing the chord on your keyboard —
 **diatonic 7ths**; switch to **+ common outside** to get secondary dominants,
 subV7 and borrowed chords in the mix. Score is per session.
 
+## Intervals: functional interval training
+
+The **intervals** section is interval ear training in the style of Alain
+Benbassat's *Functional Ear Trainer* — you hear the interval *inside a key*,
+not in a vacuum. Pick how the tonal center is set:
+
+- **drone** — an open fifth on the tonic hangs underneath the whole question,
+- **triad background** — the tonic triad is held as a quiet bed under the notes,
+- **cadence** — a I–IV–V7–I plants the key first, then the interval plays clean.
+
+Then two notes sound and you name the interval — click a chip or play both notes
+on your keyboard. Choose the direction (**ascending**, **descending**, or
+**harmonic**) and the pool (**3rds · 5th · 8ve** for starting out, **consonant**,
+or **all within octave**). `r` replays the interval, **context** re-grounds the
+key, **reveal** gives up. Score is per session. Uses the key set up top and the
+synth voice from ⚙ settings.
+
 ## Practice mode
 
 Once a song is transcribed, toggle **practice**. Chord labels hide behind `?`.
