@@ -53,6 +53,13 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const panelActive = name => !!document.getElementById(`panel-${name}`)?.classList.contains('active');
 
+// When the curriculum launches the intervals drill for a specific unit, it
+// scopes the questions to that unit's target intervals (config.intItems) — so
+// "practise m3 & M3" actually only asks those, not the whole 12-tone palette.
+// null = no restriction (drill everything). Read by the intervals drill and
+// surfaced as a clearable "focus" chip so it's never a silent, sticky filter.
+let intFocusSet = null;
+
 // Programmatically launch a drill preconfigured — the curriculum's workout and
 // path views drive the existing drills through this. `drill` is a key below;
 // `config` maps raw <select>/<input> ids to the values to set before starting.
@@ -89,6 +96,9 @@ function runAssignment(drill, config = {}) {
     document.querySelector('.dojo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
+  // scope the intervals drill to this unit's target set (or clear a stale scope
+  // when a launch doesn't ask for one) before the drill picks its first question
+  if (drill === 'intervals') setIntervalFocus(Array.isArray(config.intItems) ? config.intItems : null);
   for (const [id, val] of Object.entries(config)) {
     const e = document.getElementById(id);
     if (!e) continue;
@@ -107,6 +117,31 @@ function stopDojoMic() {
   if (isMicOn()) stopMic();
   const mic = document.getElementById('sing-mic');
   if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
+}
+
+// Set (or clear, with null) which intervals the drill is scoped to, then repaint
+// the focus chip. Only names that are actually real intervals survive.
+function setIntervalFocus(names) {
+  intFocusSet = names && names.length
+    ? INTERVALS.filter(i => names.includes(i.name)).map(i => i.name)
+    : null;
+  if (intFocusSet && !intFocusSet.length) intFocusSet = null;
+  renderIntFocus();
+}
+
+// Paint the "focus: m3 · M3 ✕" chip above the interval answers, or hide it when
+// unscoped. The ✕ drops back to drilling all intervals.
+function renderIntFocus() {
+  const box = $('int-focus');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!intFocusSet) { box.hidden = true; return; }
+  box.hidden = false;
+  box.appendChild(el('span', 'dj-focus-lbl', `focus: ${intFocusSet.join(' · ')}`));
+  const clear = el('button', 'dj-focus-clear', '✕');
+  clear.title = 'drill all intervals';
+  clear.onclick = () => setIntervalFocus(null);
+  box.appendChild(clear);
 }
 
 let enterDojoCb = null; // set by initDojo — lets runAssignment switch into dojo mode
@@ -880,8 +915,11 @@ function initDojo(opts = {}) {
 
   $('int-new').onclick = () => {
     const type = $('int-type').value;
-    const wname = pickWeighted('intervals', INTERVALS.map(i => i.name));
-    intState.iv = INTERVALS.find(i => i.name === wname) || pick(INTERVALS);
+    // when a curriculum unit scopes the drill, only ask its target intervals;
+    // the answer chips still show all 12, so it stays a real identification test
+    const pool = intFocusSet ? INTERVALS.filter(i => intFocusSet.includes(i.name)) : INTERVALS;
+    const wname = pickWeighted('intervals', pool.map(i => i.name));
+    intState.iv = pool.find(i => i.name === wname) || pick(pool);
     intState.low = 48 + rand(20);
     intState.harmonic = type === 'harmonic' || (type === 'mixed' && Math.random() < 0.5);
     intState.up = type === 'melodic-asc' ? true

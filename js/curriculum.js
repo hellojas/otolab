@@ -189,6 +189,15 @@ const UNITS = [
 
 const UNIT_BY_ID = Object.fromEntries(UNITS.map(u => [u.id, u]));
 
+// The launch config for a unit: its base select config, plus — for the intervals
+// drill — the unit's target intervals so the drill only asks those, not all 12.
+// `items` overrides the unit's goal set (the review step scopes to what's due).
+function launchConfig(u, items) {
+  const config = { ...u.config };
+  if (u.drill === 'intervals') config.intItems = items || u.goalItems;
+  return config;
+}
+
 // The applied assignment: each unit points at a specific real tune from the
 // groundtruth collection whose changes exercise that unit's skill at roughly
 // its level. The changes quiz plays it and hides the title until you check —
@@ -279,12 +288,12 @@ function buildWorkout() {
   const steps = [];
   steps.push({
     key: 'warm', label: 'Warm up', title: warm.title, cat: warm.cat,
-    drill: warm.drill, config: warm.config, goalCount: 8, goalPct: 0,
+    drill: warm.drill, config: launchConfig(warm), goalCount: 8, goalPct: 0,
     note: 'loosen the ears — 8 quick reps',
   });
   steps.push({
     key: 'focus', label: "Today's focus", title: cur.title, cat: cur.cat,
-    drill: cur.drill, config: cur.config, goalCount: Math.min(cur.goalCount, 15),
+    drill: cur.drill, config: launchConfig(cur), goalCount: Math.min(cur.goalCount, 15),
     goalPct: cur.goalPct, note: cur.blurb, unitId: cur.id,
   });
 
@@ -298,7 +307,14 @@ function buildWorkout() {
     review = UNITS.find(u => u.cat === topCat && (done(u.id) || u.id === cur.id));
   }
   if (!review) review = doneUnits[0] || cur;
-  const reviewConfig = { ...review.config };
+  // for an interval review, scope to the intervals that are actually due (if
+  // any), so review resurfaces the weak ones rather than re-drilling all 12
+  let reviewItems = null;
+  if (review.drill === 'intervals') {
+    const dueNames = due.filter(d => d.cat === 'intervals' && review.goalItems.includes(d.id)).map(d => d.id);
+    reviewItems = dueNames.length ? dueNames : review.goalItems;
+  }
+  const reviewConfig = launchConfig(review, reviewItems);
   if (review.drill === 'mdeg') reviewConfig['mdeg-focus'] = true;
   steps.push({
     key: 'review', label: 'Review', title: review.title, cat: review.cat,
@@ -424,7 +440,7 @@ function startTestOut(u) {
   if (done(u.id) || !unlocked(u)) return;
   testOut = { unitId: u.id, seen: 0, correct: 0 };
   pathMsg = `testing out of ${u.title} — get 6 of your next answers right`;
-  deps.runAssignment(u.drill, u.config);
+  deps.runAssignment(u.drill, launchConfig(u));
 }
 
 // returns true if the attempt was consumed by an active test-out
@@ -484,7 +500,7 @@ function renderPath() {
 
     if (state === 'current' || state === 'open' || state === 'done') {
       const go = el('button', 'path-go', state === 'done' ? 'revisit' : 'practise');
-      go.onclick = () => deps.runAssignment(u.drill, u.config);
+      go.onclick = () => deps.runAssignment(u.drill, launchConfig(u));
       row.appendChild(go);
     }
     if ((state === 'current' || state === 'open') && m.seen < u.goalCount) {

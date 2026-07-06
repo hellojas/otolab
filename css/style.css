@@ -486,6 +486,21 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 .dj-result { font-size: 13.5px; }
 .dj-score { color: var(--muted); font-size: 13px; margin-left: auto; }
 
+/* "focus: m3 · M3 ✕" — the curriculum scoping the interval drill to a unit's set */
+.dj-focus {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 999px; padding: 3px 5px 3px 10px;
+}
+.dj-focus-clear {
+  font-size: 11px; line-height: 1; padding: 2px 5px; cursor: pointer;
+  border: none; border-radius: 999px; color: inherit;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.dj-focus-clear:hover { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+
 /* segmented source switch on the unified "changes" quiz */
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
 .seg-btn { border: none; border-radius: 0; background: transparent; color: var(--muted); padding: 4px 14px; font-size: 13px; }
