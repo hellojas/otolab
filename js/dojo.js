@@ -106,8 +106,10 @@ function runAssignment(drill, config = {}) {
 // the synth plays the target, so the mic must survive playSequence().
 function stopDojoMic() {
   if (isMicOn()) stopMic();
-  const mic = document.getElementById('sing-mic');
-  if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
+  for (const id of ['sing-mic', 'prog-mic']) {
+    const mic = document.getElementById(id);
+    if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
+  }
 }
 
 let enterDojoCb = null; // set by initDojo — lets runAssignment switch into dojo mode
@@ -448,6 +450,7 @@ function makeScore(elId, label = 'this session') {
   let right = 0, total = 0;
   return {
     add(r, t = 1) { right += r; total += t; this.paint(); },
+    stats() { return { right, total }; },
     paint() {
       const pct = total ? Math.round(100 * right / total) : 0;
       $(elId).textContent = total ? `${label}: ${right}/${total} · ${pct}%` : '';
@@ -1863,17 +1866,30 @@ function initDojo(opts = {}) {
   // rebuilt per question to only offer progressions with the same chord count
   // as the one that played — hearing 3 chords never shows a 4-chord option.
   const progScore = makeScore('prog-score');
-  const progState = { prog: null, key: null, answered: true };
+  const progState = { prog: null, key: null, answered: true,
+    chips: [], singSeq: null, singIdx: 0, singHold: 0 };
 
   const progPool = () => {
     const len = $('prog-len').value; // 'mixed' | '3' | '4'
     return len === 'mixed' ? PROGRESSIONS : PROGRESSIONS.filter(p => p.degs.length === +len);
   };
 
+  // Adaptive difficulty: once the ear has proven itself at ≥80% — this session
+  // with a real sample, or all-time in the progress store — degrade the
+  // training signal: faster playback, and only four answer chips instead of
+  // the whole length group. Recognition should keep getting harder as it firms.
+  const progHot = () => {
+    const s = progScore.stats();
+    if (s.total >= 8 && s.right / s.total >= 0.8) return true;
+    const all = progressStats().byCat.progressions;
+    return !!all && all.seen >= 30 && all.pct >= 80;
+  };
+
   function progPlay() {
     const { prog, key } = progState;
     if (!prog) return;
     progState.askedAt = nowT();
+    const bpm = progHot() ? 116 : 96;
     const t = key.tonic;
     let prev = null;
     const evs = prog.degs.map(([d, q], i) => {
@@ -1882,11 +1898,53 @@ function initDojo(opts = {}) {
       return { notes: compNotes(root, q), bass: prev, beats: i === prog.degs.length - 1 ? 3 : 1.5 };
     });
     // hard mode: no tonic anchor — you have to find "home" from the loop itself
-    if ($('prog-anchor').checked) { playSequence(evs, 96); return; }
+    if ($('prog-anchor').checked) { playSequence(evs, bpm); return; }
     const tonicQ = key.mode === 'minor' ? 'm' : '';
     const ref = { notes: compNotes(t, tonicQ), bass: nearestBass(t, null), beats: 2 };
-    playSequence([ref, { beats: 1 }, ...evs], 96);
+    playSequence([ref, { beats: 1 }, ...evs], bpm);
   }
+
+  // Sing-first gate (audiation): with the mic on and "sing the roots first"
+  // ticked, the answer chips stay locked until you've sung the progression's
+  // root line — pitch-class matched, octave-free, same hold-to-lock rule as
+  // the sing drill. If you can't sing the bass line, you were guessing.
+  function progSingDone(skipped) {
+    progState.singSeq = null;
+    progState.chips.forEach(c => { c.disabled = false; });
+    $('prog-skip-sing').hidden = true;
+    $('prog-read').textContent = skipped ? '' : '✓ line sung — now name it';
+  }
+
+  function progOnPitch(p) {
+    const seq = progState.singSeq;
+    if (!seq || progState.singIdx >= seq.length) return;
+    const read = $('prog-read');
+    if (!p) { read.textContent = `sing root ${progState.singIdx + 1}/${seq.length}…`; return; }
+    const targetPc = seq[progState.singIdx];
+    const sungFloat = p.midi + p.cents / 100;
+    let tm = p.midi + ((((targetPc - p.midi) % 12) + 12) % 12);
+    if (tm - p.midi > 6) tm -= 12;
+    const cents = (sungFloat - tm) * 100;
+    read.textContent = `root ${progState.singIdx + 1}/${seq.length} — singing ${noteNameOf(p.midi)} ${cents >= 0 ? '+' : ''}${Math.round(cents)}¢`;
+    progState.singHold = Math.abs(cents) < 35 ? progState.singHold + 1 : 0;
+    if (progState.singHold >= 18) {
+      progState.singHold = 0;
+      progState.singIdx++;
+      if (progState.singIdx >= seq.length) progSingDone(false);
+      else read.textContent = `✓ got it — now root ${progState.singIdx + 1}/${seq.length}`;
+    }
+  }
+
+  $('prog-mic').onclick = async () => {
+    if (isMicOn()) { stopDojoMic(); return; }
+    try {
+      await startMic(progOnPitch, () => stopDojoMic());
+      $('prog-mic').textContent = 'mic on'; $('prog-mic').classList.add('on');
+    } catch (e) {
+      $('prog-meta').textContent = 'mic blocked — allow microphone access in the browser';
+    }
+  };
+  $('prog-skip-sing').onclick = () => progSingDone(true);
 
   $('prog-new').onclick = () => {
     const pool = progPool();
@@ -1895,15 +1953,40 @@ function initDojo(opts = {}) {
     progState.key = { tonic: rand(12), mode: progState.prog.mode };
     progState.answered = false;
     const n = progState.prog.degs.length;
-    $('prog-meta').textContent = $('prog-anchor').checked
-      ? `${n} chords, no anchor — find home yourself`
-      : `key: ${keyName(progState.key)} — tonic first, then ${n} chords`;
+    const hot = progHot();
+    $('prog-meta').textContent = (hot ? '⚡ hot — faster, fewer options · ' : '')
+      + ($('prog-anchor').checked
+        ? `${n} chords, no anchor — find home yourself`
+        : `key: ${keyName(progState.key)} — tonic first, then ${n} chords`);
     $('prog-result').textContent = '';
+
+    // audiation gate: root line to sing before the chips unlock
+    const singFirst = $('prog-sing').checked && isMicOn();
+    progState.singSeq = singFirst
+      ? progState.prog.degs.map(([d]) => (progState.key.tonic + d) % 12) : null;
+    progState.singIdx = 0; progState.singHold = 0;
+    $('prog-skip-sing').hidden = !singFirst;
+    $('prog-read').textContent = singFirst
+      ? 'sing the root of each chord (any octave) to unlock the answers'
+      : ($('prog-sing').checked ? 'enable the mic to sing first' : '');
+
+    // the smart bit: only same-length progressions are offered as answers —
+    // and once you're hot, just the target and three distractors, kept in
+    // canonical order so chip position never leaks the answer.
+    let options = PROGRESSIONS.filter(p => p.degs.length === n);
+    if (hot) {
+      const others = options.filter(p => p.id !== progState.prog.id);
+      const picks = [];
+      while (picks.length < 3 && others.length) picks.push(others.splice(rand(others.length), 1)[0]);
+      options = [progState.prog, ...picks]
+        .sort((a, b) => PROGRESSIONS.indexOf(a) - PROGRESSIONS.indexOf(b));
+    }
     const box = $('prog-answers');
     box.innerHTML = '';
-    // the smart bit: only same-length progressions are offered as answers
-    for (const p of PROGRESSIONS.filter(p => p.degs.length === n)) {
+    progState.chips = [];
+    for (const p of options) {
       const chip = el('button', 'chip', p.label);
+      chip.disabled = singFirst;
       chip.onclick = () => {
         if (progState.answered) return;
         progState.answered = true;
@@ -1914,16 +1997,30 @@ function initDojo(opts = {}) {
         $('prog-result').textContent = (ok ? `✓ ${progState.prog.label}` : `✗ that was ${progState.prog.label}`)
           + ` — ${progState.prog.hint}`;
         // close the loop on a miss: hear the right answer again with its name
-        // showing, then move on — the re-listen is where the learning lands
-        if (!ok) setTimeout(() => { if (panelActive('prog')) progPlay(); }, 700);
+        // showing, and send the hands to the instrument — two more keys locks
+        // it in far better than the next multiple-choice rep.
+        if (!ok) {
+          const k2 = (progState.key.tonic + 1 + rand(11)) % 12;
+          let k3 = (progState.key.tonic + 1 + rand(11)) % 12;
+          if (k3 === k2) k3 = (k3 + 5) % 12;
+          const kn = t2 => keyName({ tonic: t2, mode: progState.prog.mode });
+          $('prog-read').textContent =
+            `close the loop at your instrument: play it in ${kn(progState.key.tonic)}, then ${kn(k2)} and ${kn(k3)}`;
+          setTimeout(() => { if (panelActive('prog')) progPlay(); }, 700);
+        }
         setTimeout(() => { if (panelActive('prog')) $('prog-new').click(); }, ok ? 2200 : 8500);
       };
       box.appendChild(chip);
+      progState.chips.push(chip);
     }
     progPlay();
   };
   $('prog-replay').onclick = progPlay;
   $('prog-len').onchange = () => $('prog-new').click();
+  $('prog-sing').onchange = () => {
+    if ($('prog-sing').checked && !isMicOn()) $('prog-read').textContent = 'enable the mic to sing first';
+    else if (!$('prog-sing').checked) { $('prog-read').textContent = ''; if (progState.singSeq) progSingDone(true); }
+  };
 
   // ---- form-recognition drill (uses the standards library) ----
   const FORM_SONGS = STD_SONGS.filter(s => songForm(s));

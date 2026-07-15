@@ -643,7 +643,11 @@
         famous progression plays: name it. The answer chips always match the
         number of chords you just heard, so counting never gives it away — and
         the key is random every question, so you're naming function, not
-        pitches. Miss one and it replays with the name showing.</p>
+        pitches. Miss one and it replays with the name showing, plus two keys
+        to play it in at your instrument. Tick <b>sing the roots first</b> to
+        lock the chips until you've sung the bass line — audiation beats
+        recognition. Get hot (≥80%) and the drill fights back: faster, with
+        fewer options.</p>
       <div class="dj-row">
         <select id="prog-len" title="which progressions can come up">
           <option value="mixed">3 &amp; 4 chords</option>
@@ -654,6 +658,12 @@
         <button id="prog-replay">▶ replay</button>
         <label class="check" title="hard mode: no tonic reference before the progression — find home from the loop itself"><input type="checkbox" id="prog-anchor"> no tonic anchor</label>
         <span id="prog-meta" class="dj-meta"></span>
+      </div>
+      <div class="dj-row">
+        <label class="check" title="audiation gate: sing the root of each chord (any octave) before the answer chips unlock — if you can't sing the bass line, you guessed"><input type="checkbox" id="prog-sing"> sing the roots first</label>
+        <button id="prog-mic">enable mic</button>
+        <button id="prog-skip-sing" hidden>skip singing</button>
+        <span id="prog-read" class="dj-meta"></span>
       </div>
       <div id="prog-answers" class="chips"></div>
       <div class="dj-row">
