@@ -1,0 +1,59 @@
+# wick remote fire — trigger from your phone via the GitHub app (Actions tab →
+# Run workflow), or `gh workflow run wick-fire.yml -f project=x -f idea="..."`.
+#
+# COST: this is PROGRAMMATIC usage. It draws from your plan's monthly Agent
+# SDK/headless credit (e.g. $200/mo on Max 20x, use-it-or-lose-it, does NOT
+# roll over), then stops unless you've enabled pay-as-you-go usage credits.
+# wick's context discipline (progressive disclosure, embers, tier-pinned
+# subagents) is what makes this credit go far.
+name: wick-fire
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "project name"
+        required: true
+      idea:
+        description: "one paragraph (ignored if wick.md exists in repo)"
+        required: false
+        default: ""
+      ideate:
+        description: "run Phase 0 ideation + think tank first"
+        type: boolean
+        default: false
+
+jobs:
+  fire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120   # hard wall so a runaway run can't burn the credit
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fire wick
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # or: claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # (subscription-credit path; verify current auth support in the
+          # action's README — this moves fast)
+          prompt: |
+            /fire-away ${{ inputs.project }} ${{ inputs.ideate == true && 'ideate' || '' }} "${{ inputs.idea }}"
+          claude_args: "--max-turns 150"
+
+      - name: Open PR with the demo
+        if: always()
+        run: |
+          BRANCH="wick/${{ inputs.project }}"
+          if git rev-parse --verify "$BRANCH" >/dev/null 2>&1 || git ls-remote --exit-code origin "$BRANCH" >/dev/null 2>&1; then
+            gh pr create --head "$BRANCH" \
+              --title "wick: ${{ inputs.project }}" \
+              --body "Unattended /fire-away run. Read wick/CLOSEOUT.md first (risky forks + NOT SHIPPED items), then ASSUMPTIONS.md. Demo command is in the closeout." \
+              || echo "PR may already exist"
+          else
+            echo "no wick branch produced — check the run log"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
