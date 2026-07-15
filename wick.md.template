@@ -1,0 +1,31 @@
+# wick.md — manifest (rename to wick.md to drive a /fire run)
+
+## Brief
+<2-4 sentences: what it is, who it's for, the ONE thing the demo must show.>
+
+## Stack
+- runtime:
+- framework (or "vanilla"):
+- storage (or "none / in-memory"):
+- forbidden:
+
+## Must-haves (become R-###)
+-
+-
+
+## Out of scope (hard)
+-
+-
+
+## Decisions pre-made (kills RISKY assumptions)
+-
+-
+
+## Demo definition
+- runs via: <exact command or "open index.html">
+- user should see:
+- acceptance:
+
+## Taste (optional, SOFT)
+- palette / type:
+- copy voice:
