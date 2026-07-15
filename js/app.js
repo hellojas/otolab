@@ -8,7 +8,7 @@ import { encodeShare, decodeShare, packState, unpackState } from './share.js';
 import {
   onHeldChange, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 } from './input.js';
-import { playChord, ensureCtx, VOICES, setVoice, getVoice, setChallenge, setMasterVolume } from './audio.js';
+import { playChord, ensureCtx, VOICES, setVoice, getVoice, setChallenge, setPianoTone, setMasterVolume } from './audio.js';
 import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
@@ -831,6 +831,16 @@ function initSettings() {
     setNoteNaming(nnSel.value);
     localStorage.setItem('otolab:v1:notenames', nnSel.value);
     refreshNoteNames();
+  });
+
+  const toneSel = $('#piano-tone');
+  const savedTone = localStorage.getItem('otolab:v1:pianotone');
+  if (savedTone) toneSel.value = savedTone;
+  setPianoTone(toneSel.value);
+  toneSel.addEventListener('change', () => {
+    setPianoTone(toneSel.value);
+    localStorage.setItem('otolab:v1:pianotone', toneSel.value);
+    preview(); // hear the new voicing immediately
   });
 
   const chSel = $('#challenge-select');

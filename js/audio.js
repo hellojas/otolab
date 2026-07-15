@@ -72,132 +72,229 @@ function buildPiano(freq, vel, t) {
 }
 
 // ---------- modeled acoustic piano (Pianoteq-style, in miniature) ----------
-// No samples: each note is *modeled* and rendered once into an AudioBuffer,
-// then cached. The recipe is what separates a piano from "a synth playing
-// sine-ish tones":
-//   · stiff-string INHARMONICITY — partial n lands at f·n·√(1+B·n²), not f·n.
-//     The sharpened upper partials are the single strongest "real piano" cue.
-//   · STRIKE-POINT comb — the hammer hits ~1/8 along the string, so partials
-//     with a node there (≈ the 8th) are suppressed: aₙ ∝ sin(π·n·d).
-//   · DETUNED UNISONS — mid/treble notes have 2–3 strings a hair apart; their
-//     beating is the shimmer a single oscillator can never make.
-//   · TWO-STAGE, PER-PARTIAL DECAY — a bright prompt sound that falls away
-//     fast, then a long quiet aftersound; high partials die first, bass rings.
-//   · velocity → brightness (spectral tilt + hammer noise), plus a soundboard
-//     "body" via a tiny synthesized-impulse convolver shared by all notes.
+// No samples: each note is *modeled* and rendered once into a cached stereo
+// AudioBuffer. v2 folds in the phenomena Modartt lists for Pianoteq plus the
+// piano-acoustics literature (Weinreich's coupled strings, Railsback stretch,
+// Conklin's longitudinal modes):
+//   · stiff-string INHARMONICITY — partial n at f·n·√(1+B·n²); the sharpened
+//     uppers are the strongest single "real piano" cue.
+//   · STRIKE-POINT comb (hammer ≈ 1/8 along the string) shaping amplitudes,
+//     with velocity → brightness (hammer-felt compression as a spectral tilt).
+//   · DETUNED UNISONS (1/2/3 strings by register) — real-unison beating.
+//   · TWO-STAGE, PER-PARTIAL DECAY — bright prompt sound, long aftersound.
+//   · SOUNDBOARD RADIATION — a board can't radiate 27 Hz, so the deep bass
+//     fundamental is weak and the note is heard through partials 2–5 (this is
+//     what keeps modeled bass "woody" instead of "subby"), plus per-partial
+//     spectral RIPPLE (±3.5 dB) from board resonances — smooth spectra are the
+//     synth giveaway.
+//   · LONGITUDINAL string modes in the bass — the metallic growl in a hard-hit
+//     low note, excited nonlinearly (amp ∝ vel²).
+//   · DUPLEX-SCALE shimmer in the treble — quiet, long-ringing halo partials
+//     from the undamped string segments beyond the bridge.
+//   · RAILSBACK STRETCH tuning — octaves tuned to the inharmonic partials, so
+//     treble runs sharp and bass flat, exactly like a tuned grand.
+//   · STEREO — bass strings left, treble right (player perspective), unisons
+//     spread a touch, and a modal wooden-soundboard convolver for body.
+// Three voicing presets caricature famous grands: classic (Steinway-ish,
+// balanced/singing), warm (Bösendorfer-ish, darker, wider unisons, longer
+// ring), bright (Yamaha-ish, harder hammers, cleaner attack).
 
-const pianoCache = new Map(); // `${midi}|${velBucket}` -> AudioBuffer
-const PIANO_CACHE_MAX = 48;
+const PIANO_TONES = {
+  classic: { fcMul: 1.0,  pAdd: 0,     detMul: 1.0,  thumpMul: 1.0,  tauMul: 1.0,  stretchMul: 1.0 },
+  warm:    { fcMul: 0.72, pAdd: 0.25,  detMul: 1.25, thumpMul: 1.1,  tauMul: 1.12, stretchMul: 0.9 },
+  bright:  { fcMul: 1.35, pAdd: -0.2,  detMul: 0.85, thumpMul: 1.05, tauMul: 0.94, stretchMul: 1.1 },
+};
+let pianoTone = 'classic';
+function setPianoTone(id) { if (PIANO_TONES[id]) pianoTone = id; }
+function getPianoTone() { return pianoTone; }
+
+const pianoCache = new Map(); // `${midi}|${velBucket}|${tone}` -> AudioBuffer
+const PIANO_CACHE_MAX = 36;
 const PIANO_VELS = [0.35, 0.62, 0.88]; // render velocities per bucket
 
-let soundboard = null; // shared { input } — a small convolver "body"
+// deterministic per-(note,partial) hash in [0,1) — the same note always gets
+// the same spectral ripple, so repeats sound like the same instrument
+function pHash(a, b, c = 0) {
+  const x = Math.sin(a * 12.9898 + b * 78.233 + c * 37.719) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// Railsback curve: stretch derived from where a tuner actually puts octaves
+// (matching inharmonic partial 2 of the lower note) — treble sharp, bass flat.
+function railsback(midi) {
+  const dev = 13 * Math.pow((midi - 66) / 24, 3);
+  return Math.max(-18, Math.min(18, dev)); // cents
+}
+
+let soundboard = null; // shared { input } — modal wooden-body convolver
 function getSoundboard() {
   if (soundboard) return soundboard;
-  const sr = ctx.sampleRate, len = Math.floor(sr * 0.35);
+  const sr = ctx.sampleRate, len = Math.floor(sr * 1.1);
   const ir = ctx.createBuffer(2, len, sr);
   for (let ch = 0; ch < 2; ch++) {
     const d = ir.getChannelData(ch);
-    let lp = 0;
-    for (let i = 0; i < len; i++) {
-      // decaying noise through a one-pole lowpass ≈ a small dark room/board
-      const w = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.075));
-      lp += 0.18 * (w - lp);
-      d[i] = lp;
+    // a wooden board is a bank of discrete modes, dense and short-lived toward
+    // the top — not white noise. 42 log-spaced modes, jittered per channel so
+    // the two ears see a decorrelated (wide) body.
+    for (let k = 0; k < 42; k++) {
+      const fk = 62 * Math.pow(5200 / 62, k / 41) * (1 + (pHash(k, ch) - 0.5) * 0.12);
+      const ak = Math.pow(62 / fk, 0.35) * (0.7 + 0.6 * pHash(k, ch, 7));
+      const tk = Math.max(0.05, Math.min(0.9, 0.85 * Math.pow(62 / fk, 0.55)));
+      const m = Math.exp(-1 / (tk * sr));
+      const w = 2 * Math.PI * fk / sr, cw = Math.cos(w), sw = Math.sin(w);
+      let cph = Math.cos(pHash(k, ch, 3) * 6.283), sph = Math.sin(pHash(k, ch, 3) * 6.283);
+      let env = ak;
+      const end = Math.min(len, Math.ceil(tk * sr * 10));
+      for (let i = 0; i < end; i++) {
+        d[i] += env * sph;
+        const nc = cph * cw - sph * sw; sph = sph * cw + cph * sw; cph = nc;
+        env *= m;
+      }
     }
+    let peak = 0;
+    for (let i = 0; i < len; i++) { const v = Math.abs(d[i]); if (v > peak) peak = v; }
+    if (peak > 0) for (let i = 0; i < len; i++) d[i] *= 0.5 / peak;
   }
   const conv = ctx.createConvolver();
   conv.buffer = ir;
   const wet = ctx.createGain();
-  wet.gain.value = 0.5; // pre-scaled: sends into this are quiet
+  wet.gain.value = 0.45; // pre-scaled: sends into this are quiet
   conv.connect(wet).connect(master);
   soundboard = { input: conv };
   return soundboard;
 }
 
-function renderPianoBuffer(freq, vel) {
+function renderPianoBuffer(freq, vel, toneId = pianoTone) {
+  const T = PIANO_TONES[toneId] || PIANO_TONES.classic;
   const sr = ctx.sampleRate;
   const midi = 69 + 12 * Math.log2(freq / 440);
   const reg = Math.min(1, Math.max(0, (midi - 21) / 87)); // 0 = bottom A, 1 = top C
-  const dur = 5.0 - 3.2 * reg;                            // bass rings ~5s, treble ~1.8s
+  const dur = 5.2 - 3.3 * reg;                            // bass rings ~5s, treble ~1.9s
   const len = Math.floor(sr * dur);
-  const buf = ctx.createBuffer(1, len, sr);
-  const data = buf.getChannelData(0);
+  const buf = ctx.createBuffer(2, len, sr);
+  const dataL = buf.getChannelData(0), dataR = buf.getChannelData(1);
+
+  // stretch-tune the note itself (Railsback), then model around it
+  freq *= Math.pow(2, railsback(midi) * T.stretchMul / 1200);
 
   // stiffness rises into the treble (bass strings are wound to fight it)
   const B = 0.00006 * Math.pow(2, reg * 4.2);
   const strike = 0.09 + 0.05 * (1 - reg);                 // hammer position (≈1/8 – 1/7)
-  const p = 2.1 - 0.9 * vel;                              // rolloff: soft = dark, hard = bright
-  const fc = 900 + 5200 * vel + freq * 0.6;               // brightness lowpass corner
-  const tau0 = 0.9 + (1 - reg) * 3.2;                     // slow-decay base (s)
+  const p = 2.1 - 0.9 * vel + T.pAdd;                     // rolloff: soft = dark, hard = bright
+  const fc = (900 + 5200 * vel + freq * 0.6) * T.fcMul;   // brightness corner
+  const tau0 = (0.9 + (1 - reg) * 3.2) * T.tauMul;        // slow-decay base (s)
   const nPart = Math.max(3, Math.min(18, Math.floor(9000 / freq)));
   // unison strings: 1 in the bass, 2 in the tenor, 3 in the treble
-  const cents = midi < 44 ? [0] : midi < 64 ? [-0.9, 0.9] : [-1.3, 0, 1.3];
+  const det = T.detMul;
+  const cents = midi < 44 ? [0] : midi < 64 ? [-0.9 * det, 0.9 * det] : [-1.3 * det, 0, 1.3 * det];
 
-  let aFirst = 0; // remember partial-1 level to scale the hammer thump
-  for (const c of cents) {
+  // stereo placement: bass to the left, treble right (player perspective),
+  // each unison string spread a touch around the note position
+  const basePan = Math.max(-0.45, Math.min(0.45, (midi - 60) / 60));
+
+  const midiR = Math.round(midi);
+  let aFirst = 0; // partial-1 level, used to scale thump/growl/shimmer
+
+  const addPartial = (fn, a, tauS, tauF, wFast, gL, gR) => {
+    if (fn > sr * 0.45 || a < 1e-4) return;
+    let envS = (1 - wFast) * a, envF = wFast * a;
+    const mS = Math.exp(-1 / (tauS * sr));
+    const mF = Math.exp(-1 / (tauF * sr));
+    const end = Math.min(len, Math.ceil(tauS * sr * Math.log(Math.max(envS, 1e-9) / 2e-5)));
+    if (end <= 0) return;
+    const w = 2 * Math.PI * fn / sr;
+    const cw = Math.cos(w), sw = Math.sin(w);
+    let cph = 1, sph = 0;
+    for (let i = 0; i < end; i++) {
+      const v = (envF + envS) * sph;
+      dataL[i] += v * gL;
+      dataR[i] += v * gR;
+      const nc = cph * cw - sph * sw;
+      sph = sph * cw + cph * sw;
+      cph = nc;
+      envS *= mS; envF *= mF;
+    }
+  };
+
+  cents.forEach((c, s) => {
     const f0 = freq * Math.pow(2, c / 1200);
+    const pan = basePan + (s - (cents.length - 1) / 2) * 0.1;
+    const th = (Math.max(-1, Math.min(1, pan)) + 1) * Math.PI / 4;
+    const gL = Math.cos(th), gR = Math.sin(th);
     for (let n = 1; n <= nPart; n++) {
-      const fn = f0 * n * Math.sqrt(1 + B * n * n);       // inharmonic partial
+      const fn = f0 * n * Math.sqrt(1 + B * n * n);        // inharmonic partial
       if (fn > sr * 0.45) break;
       let a = Math.pow(n, -p) * Math.abs(Math.sin(Math.PI * n * strike));
-      a /= 1 + Math.pow(fn / fc, 2);                      // velocity brightness tilt
-      if (a < 1e-4) continue;
+      a /= 1 + Math.pow(fn / fc, 2);                       // velocity brightness tilt
+      a *= fn * fn / (fn * fn + 95 * 95);                  // soundboard radiation: weak deep fundamental
+      a *= Math.pow(10, (pHash(midiR, n, s) - 0.5) * 7 / 20); // board-resonance ripple ±3.5 dB
       if (n === 1) aFirst = Math.max(aFirst, a);
+      const tauS = tau0 / (1 + 0.08 * (n - 1));            // aftersound (slow)
+      addPartial(fn, a, tauS, tauS * 0.22, 0.55, gL, gR);
+    }
 
-      const tauS = tau0 / (1 + 0.08 * (n - 1));           // aftersound (slow)
-      const tauF = tauS * 0.22;                           // prompt sound (fast)
-      let envS = 0.45 * a, envF = 0.55 * a;
-      const mS = Math.exp(-1 / (tauS * sr));
-      const mF = Math.exp(-1 / (tauF * sr));
-      // stop adding this partial once its slow tail is inaudible
-      const end = Math.min(len, Math.ceil(tauS * sr * Math.log(envS / 2e-5)));
-      if (end <= 0) continue;
-
-      // phasor rotation: a sine oscillator with two mults, no Math.sin per sample
-      const w = 2 * Math.PI * fn / sr;
-      const cw = Math.cos(w), sw = Math.sin(w);
-      let cph = 1, sph = 0;
-      for (let i = 0; i < end; i++) {
-        data[i] += (envF + envS) * sph;
-        const nc = cph * cw - sph * sw;
-        sph = sph * cw + cph * sw;
-        cph = nc;
-        envS *= mS; envF *= mF;
+    // longitudinal modes (bass only): the metallic growl of a hard-hit low
+    // string — nonlinearly excited, so amp rides vel², dies fast
+    if (midi < 52) {
+      for (let k = 0; k < 2; k++) {
+        const fL = f0 * (13.5 + 4.5 * pHash(midiR, k, 11));
+        addPartial(fL, aFirst * 0.22 * vel * vel * (k ? 0.6 : 1), 0.35, 0.1, 0.6, gL, gR);
       }
+    }
+    // duplex-scale shimmer (treble only): quiet, undamped halo above the note
+    if (midi > 62) {
+      const fD = f0 * (4.05 + 0.35 * pHash(midiR, 5, 13));
+      addPartial(fD, aFirst * 0.05 * vel, 0.9, 0.5, 0.3, gL, gR);
+    }
+  });
+
+  // attack: a resonant knock (the board thud), not hiss — plus a whisper of
+  // lowpassed hammer noise. Both ride velocity hard, like real felt.
+  {
+    const th = (basePan + 1) * Math.PI / 4;
+    const gL = Math.cos(th), gR = Math.sin(th);
+    const knockAmp = aFirst * Math.pow(vel, 1.5) * (1.2 - 0.6 * reg) * 0.55 * T.thumpMul;
+    addPartial(95 + 130 * reg, knockAmp, 0.03, 0.012, 0.5, gL, gR);
+    const alpha = Math.min(0.6, (2 * Math.PI * (700 + 3800 * vel + freq * 0.25)) / sr);
+    const nLen = Math.min(len, Math.floor(sr * 0.012));
+    let lp = 0;
+    for (let i = 0; i < nLen; i++) {
+      const w = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.003));
+      lp += alpha * (w - lp);
+      const v = knockAmp * 0.7 * lp;
+      dataL[i] += v * gL; dataR[i] += v * gR;
     }
   }
 
-  // hammer thump: a short lowpassed noise burst, heavier in the bass
-  const thumpAmp = aFirst * (0.5 + 0.9 * vel) * (1.15 - 0.75 * reg) * 0.6;
-  const alpha = Math.min(0.6, (2 * Math.PI * (700 + 3800 * vel + freq * 0.25)) / sr);
-  const thumpLen = Math.min(len, Math.floor(sr * 0.02));
-  let lp = 0;
-  for (let i = 0; i < thumpLen; i++) {
-    const w = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.004));
-    lp += alpha * (w - lp);
-    data[i] += thumpAmp * lp;
+  // click-proof the edges: velocity-shaped bloom in (soft = slower), fade out
+  const aLen = Math.floor(sr * (0.0008 + 0.0035 * (1 - vel)));
+  const fLen = Math.min(len, Math.floor(sr * 0.06));
+  for (const d of [dataL, dataR]) {
+    for (let i = 0; i < aLen; i++) d[i] *= i / aLen;
+    for (let i = 0; i < fLen; i++) d[len - 1 - i] *= i / fLen;
   }
 
-  // click-proof the edges: 1.5ms attack ramp in, 60ms fade out
-  const aLen = Math.floor(sr * 0.0015);
-  for (let i = 0; i < aLen; i++) data[i] *= i / aLen;
-  const fLen = Math.min(len, Math.floor(sr * 0.06));
-  for (let i = 0; i < fLen; i++) data[len - 1 - i] *= i / fLen;
-
-  // normalize to a consistent peak; loudness is applied per-note in build()
+  // normalize both channels together; loudness is applied per-note in build()
   let peak = 0;
-  for (let i = 0; i < len; i++) { const v = Math.abs(data[i]); if (v > peak) peak = v; }
-  if (peak > 0) { const s = 0.92 / peak; for (let i = 0; i < len; i++) data[i] *= s; }
+  for (let i = 0; i < len; i++) {
+    const l = Math.abs(dataL[i]), r = Math.abs(dataR[i]);
+    if (l > peak) peak = l;
+    if (r > peak) peak = r;
+  }
+  if (peak > 0) {
+    const sc = 0.92 / peak;
+    for (let i = 0; i < len; i++) { dataL[i] *= sc; dataR[i] *= sc; }
+  }
   return buf;
 }
 
 function buildModelPiano(freq, vel, t) {
   const midiR = Math.round(69 + 12 * Math.log2(freq / 440));
   const bucket = vel < 0.45 ? 0 : vel < 0.75 ? 1 : 2;
-  const key = `${midiR}|${bucket}`;
+  const key = `${midiR}|${bucket}|${pianoTone}`;
   let buf = pianoCache.get(key);
   if (!buf) {
-    buf = renderPianoBuffer(midiToFreq(midiR), PIANO_VELS[bucket]);
+    buf = renderPianoBuffer(midiToFreq(midiR), PIANO_VELS[bucket], pianoTone);
     if (pianoCache.size >= PIANO_CACHE_MAX) pianoCache.delete(pianoCache.keys().next().value);
     pianoCache.set(key, buf);
   }
@@ -215,7 +312,7 @@ function buildModelPiano(freq, vel, t) {
 
   // a quiet send into the shared soundboard for body & bloom
   const send = ctx.createGain();
-  send.gain.value = 0.14;
+  send.gain.value = 0.15;
   gain.connect(send).connect(getSoundboard().input);
 
   src.start(t);
@@ -531,5 +628,6 @@ export {
   noteOn, noteOff, playChord, allNotesOff, ensureCtx,
   playNoteAt, playChordAt, clickAt, audioNow,
   VOICES, setVoice, getVoice, setChallenge, getChallenge, setMasterVolume,
+  setPianoTone, getPianoTone,
   renderPianoBuffer, // exported for tests — asserts the model's energy/decay
 };
