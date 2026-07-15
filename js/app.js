@@ -6,9 +6,9 @@ import {
 } from './theory.js';
 import { encodeShare, decodeShare, packState, unpackState } from './share.js';
 import {
-  onHeldChange, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
+  onHeldChange, onPedal, connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 } from './input.js';
-import { playChord, ensureCtx, VOICES, setVoice, getVoice, setChallenge, setPianoTone, setMasterVolume } from './audio.js';
+import { playChord, ensureCtx, VOICES, setVoice, getVoice, setChallenge, setPianoTone, setSustainPedal, setMasterVolume } from './audio.js';
 import { fetchLyrics, parseTitle } from './lyrics.js';
 import { parseProgression, gradeProgression } from './reference.js';
 import { startListen, stopListen, isListening } from './listen.js';
@@ -1164,6 +1164,7 @@ function init() {
   initProgressDrawer();
   buildPiano($('#piano'));
   initComputerKeyboard(oct => { $('#kb-octave').textContent = `C${oct}`; });
+  onPedal(setSustainPedal); // MIDI CC64 → real sustain: notes hold, strings ring along
   initTransport();
   initKeyControls();
   initShortcuts();

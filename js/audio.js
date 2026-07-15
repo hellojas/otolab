@@ -99,10 +99,12 @@ function buildPiano(freq, vel, t) {
 // balanced/singing), warm (Bösendorfer-ish, darker, wider unisons, longer
 // ring), bright (Yamaha-ish, harder hammers, cleaner attack).
 
+// hammerMul scales the felt contact time: softer felt (warm) stays on the
+// string longer = darker; harder felt (bright) leaves sooner = brighter.
 const PIANO_TONES = {
-  classic: { fcMul: 1.0,  pAdd: 0,     detMul: 1.0,  thumpMul: 1.0,  tauMul: 1.0,  stretchMul: 1.0 },
-  warm:    { fcMul: 0.72, pAdd: 0.25,  detMul: 1.25, thumpMul: 1.1,  tauMul: 1.12, stretchMul: 0.9 },
-  bright:  { fcMul: 1.35, pAdd: -0.2,  detMul: 0.85, thumpMul: 1.05, tauMul: 0.94, stretchMul: 1.1 },
+  classic: { hammerMul: 1.0,  pAdd: 0,     detMul: 1.0,  thumpMul: 1.0,  tauMul: 1.0,  stretchMul: 1.0 },
+  warm:    { hammerMul: 1.4,  pAdd: 0.25,  detMul: 1.25, thumpMul: 1.1,  tauMul: 1.12, stretchMul: 0.9 },
+  bright:  { hammerMul: 0.7,  pAdd: -0.2,  detMul: 0.85, thumpMul: 1.05, tauMul: 0.94, stretchMul: 1.1 },
 };
 let pianoTone = 'classic';
 function setPianoTone(id) { if (PIANO_TONES[id]) pianoTone = id; }
@@ -164,6 +166,87 @@ function getSoundboard() {
   return soundboard;
 }
 
+// ---- sympathetic resonance: a bank of real string resonators --------------
+// Pianoteq's resonances are damper-position dependent: pedal down = every
+// string is free to ring along with whatever partials it shares with the
+// played note. We model the strings themselves — 24 tuned feedback combs
+// (C2–B3; each comb resonates at ALL multiples of its fundamental, so two
+// octaves of strings blanket the whole spectrum). A comb only speaks where
+// the played note actually has energy, so a C major chord halos like C major
+// — this is genuine sympathetic resonance, not reverb. The bank is faintly
+// alive even pedal-up (the top ~octave and duplex segments of a real piano
+// are undamped) and opens fully with the pedal.
+let sympathy = null; // { input } — feed post-note signal here
+let sympathyLevel = null;
+let pedalOn = false;
+const sustained = new Set(); // voices held only by the pedal
+
+function getSympathy() {
+  if (sympathy) return sympathy;
+  const input = ctx.createGain();
+  input.gain.value = 1;
+  sympathyLevel = ctx.createGain();
+  sympathyLevel.gain.value = 0.1; // pedal-up: just the undamped-string glow
+  const out = ctx.createGain();
+  out.gain.value = 0.055;
+  input.connect(sympathyLevel);
+  for (let m = 36; m <= 59; m++) { // C2..B3 string fundamentals
+    const f = midiToFreq(m);
+    const delay = ctx.createDelay(0.06);
+    delay.delayTime.value = 1 / f;
+    const damp = ctx.createBiquadFilter();
+    damp.type = 'lowpass';
+    damp.frequency.value = 2600 + f * 2; // string damping: highs die first
+    damp.Q.value = 0.2;
+    const fb = ctx.createGain();
+    fb.gain.value = 0.955;               // ~2–3 s ring in the bass, shorter up top
+    sympathyLevel.connect(delay);
+    delay.connect(damp).connect(fb).connect(delay); // the string loop
+    damp.connect(out);
+  }
+  out.connect(master);
+  sympathy = { input };
+  return sympathy;
+}
+
+function setSustainPedal(on) {
+  pedalOn = !!on;
+  if (ctx && sympathyLevel) {
+    sympathyLevel.gain.setTargetAtTime(pedalOn ? 0.55 : 0.1, ctx.currentTime, 0.04);
+  }
+  if (!pedalOn) { // lifting the pedal drops every note it was holding
+    for (const v of sustained) v.stop();
+    sustained.clear();
+  }
+}
+const getPedalState = () => ({ on: pedalOn, sustained: sustained.size });
+
+// damper/release noise: the felt landing back on the string — a soft, dark
+// "puh" whose loudness follows how loud the note still is. Rendered once.
+let damperBuf = null;
+function damperNoise(when, level, pan = 0) {
+  if (level < 0.002) return;
+  if (!damperBuf) {
+    const sr = ctx.sampleRate, len = Math.floor(sr * 0.05);
+    damperBuf = ctx.createBuffer(1, len, sr);
+    const d = damperBuf.getChannelData(0);
+    let lp = 0;
+    for (let i = 0; i < len; i++) {
+      const w = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.012));
+      lp += 0.09 * (w - lp); // dark: felt, not fingernail
+      d[i] = lp * 6;
+    }
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = damperBuf;
+  const g = ctx.createGain();
+  g.gain.value = Math.min(0.12, level * 0.45);
+  const panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+  if (panner) { panner.pan.value = pan; src.connect(g).connect(panner).connect(master); }
+  else src.connect(g).connect(master);
+  src.start(Math.max(ctx.currentTime, when));
+}
+
 function renderPianoBuffer(freq, vel, toneId = pianoTone) {
   const T = PIANO_TONES[toneId] || PIANO_TONES.classic;
   const sr = ctx.sampleRate;
@@ -180,8 +263,14 @@ function renderPianoBuffer(freq, vel, toneId = pianoTone) {
   // stiffness rises into the treble (bass strings are wound to fight it)
   const B = 0.00006 * Math.pow(2, reg * 4.2);
   const strike = 0.09 + 0.05 * (1 - reg);                 // hammer position (≈1/8 – 1/7)
-  const p = 2.1 - 0.9 * vel + T.pAdd;                     // rolloff: soft = dark, hard = bright
-  const fc = (900 + 5200 * vel + freq * 0.6) * T.fcMul;   // brightness corner
+  const p = 1.85 - 0.3 * vel + T.pAdd;                    // base string/strike rolloff
+  // NONLINEAR HAMMER-FELT CONTACT — the defining velocity cue. Felt is a
+  // stiffening spring (F ∝ x^~2.5), so a harder blow compresses it further and
+  // leaves the string *sooner*: contact ~3.5 ms in the bass / ~0.6 ms in the
+  // treble, shrinking ~40% from pp to ff. The force pulse acts as a lowpass
+  // whose corner ≈ 1/(π·τc), so brightness grows superlinearly with velocity —
+  // faster than any velocity→filter mapping can fake.
+  const tauC = (0.0006 + 0.003 * (1 - reg) * (1 - reg)) * (1.65 - 1.0 * vel) * T.hammerMul;
   const tau0 = (0.9 + (1 - reg) * 3.2) * T.tauMul;        // slow-decay base (s)
   const nPart = Math.max(3, Math.min(18, Math.floor(9000 / freq)));
   // unison strings: 1 in the bass, 2 in the tenor, 3 in the treble
@@ -225,7 +314,10 @@ function renderPianoBuffer(freq, vel, toneId = pianoTone) {
       const fn = f0 * n * Math.sqrt(1 + B * n * n);        // inharmonic partial
       if (fn > sr * 0.45) break;
       let a = Math.pow(n, -p) * Math.abs(Math.sin(Math.PI * n * strike));
-      a /= 1 + Math.pow(fn / fc, 2);                       // velocity brightness tilt
+      // hammer force-pulse rolloff. The nonlinear felt sharpens the pulse, so
+      // its effective bandwidth is ~3/τc (not the half-sine's 1/πτc) — corner
+      // ≈ 2.6 kHz at C4 ff, ≈ 1.7 kHz at pp: brightness grows superlinearly.
+      a /= 1 + Math.pow(fn * tauC / 3.1, 2);
       a *= fn * fn / (fn * fn + 95 * 95);                  // soundboard radiation: weak deep fundamental
       a *= Math.pow(10, (pHash(midiR, n, s) - 0.5) * 7 / 20); // board-resonance ripple ±3.5 dB
       if (n === 1) aFirst = Math.max(aFirst, a);
@@ -310,13 +402,21 @@ function buildModelPiano(freq, vel, t) {
   gain.gain.setValueAtTime(peak, t);
   src.connect(gain).connect(master);
 
-  // a quiet send into the shared soundboard for body & bloom
+  // quiet sends: the soundboard for body, the string bank for sympathy
   const send = ctx.createGain();
   send.gain.value = 0.15;
   gain.connect(send).connect(getSoundboard().input);
+  const symSend = ctx.createGain();
+  symSend.gain.value = 0.6;
+  gain.connect(symSend).connect(getSympathy().input);
 
   src.start(t);
-  return { gain, oscs: [src], rel: 0.18 };
+  const pan = Math.max(-0.45, Math.min(0.45, (midiR - 60) / 60));
+  return {
+    gain, oscs: [src], rel: 0.18,
+    // the felt landing back on the string, scaled by the note's current level
+    damper: rt => damperNoise(rt, gain.gain.value * (0.35 + 0.65 * vel), pan),
+  };
 }
 
 // Rhodes-ish: sine body plus a bright "tine" partial that dies fast and a
@@ -561,6 +661,7 @@ function noteOn(midi, velocity = 0.8) {
   voices.set(midi, {
     stop(now = false) {
       const rt = ctx.currentTime;
+      if (!now && v.damper) v.damper(rt); // dampers land only on a gentle release
       v.gain.gain.cancelScheduledValues(rt);
       v.gain.gain.setValueAtTime(Math.max(v.gain.gain.value, 0.0001), rt);
       v.gain.gain.exponentialRampToValueAtTime(0.0001, rt + (now ? 0.02 : v.rel));
@@ -571,7 +672,12 @@ function noteOn(midi, velocity = 0.8) {
 
 function noteOff(midi, immediate = false) {
   const v = voices.get(midi);
-  if (v) { v.stop(immediate); voices.delete(midi); }
+  if (!v) return;
+  voices.delete(midi);
+  // sustain pedal down: the key comes up but the damper stays off the string —
+  // the note keeps ringing until the pedal is lifted
+  if (pedalOn && !immediate) { sustained.add(v); return; }
+  v.stop(immediate);
 }
 
 function playChord(midiNotes, dur = 1.4, velocity = 0.7) {
@@ -582,6 +688,8 @@ function playChord(midiNotes, dur = 1.4, velocity = 0.7) {
 
 function allNotesOff() {
   for (const m of [...voices.keys()]) noteOff(m, true);
+  for (const v of sustained) v.stop(true); // pedal-held notes too
+  sustained.clear();
 }
 
 // ---------- scheduled playback (standards player) ----------
@@ -628,6 +736,6 @@ export {
   noteOn, noteOff, playChord, allNotesOff, ensureCtx,
   playNoteAt, playChordAt, clickAt, audioNow,
   VOICES, setVoice, getVoice, setChallenge, getChallenge, setMasterVolume,
-  setPianoTone, getPianoTone,
+  setPianoTone, getPianoTone, setSustainPedal, getPedalState,
   renderPianoBuffer, // exported for tests — asserts the model's energy/decay
 };

@@ -54,11 +54,17 @@ async function connectMidi(statusEl) {
   attach();
 }
 
+// sustain-pedal (CC64) subscribers — the synth holds notes & opens the
+// sympathetic-resonance bank while the pedal is down
+const pedalListeners = [];
+function onPedal(fn) { pedalListeners.push(fn); }
+
 function handleMidiMessage(msg) {
   const [status, note, vel] = msg.data;
   const cmd = status & 0xf0;
   if (cmd === 0x90 && vel > 0) pressNote(note, vel / 127);
   else if (cmd === 0x80 || (cmd === 0x90 && vel === 0)) releaseNote(note);
+  else if (cmd === 0xb0 && note === 64) pedalListeners.forEach(fn => fn(vel >= 64));
 }
 
 // ---- Computer keyboard as piano (Ableton-style) ----
@@ -166,6 +172,6 @@ function paintPiano(container, notes, flash = []) {
 }
 
 export {
-  onHeldChange, heldNotes, pressNote, releaseNote,
+  onHeldChange, heldNotes, pressNote, releaseNote, onPedal,
   connectMidi, initComputerKeyboard, buildPiano, paintPiano,
 };
