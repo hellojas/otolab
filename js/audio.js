@@ -1,6 +1,7 @@
 // audio.js — a small Web Audio synth so you can check what you play against
-// the recording. Several voices are available (pick one in ⚙ settings): a few
-// oscillator patches (piano, e-piano, organ, brass, strings, music box) and a
+// the recording. Several voices are available (pick one in ⚙ settings): a
+// physically-modeled acoustic piano (the default — see buildModelPiano), a few
+// oscillator patches (e-piano, organ, brass, strings, music box) and a
 // Karplus-Strong plucked string for the guitar.
 
 let ctx = null;
@@ -68,6 +69,157 @@ function buildPiano(freq, vel, t) {
 
   o1.start(t); o2.start(t);
   return { gain, oscs: [o1, o2], rel: 0.25 };
+}
+
+// ---------- modeled acoustic piano (Pianoteq-style, in miniature) ----------
+// No samples: each note is *modeled* and rendered once into an AudioBuffer,
+// then cached. The recipe is what separates a piano from "a synth playing
+// sine-ish tones":
+//   · stiff-string INHARMONICITY — partial n lands at f·n·√(1+B·n²), not f·n.
+//     The sharpened upper partials are the single strongest "real piano" cue.
+//   · STRIKE-POINT comb — the hammer hits ~1/8 along the string, so partials
+//     with a node there (≈ the 8th) are suppressed: aₙ ∝ sin(π·n·d).
+//   · DETUNED UNISONS — mid/treble notes have 2–3 strings a hair apart; their
+//     beating is the shimmer a single oscillator can never make.
+//   · TWO-STAGE, PER-PARTIAL DECAY — a bright prompt sound that falls away
+//     fast, then a long quiet aftersound; high partials die first, bass rings.
+//   · velocity → brightness (spectral tilt + hammer noise), plus a soundboard
+//     "body" via a tiny synthesized-impulse convolver shared by all notes.
+
+const pianoCache = new Map(); // `${midi}|${velBucket}` -> AudioBuffer
+const PIANO_CACHE_MAX = 48;
+const PIANO_VELS = [0.35, 0.62, 0.88]; // render velocities per bucket
+
+let soundboard = null; // shared { input } — a small convolver "body"
+function getSoundboard() {
+  if (soundboard) return soundboard;
+  const sr = ctx.sampleRate, len = Math.floor(sr * 0.35);
+  const ir = ctx.createBuffer(2, len, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = ir.getChannelData(ch);
+    let lp = 0;
+    for (let i = 0; i < len; i++) {
+      // decaying noise through a one-pole lowpass ≈ a small dark room/board
+      const w = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.075));
+      lp += 0.18 * (w - lp);
+      d[i] = lp;
+    }
+  }
+  const conv = ctx.createConvolver();
+  conv.buffer = ir;
+  const wet = ctx.createGain();
+  wet.gain.value = 0.5; // pre-scaled: sends into this are quiet
+  conv.connect(wet).connect(master);
+  soundboard = { input: conv };
+  return soundboard;
+}
+
+function renderPianoBuffer(freq, vel) {
+  const sr = ctx.sampleRate;
+  const midi = 69 + 12 * Math.log2(freq / 440);
+  const reg = Math.min(1, Math.max(0, (midi - 21) / 87)); // 0 = bottom A, 1 = top C
+  const dur = 5.0 - 3.2 * reg;                            // bass rings ~5s, treble ~1.8s
+  const len = Math.floor(sr * dur);
+  const buf = ctx.createBuffer(1, len, sr);
+  const data = buf.getChannelData(0);
+
+  // stiffness rises into the treble (bass strings are wound to fight it)
+  const B = 0.00006 * Math.pow(2, reg * 4.2);
+  const strike = 0.09 + 0.05 * (1 - reg);                 // hammer position (≈1/8 – 1/7)
+  const p = 2.1 - 0.9 * vel;                              // rolloff: soft = dark, hard = bright
+  const fc = 900 + 5200 * vel + freq * 0.6;               // brightness lowpass corner
+  const tau0 = 0.9 + (1 - reg) * 3.2;                     // slow-decay base (s)
+  const nPart = Math.max(3, Math.min(18, Math.floor(9000 / freq)));
+  // unison strings: 1 in the bass, 2 in the tenor, 3 in the treble
+  const cents = midi < 44 ? [0] : midi < 64 ? [-0.9, 0.9] : [-1.3, 0, 1.3];
+
+  let aFirst = 0; // remember partial-1 level to scale the hammer thump
+  for (const c of cents) {
+    const f0 = freq * Math.pow(2, c / 1200);
+    for (let n = 1; n <= nPart; n++) {
+      const fn = f0 * n * Math.sqrt(1 + B * n * n);       // inharmonic partial
+      if (fn > sr * 0.45) break;
+      let a = Math.pow(n, -p) * Math.abs(Math.sin(Math.PI * n * strike));
+      a /= 1 + Math.pow(fn / fc, 2);                      // velocity brightness tilt
+      if (a < 1e-4) continue;
+      if (n === 1) aFirst = Math.max(aFirst, a);
+
+      const tauS = tau0 / (1 + 0.08 * (n - 1));           // aftersound (slow)
+      const tauF = tauS * 0.22;                           // prompt sound (fast)
+      let envS = 0.45 * a, envF = 0.55 * a;
+      const mS = Math.exp(-1 / (tauS * sr));
+      const mF = Math.exp(-1 / (tauF * sr));
+      // stop adding this partial once its slow tail is inaudible
+      const end = Math.min(len, Math.ceil(tauS * sr * Math.log(envS / 2e-5)));
+      if (end <= 0) continue;
+
+      // phasor rotation: a sine oscillator with two mults, no Math.sin per sample
+      const w = 2 * Math.PI * fn / sr;
+      const cw = Math.cos(w), sw = Math.sin(w);
+      let cph = 1, sph = 0;
+      for (let i = 0; i < end; i++) {
+        data[i] += (envF + envS) * sph;
+        const nc = cph * cw - sph * sw;
+        sph = sph * cw + cph * sw;
+        cph = nc;
+        envS *= mS; envF *= mF;
+      }
+    }
+  }
+
+  // hammer thump: a short lowpassed noise burst, heavier in the bass
+  const thumpAmp = aFirst * (0.5 + 0.9 * vel) * (1.15 - 0.75 * reg) * 0.6;
+  const alpha = Math.min(0.6, (2 * Math.PI * (700 + 3800 * vel + freq * 0.25)) / sr);
+  const thumpLen = Math.min(len, Math.floor(sr * 0.02));
+  let lp = 0;
+  for (let i = 0; i < thumpLen; i++) {
+    const w = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.004));
+    lp += alpha * (w - lp);
+    data[i] += thumpAmp * lp;
+  }
+
+  // click-proof the edges: 1.5ms attack ramp in, 60ms fade out
+  const aLen = Math.floor(sr * 0.0015);
+  for (let i = 0; i < aLen; i++) data[i] *= i / aLen;
+  const fLen = Math.min(len, Math.floor(sr * 0.06));
+  for (let i = 0; i < fLen; i++) data[len - 1 - i] *= i / fLen;
+
+  // normalize to a consistent peak; loudness is applied per-note in build()
+  let peak = 0;
+  for (let i = 0; i < len; i++) { const v = Math.abs(data[i]); if (v > peak) peak = v; }
+  if (peak > 0) { const s = 0.92 / peak; for (let i = 0; i < len; i++) data[i] *= s; }
+  return buf;
+}
+
+function buildModelPiano(freq, vel, t) {
+  const midiR = Math.round(69 + 12 * Math.log2(freq / 440));
+  const bucket = vel < 0.45 ? 0 : vel < 0.75 ? 1 : 2;
+  const key = `${midiR}|${bucket}`;
+  let buf = pianoCache.get(key);
+  if (!buf) {
+    buf = renderPianoBuffer(midiToFreq(midiR), PIANO_VELS[bucket]);
+    if (pianoCache.size >= PIANO_CACHE_MAX) pianoCache.delete(pianoCache.keys().next().value);
+    pianoCache.set(key, buf);
+  }
+
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const cents = 1200 * Math.log2(freq / midiToFreq(midiR));
+  if (Math.abs(cents) > 0.5) src.detune.value = cents; // future-proof: microtuning
+
+  const gain = ctx.createGain();
+  const peak = 0.5 * (0.35 + 0.65 * vel); // decay is baked into the buffer
+  gain.gain.value = peak;
+  gain.gain.setValueAtTime(peak, t);
+  src.connect(gain).connect(master);
+
+  // a quiet send into the shared soundboard for body & bloom
+  const send = ctx.createGain();
+  send.gain.value = 0.14;
+  gain.connect(send).connect(getSoundboard().input);
+
+  src.start(t);
+  return { gain, oscs: [src], rel: 0.18 };
 }
 
 // Rhodes-ish: sine body plus a bright "tine" partial that dies fast and a
@@ -251,7 +403,8 @@ function buildMusicBox(freq, vel, t) {
 }
 
 const VOICE_DEFS = {
-  piano:    { label: 'piano',     build: buildPiano },
+  piano:    { label: 'piano',     build: buildModelPiano },
+  softpiano:{ label: 'piano · soft synth', build: buildPiano },
   epiano:   { label: 'e-piano',   build: buildEPiano },
   organ:    { label: 'organ',     build: buildOrgan },
   guitar:   { label: 'guitar',    build: buildGuitar },
@@ -378,4 +531,5 @@ export {
   noteOn, noteOff, playChord, allNotesOff, ensureCtx,
   playNoteAt, playChordAt, clickAt, audioNow,
   VOICES, setVoice, getVoice, setChallenge, getChallenge, setMasterVolume,
+  renderPianoBuffer, // exported for tests — asserts the model's energy/decay
 };
