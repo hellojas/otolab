@@ -15,7 +15,16 @@ function ensureCtx() {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain();
     master.gain.value = masterVol;
-    master.connect(ctx.destination);
+    // safety limiter: transparent below −6 dB, then clamps hard — a stacked
+    // chord (or any future bug) saturates gracefully instead of clipping the
+    // DAC into a screech
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -6;
+    limiter.knee.value = 4;
+    limiter.ratio.value = 16;
+    limiter.attack.value = 0.002;
+    limiter.release.value = 0.12;
+    master.connect(limiter).connect(ctx.destination);
   }
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;
@@ -194,10 +203,12 @@ function getSympathy() {
     const f = midiToFreq(m);
     const delay = ctx.createDelay(0.06);
     delay.delayTime.value = 1 / f;
-    const damp = ctx.createBiquadFilter();
-    damp.type = 'lowpass';
-    damp.frequency.value = 2600 + f * 2; // string damping: highs die first
-    damp.Q.value = 0.2;
+    // string damping (highs die first) as a ONE-POLE lowpass, |H| ≤ 1 by
+    // construction. A biquad lowpass here is a trap: Web Audio interprets its
+    // Q as resonance in dB, the response peaks above unity near the cutoff,
+    // the loop gain crosses 1, and all 24 combs scream themselves to +∞.
+    const pole = Math.exp(-2 * Math.PI * (2600 + f * 2) / ctx.sampleRate);
+    const damp = ctx.createIIRFilter([1 - pole], [1, -pole]);
     const fb = ctx.createGain();
     fb.gain.value = 0.955;               // ~2–3 s ring in the bass, shorter up top
     sympathyLevel.connect(delay);
@@ -658,16 +669,23 @@ function noteOn(midi, velocity = 0.8) {
   rollGesture(t);
   const v = VOICE_DEFS[challengeVoice()].build(challengeFreq(midi), velocity, t);
 
-  voices.set(midi, {
+  const handle = {
     stop(now = false) {
       const rt = ctx.currentTime;
       if (!now && v.damper) v.damper(rt); // dampers land only on a gentle release
+      // read the ramped value BEFORE cancelling: cancelScheduledValues removes
+      // the in-flight ramp, which snaps .value back to the attack peak — pin
+      // the release to where the envelope actually is or every retriggered
+      // note (chords sharing tones, replays) pops
+      const cur = v.gain.gain.value;
       v.gain.gain.cancelScheduledValues(rt);
-      v.gain.gain.setValueAtTime(Math.max(v.gain.gain.value, 0.0001), rt);
+      v.gain.gain.setValueAtTime(Math.max(cur, 0.0001), rt);
       v.gain.gain.exponentialRampToValueAtTime(0.0001, rt + (now ? 0.02 : v.rel));
       v.oscs.forEach(o => o.stop(rt + (now ? 0.05 : v.rel + 0.1)));
     },
-  });
+  };
+  voices.set(midi, handle);
+  return handle;
 }
 
 function noteOff(midi, immediate = false) {
@@ -682,8 +700,11 @@ function noteOff(midi, immediate = false) {
 
 function playChord(midiNotes, dur = 1.4, velocity = 0.7) {
   ensureCtx();
-  for (const m of midiNotes) noteOn(m, velocity);
-  setTimeout(() => midiNotes.forEach(m => noteOff(m)), dur * 1000);
+  const started = midiNotes.map(m => [m, noteOn(m, velocity)]);
+  // only release the voices THIS call started: if the same midi was
+  // retriggered meanwhile (a replay, the next chord), the stale timer must
+  // not cut the new note short
+  setTimeout(() => started.forEach(([m, h]) => { if (voices.get(m) === h) noteOff(m); }), dur * 1000);
 }
 
 function allNotesOff() {
