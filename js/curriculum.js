@@ -146,6 +146,13 @@ const UNITS = [
     requires: ['deg-major'],
     blurb: 'Hear a whole cadence as one gesture — ii–V–I vs backdoor vs tritone sub.',
   },
+  {
+    id: 'prog-id', title: 'Harmony · name the progression',
+    drill: 'prog', cat: 'progressions', config: { 'prog-len': 'mixed' },
+    goalItems: ['axis', 'doo-wop', 'circle', 'andalusian', 'ii-V-I'], goalPct: 65, goalCount: 16,
+    requires: ['cadence-id'],
+    blurb: 'The loops songs run on — Axis, doo-wop, the circle, the Andalusian — named whole.',
+  },
 
   // ---- advanced tier: hearing structure, not just atoms ----
   {

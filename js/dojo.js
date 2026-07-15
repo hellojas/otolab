@@ -65,6 +65,7 @@ const DRILL_TABS = {
   rhythm:    { tab: 'rhythm',    start: 'rhy-new' },
   echo:      { tab: 'echo',      start: 'echo-new' },
   cadence:   { tab: 'cadence',   start: 'cad-new' },
+  prog:      { tab: 'prog',      start: 'prog-new' },
   form:      { tab: 'form',      start: 'form-new' },
   modal:     { tab: 'modal',     start: 'modal-new' },
   tension:   { tab: 'tension',   start: 'tens-new' },
@@ -105,8 +106,10 @@ function runAssignment(drill, config = {}) {
 // the synth plays the target, so the mic must survive playSequence().
 function stopDojoMic() {
   if (isMicOn()) stopMic();
-  const mic = document.getElementById('sing-mic');
-  if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
+  for (const id of ['sing-mic', 'prog-mic']) {
+    const mic = document.getElementById(id);
+    if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
+  }
 }
 
 let enterDojoCb = null; // set by initDojo — lets runAssignment switch into dojo mode
@@ -233,6 +236,44 @@ const CADENCES = [
   { id: 'deceptive',   label: 'deceptive V→vi',    mode: 'major', degs: [[7, '7'], [9, 'm7']] },
   { id: 'plagal',      label: 'plagal IV→I',       mode: 'major', degs: [[5, 'maj7'], [0, 'maj7']] },
   { id: 'minor-ii-V',  label: 'minor ii–V–i',      mode: 'minor', degs: [[2, 'm7b5'], [7, '7b9'], [0, 'm7']] },
+];
+
+// Popular-progression vocabulary for the progressions-ID drill — the loops pop
+// and jazz actually run on, curated from Wikipedia's list of chord progressions.
+// Same shape as CADENCES; `hint` is a famous-song anchor shown with the answer.
+// The drill only ever offers answers of the same length as what just played, so
+// counting chords never gives it away — grouped here as 3-chord and 4-chord.
+const PROGRESSIONS = [
+  // ---- 3 chords ----
+  { id: 'ii-V-I',      label: 'ii–V–I',            mode: 'major', degs: [[2, 'm7'], [7, '7'], [0, 'maj7']],
+    hint: 'the jazz cell — Autumn Leaves, Satin Doll' },
+  { id: 'minor-ii-V-i', label: 'iiø–V–i (minor)',  mode: 'minor', degs: [[2, 'm7b5'], [7, '7b9'], [0, 'm7']],
+    hint: 'the darker half-diminished start — Beautiful Love' },
+  { id: 'backdoor',    label: 'backdoor iv–bVII7–I', mode: 'major', degs: [[5, 'm7'], [10, '7'], [0, 'maj7']],
+    hint: 'borrowed iv and bVII7 sliding in the back — Lady Bird' },
+  { id: 'IV-iv-I',     label: 'IV–iv–I',           mode: 'major', degs: [[5, ''], [5, 'm'], [0, '']],
+    hint: 'the minor-plagal fall — In My Life, Creep' },
+  { id: 'V-IV-I',      label: 'V–IV–I',            mode: 'major', degs: [[7, ''], [5, ''], [0, '']],
+    hint: 'the blues turnaround — last bars of every 12-bar' },
+  { id: 'bVI-bVII-I',  label: 'bVI–bVII–I',        mode: 'major', degs: [[8, ''], [10, ''], [0, '']],
+    hint: 'the Mario cadence — the big borrowed lift home' },
+  // ---- 4 chords ----
+  { id: 'axis',        label: 'I–V–vi–IV',         mode: 'major', degs: [[0, ''], [7, ''], [9, 'm'], [5, '']],
+    hint: 'the Axis — Let It Be, No Woman No Cry' },
+  { id: 'axis-vi',     label: 'vi–IV–I–V',         mode: 'major', degs: [[9, 'm'], [5, ''], [0, ''], [7, '']],
+    hint: 'the Axis from vi — Save Tonight, Zombie’s major cousin' },
+  { id: 'doo-wop',     label: 'I–vi–IV–V (50s)',   mode: 'major', degs: [[0, ''], [9, 'm'], [5, ''], [7, '']],
+    hint: 'the 50s doo-wop — Stand By Me, Earth Angel' },
+  { id: 'blue-moon',   label: 'I–vi–ii–V',         mode: 'major', degs: [[0, 'maj7'], [9, 'm7'], [2, 'm7'], [7, '7']],
+    hint: 'the rhythm-changes turnaround — Blue Moon, Heart and Soul' },
+  { id: 'ragtime-turn', label: 'I–VI7–ii–V',       mode: 'major', degs: [[0, 'maj7'], [9, '7'], [2, 'm7'], [7, '7']],
+    hint: 'turnaround with a dominant VI7 kicking into ii' },
+  { id: 'circle',      label: 'vi–ii–V–I',         mode: 'major', degs: [[9, 'm7'], [2, 'm7'], [7, '7'], [0, 'maj7']],
+    hint: 'the circle of fifths — Fly Me to the Moon’s opening lap' },
+  { id: 'andalusian',  label: 'Andalusian i–bVII–bVI–V', mode: 'minor', degs: [[0, 'm'], [10, ''], [8, ''], [7, '']],
+    hint: 'the flamenco walk-down — Hit the Road Jack, Sultans of Swing' },
+  { id: 'minor-axis',  label: 'i–bVI–bIII–bVII',   mode: 'minor', degs: [[0, 'm'], [8, ''], [3, ''], [10, '']],
+    hint: 'the minor pop loop — Zombie, Numb' },
 ];
 
 // Classify a standards-library song's form from its section names + bar count.
@@ -409,6 +450,7 @@ function makeScore(elId, label = 'this session') {
   let right = 0, total = 0;
   return {
     add(r, t = 1) { right += r; total += t; this.paint(); },
+    stats() { return { right, total }; },
     paint() {
       const pct = total ? Math.round(100 * right / total) : 0;
       $(elId).textContent = total ? `${label}: ${right}/${total} · ${pct}%` : '';
@@ -1818,6 +1860,167 @@ function initDojo(opts = {}) {
     cadPlay();
   };
   $('cad-replay').onclick = cadPlay;
+
+  // ---- popular-progression ID drill ----
+  // Like the cadence drill but over whole song loops, and the answer chips are
+  // rebuilt per question to only offer progressions with the same chord count
+  // as the one that played — hearing 3 chords never shows a 4-chord option.
+  const progScore = makeScore('prog-score');
+  const progState = { prog: null, key: null, answered: true,
+    chips: [], singSeq: null, singIdx: 0, singHold: 0 };
+
+  const progPool = () => {
+    const len = $('prog-len').value; // 'mixed' | '3' | '4'
+    return len === 'mixed' ? PROGRESSIONS : PROGRESSIONS.filter(p => p.degs.length === +len);
+  };
+
+  // Adaptive difficulty: once the ear has proven itself at ≥80% — this session
+  // with a real sample, or all-time in the progress store — degrade the
+  // training signal: faster playback, and only four answer chips instead of
+  // the whole length group. Recognition should keep getting harder as it firms.
+  const progHot = () => {
+    const s = progScore.stats();
+    if (s.total >= 8 && s.right / s.total >= 0.8) return true;
+    const all = progressStats().byCat.progressions;
+    return !!all && all.seen >= 30 && all.pct >= 80;
+  };
+
+  function progPlay() {
+    const { prog, key } = progState;
+    if (!prog) return;
+    progState.askedAt = nowT();
+    const bpm = progHot() ? 116 : 96;
+    const t = key.tonic;
+    let prev = null;
+    const evs = prog.degs.map(([d, q], i) => {
+      const root = (t + d) % 12;
+      prev = nearestBass(root, prev);
+      return { notes: compNotes(root, q), bass: prev, beats: i === prog.degs.length - 1 ? 3 : 1.5 };
+    });
+    // hard mode: no tonic anchor — you have to find "home" from the loop itself
+    if ($('prog-anchor').checked) { playSequence(evs, bpm); return; }
+    const tonicQ = key.mode === 'minor' ? 'm' : '';
+    const ref = { notes: compNotes(t, tonicQ), bass: nearestBass(t, null), beats: 2 };
+    playSequence([ref, { beats: 1 }, ...evs], bpm);
+  }
+
+  // Sing-first gate (audiation): with the mic on and "sing the roots first"
+  // ticked, the answer chips stay locked until you've sung the progression's
+  // root line — pitch-class matched, octave-free, same hold-to-lock rule as
+  // the sing drill. If you can't sing the bass line, you were guessing.
+  function progSingDone(skipped) {
+    progState.singSeq = null;
+    progState.chips.forEach(c => { c.disabled = false; });
+    $('prog-skip-sing').hidden = true;
+    $('prog-read').textContent = skipped ? '' : '✓ line sung — now name it';
+  }
+
+  function progOnPitch(p) {
+    const seq = progState.singSeq;
+    if (!seq || progState.singIdx >= seq.length) return;
+    const read = $('prog-read');
+    if (!p) { read.textContent = `sing root ${progState.singIdx + 1}/${seq.length}…`; return; }
+    const targetPc = seq[progState.singIdx];
+    const sungFloat = p.midi + p.cents / 100;
+    let tm = p.midi + ((((targetPc - p.midi) % 12) + 12) % 12);
+    if (tm - p.midi > 6) tm -= 12;
+    const cents = (sungFloat - tm) * 100;
+    read.textContent = `root ${progState.singIdx + 1}/${seq.length} — singing ${noteNameOf(p.midi)} ${cents >= 0 ? '+' : ''}${Math.round(cents)}¢`;
+    progState.singHold = Math.abs(cents) < 35 ? progState.singHold + 1 : 0;
+    if (progState.singHold >= 18) {
+      progState.singHold = 0;
+      progState.singIdx++;
+      if (progState.singIdx >= seq.length) progSingDone(false);
+      else read.textContent = `✓ got it — now root ${progState.singIdx + 1}/${seq.length}`;
+    }
+  }
+
+  $('prog-mic').onclick = async () => {
+    if (isMicOn()) { stopDojoMic(); return; }
+    try {
+      await startMic(progOnPitch, () => stopDojoMic());
+      $('prog-mic').textContent = 'mic on'; $('prog-mic').classList.add('on');
+    } catch (e) {
+      $('prog-meta').textContent = 'mic blocked — allow microphone access in the browser';
+    }
+  };
+  $('prog-skip-sing').onclick = () => progSingDone(true);
+
+  $('prog-new').onclick = () => {
+    const pool = progPool();
+    const wid = pickWeighted('progressions', pool.map(p => p.id));
+    progState.prog = pool.find(p => p.id === wid) || pick(pool);
+    progState.key = { tonic: rand(12), mode: progState.prog.mode };
+    progState.answered = false;
+    const n = progState.prog.degs.length;
+    const hot = progHot();
+    $('prog-meta').textContent = (hot ? '⚡ hot — faster, fewer options · ' : '')
+      + ($('prog-anchor').checked
+        ? `${n} chords, no anchor — find home yourself`
+        : `key: ${keyName(progState.key)} — tonic first, then ${n} chords`);
+    $('prog-result').textContent = '';
+
+    // audiation gate: root line to sing before the chips unlock
+    const singFirst = $('prog-sing').checked && isMicOn();
+    progState.singSeq = singFirst
+      ? progState.prog.degs.map(([d]) => (progState.key.tonic + d) % 12) : null;
+    progState.singIdx = 0; progState.singHold = 0;
+    $('prog-skip-sing').hidden = !singFirst;
+    $('prog-read').textContent = singFirst
+      ? 'sing the root of each chord (any octave) to unlock the answers'
+      : ($('prog-sing').checked ? 'enable the mic to sing first' : '');
+
+    // the smart bit: only same-length progressions are offered as answers —
+    // and once you're hot, just the target and three distractors, kept in
+    // canonical order so chip position never leaks the answer.
+    let options = PROGRESSIONS.filter(p => p.degs.length === n);
+    if (hot) {
+      const others = options.filter(p => p.id !== progState.prog.id);
+      const picks = [];
+      while (picks.length < 3 && others.length) picks.push(others.splice(rand(others.length), 1)[0]);
+      options = [progState.prog, ...picks]
+        .sort((a, b) => PROGRESSIONS.indexOf(a) - PROGRESSIONS.indexOf(b));
+    }
+    const box = $('prog-answers');
+    box.innerHTML = '';
+    progState.chips = [];
+    for (const p of options) {
+      const chip = el('button', 'chip', p.label);
+      chip.disabled = singFirst;
+      chip.onclick = () => {
+        if (progState.answered) return;
+        progState.answered = true;
+        const ok = p.id === progState.prog.id;
+        progScore.add(ok ? 1 : 0);
+        recordTimed('progressions', progState.prog.id, ok, p.id, progState.askedAt);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('prog-result').textContent = (ok ? `✓ ${progState.prog.label}` : `✗ that was ${progState.prog.label}`)
+          + ` — ${progState.prog.hint}`;
+        // close the loop on a miss: hear the right answer again with its name
+        // showing, and send the hands to the instrument — two more keys locks
+        // it in far better than the next multiple-choice rep.
+        if (!ok) {
+          const k2 = (progState.key.tonic + 1 + rand(11)) % 12;
+          let k3 = (progState.key.tonic + 1 + rand(11)) % 12;
+          if (k3 === k2) k3 = (k3 + 5) % 12;
+          const kn = t2 => keyName({ tonic: t2, mode: progState.prog.mode });
+          $('prog-read').textContent =
+            `close the loop at your instrument: play it in ${kn(progState.key.tonic)}, then ${kn(k2)} and ${kn(k3)}`;
+          setTimeout(() => { if (panelActive('prog')) progPlay(); }, 700);
+        }
+        setTimeout(() => { if (panelActive('prog')) $('prog-new').click(); }, ok ? 2200 : 8500);
+      };
+      box.appendChild(chip);
+      progState.chips.push(chip);
+    }
+    progPlay();
+  };
+  $('prog-replay').onclick = progPlay;
+  $('prog-len').onchange = () => $('prog-new').click();
+  $('prog-sing').onchange = () => {
+    if ($('prog-sing').checked && !isMicOn()) $('prog-read').textContent = 'enable the mic to sing first';
+    else if (!$('prog-sing').checked) { $('prog-read').textContent = ''; if (progState.singSeq) progSingDone(true); }
+  };
 
   // ---- form-recognition drill (uses the standards library) ----
   const FORM_SONGS = STD_SONGS.filter(s => songForm(s));

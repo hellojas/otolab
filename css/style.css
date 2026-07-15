@@ -523,6 +523,7 @@ main { display: grid; grid-template-columns: minmax(320px, 1.1fr) 1fr; gap: 18px
 
 .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .chip { border-radius: 999px; padding: 5px 13px; font-size: 14px; }
+.chip[disabled] { opacity: 0.35; cursor: default; }
 .chip[draggable="true"] { cursor: grab; }
 .chip[draggable="true"]:active { cursor: grabbing; }
 .vc-held { margin-top: 12px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 22px; }
