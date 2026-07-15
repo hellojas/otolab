@@ -65,6 +65,7 @@ const DRILL_TABS = {
   rhythm:    { tab: 'rhythm',    start: 'rhy-new' },
   echo:      { tab: 'echo',      start: 'echo-new' },
   cadence:   { tab: 'cadence',   start: 'cad-new' },
+  prog:      { tab: 'prog',      start: 'prog-new' },
   form:      { tab: 'form',      start: 'form-new' },
   modal:     { tab: 'modal',     start: 'modal-new' },
   tension:   { tab: 'tension',   start: 'tens-new' },
@@ -233,6 +234,44 @@ const CADENCES = [
   { id: 'deceptive',   label: 'deceptive V→vi',    mode: 'major', degs: [[7, '7'], [9, 'm7']] },
   { id: 'plagal',      label: 'plagal IV→I',       mode: 'major', degs: [[5, 'maj7'], [0, 'maj7']] },
   { id: 'minor-ii-V',  label: 'minor ii–V–i',      mode: 'minor', degs: [[2, 'm7b5'], [7, '7b9'], [0, 'm7']] },
+];
+
+// Popular-progression vocabulary for the progressions-ID drill — the loops pop
+// and jazz actually run on, curated from Wikipedia's list of chord progressions.
+// Same shape as CADENCES; `hint` is a famous-song anchor shown with the answer.
+// The drill only ever offers answers of the same length as what just played, so
+// counting chords never gives it away — grouped here as 3-chord and 4-chord.
+const PROGRESSIONS = [
+  // ---- 3 chords ----
+  { id: 'ii-V-I',      label: 'ii–V–I',            mode: 'major', degs: [[2, 'm7'], [7, '7'], [0, 'maj7']],
+    hint: 'the jazz cell — Autumn Leaves, Satin Doll' },
+  { id: 'minor-ii-V-i', label: 'iiø–V–i (minor)',  mode: 'minor', degs: [[2, 'm7b5'], [7, '7b9'], [0, 'm7']],
+    hint: 'the darker half-diminished start — Beautiful Love' },
+  { id: 'backdoor',    label: 'backdoor iv–bVII7–I', mode: 'major', degs: [[5, 'm7'], [10, '7'], [0, 'maj7']],
+    hint: 'borrowed iv and bVII7 sliding in the back — Lady Bird' },
+  { id: 'IV-iv-I',     label: 'IV–iv–I',           mode: 'major', degs: [[5, ''], [5, 'm'], [0, '']],
+    hint: 'the minor-plagal fall — In My Life, Creep' },
+  { id: 'V-IV-I',      label: 'V–IV–I',            mode: 'major', degs: [[7, ''], [5, ''], [0, '']],
+    hint: 'the blues turnaround — last bars of every 12-bar' },
+  { id: 'bVI-bVII-I',  label: 'bVI–bVII–I',        mode: 'major', degs: [[8, ''], [10, ''], [0, '']],
+    hint: 'the Mario cadence — the big borrowed lift home' },
+  // ---- 4 chords ----
+  { id: 'axis',        label: 'I–V–vi–IV',         mode: 'major', degs: [[0, ''], [7, ''], [9, 'm'], [5, '']],
+    hint: 'the Axis — Let It Be, No Woman No Cry' },
+  { id: 'axis-vi',     label: 'vi–IV–I–V',         mode: 'major', degs: [[9, 'm'], [5, ''], [0, ''], [7, '']],
+    hint: 'the Axis from vi — Save Tonight, Zombie’s major cousin' },
+  { id: 'doo-wop',     label: 'I–vi–IV–V (50s)',   mode: 'major', degs: [[0, ''], [9, 'm'], [5, ''], [7, '']],
+    hint: 'the 50s doo-wop — Stand By Me, Earth Angel' },
+  { id: 'blue-moon',   label: 'I–vi–ii–V',         mode: 'major', degs: [[0, 'maj7'], [9, 'm7'], [2, 'm7'], [7, '7']],
+    hint: 'the rhythm-changes turnaround — Blue Moon, Heart and Soul' },
+  { id: 'ragtime-turn', label: 'I–VI7–ii–V',       mode: 'major', degs: [[0, 'maj7'], [9, '7'], [2, 'm7'], [7, '7']],
+    hint: 'turnaround with a dominant VI7 kicking into ii' },
+  { id: 'circle',      label: 'vi–ii–V–I',         mode: 'major', degs: [[9, 'm7'], [2, 'm7'], [7, '7'], [0, 'maj7']],
+    hint: 'the circle of fifths — Fly Me to the Moon’s opening lap' },
+  { id: 'andalusian',  label: 'Andalusian i–bVII–bVI–V', mode: 'minor', degs: [[0, 'm'], [10, ''], [8, ''], [7, '']],
+    hint: 'the flamenco walk-down — Hit the Road Jack, Sultans of Swing' },
+  { id: 'minor-axis',  label: 'i–bVI–bIII–bVII',   mode: 'minor', degs: [[0, 'm'], [8, ''], [3, ''], [10, '']],
+    hint: 'the minor pop loop — Zombie, Numb' },
 ];
 
 // Classify a standards-library song's form from its section names + bar count.
@@ -1818,6 +1857,73 @@ function initDojo(opts = {}) {
     cadPlay();
   };
   $('cad-replay').onclick = cadPlay;
+
+  // ---- popular-progression ID drill ----
+  // Like the cadence drill but over whole song loops, and the answer chips are
+  // rebuilt per question to only offer progressions with the same chord count
+  // as the one that played — hearing 3 chords never shows a 4-chord option.
+  const progScore = makeScore('prog-score');
+  const progState = { prog: null, key: null, answered: true };
+
+  const progPool = () => {
+    const len = $('prog-len').value; // 'mixed' | '3' | '4'
+    return len === 'mixed' ? PROGRESSIONS : PROGRESSIONS.filter(p => p.degs.length === +len);
+  };
+
+  function progPlay() {
+    const { prog, key } = progState;
+    if (!prog) return;
+    progState.askedAt = nowT();
+    const t = key.tonic;
+    let prev = null;
+    const evs = prog.degs.map(([d, q], i) => {
+      const root = (t + d) % 12;
+      prev = nearestBass(root, prev);
+      return { notes: compNotes(root, q), bass: prev, beats: i === prog.degs.length - 1 ? 3 : 1.5 };
+    });
+    // hard mode: no tonic anchor — you have to find "home" from the loop itself
+    if ($('prog-anchor').checked) { playSequence(evs, 96); return; }
+    const tonicQ = key.mode === 'minor' ? 'm' : '';
+    const ref = { notes: compNotes(t, tonicQ), bass: nearestBass(t, null), beats: 2 };
+    playSequence([ref, { beats: 1 }, ...evs], 96);
+  }
+
+  $('prog-new').onclick = () => {
+    const pool = progPool();
+    const wid = pickWeighted('progressions', pool.map(p => p.id));
+    progState.prog = pool.find(p => p.id === wid) || pick(pool);
+    progState.key = { tonic: rand(12), mode: progState.prog.mode };
+    progState.answered = false;
+    const n = progState.prog.degs.length;
+    $('prog-meta').textContent = $('prog-anchor').checked
+      ? `${n} chords, no anchor — find home yourself`
+      : `key: ${keyName(progState.key)} — tonic first, then ${n} chords`;
+    $('prog-result').textContent = '';
+    const box = $('prog-answers');
+    box.innerHTML = '';
+    // the smart bit: only same-length progressions are offered as answers
+    for (const p of PROGRESSIONS.filter(p => p.degs.length === n)) {
+      const chip = el('button', 'chip', p.label);
+      chip.onclick = () => {
+        if (progState.answered) return;
+        progState.answered = true;
+        const ok = p.id === progState.prog.id;
+        progScore.add(ok ? 1 : 0);
+        recordTimed('progressions', progState.prog.id, ok, p.id, progState.askedAt);
+        chip.classList.add(ok ? 'good' : 'bad');
+        $('prog-result').textContent = (ok ? `✓ ${progState.prog.label}` : `✗ that was ${progState.prog.label}`)
+          + ` — ${progState.prog.hint}`;
+        // close the loop on a miss: hear the right answer again with its name
+        // showing, then move on — the re-listen is where the learning lands
+        if (!ok) setTimeout(() => { if (panelActive('prog')) progPlay(); }, 700);
+        setTimeout(() => { if (panelActive('prog')) $('prog-new').click(); }, ok ? 2200 : 8500);
+      };
+      box.appendChild(chip);
+    }
+    progPlay();
+  };
+  $('prog-replay').onclick = progPlay;
+  $('prog-len').onchange = () => $('prog-new').click();
 
   // ---- form-recognition drill (uses the standards library) ----
   const FORM_SONGS = STD_SONGS.filter(s => songForm(s));

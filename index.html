@@ -263,6 +263,7 @@
             <button data-tab="degrees">degrees</button>
             <button data-tab="melodic">scale degrees</button>
             <button data-tab="cadence">cadences</button>
+            <button data-tab="prog">progressions</button>
             <button data-tab="modal">modes</button>
             <button data-tab="tension">tensions</button>
           </div>
@@ -633,6 +634,31 @@
       <div class="dj-row">
         <span id="cad-result" class="dj-result"></span>
         <span id="cad-score" class="dj-score"></span>
+      </div>
+    </section>
+
+    <section id="panel-prog" class="dj-panel">
+      <p class="blurb">The loops songs actually run on — the Axis, the doo-wop,
+        the circle of fifths, the Andalusian. A tonic chord sets the key, then a
+        famous progression plays: name it. The answer chips always match the
+        number of chords you just heard, so counting never gives it away — and
+        the key is random every question, so you're naming function, not
+        pitches. Miss one and it replays with the name showing.</p>
+      <div class="dj-row">
+        <select id="prog-len" title="which progressions can come up">
+          <option value="mixed">3 &amp; 4 chords</option>
+          <option value="3">3-chord only</option>
+          <option value="4">4-chord only</option>
+        </select>
+        <button id="prog-new" class="primary">new progression</button>
+        <button id="prog-replay">▶ replay</button>
+        <label class="check" title="hard mode: no tonic reference before the progression — find home from the loop itself"><input type="checkbox" id="prog-anchor"> no tonic anchor</label>
+        <span id="prog-meta" class="dj-meta"></span>
+      </div>
+      <div id="prog-answers" class="chips"></div>
+      <div class="dj-row">
+        <span id="prog-result" class="dj-result"></span>
+        <span id="prog-score" class="dj-score"></span>
       </div>
     </section>
 
