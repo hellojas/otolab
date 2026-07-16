@@ -1,24 +1,85 @@
 // listen.js — suggest chords from the audio itself. The YouTube iframe's
 // stream is cross-origin (untouchable), but Chrome's getDisplayMedia can
 // capture *tab audio* the user explicitly shares — including this tab while
-// the video plays. We run a chromagram over it and template-match triads and
-// sevenths. It's a rough ear, not ground truth: clear mixes work well, dense
-// voicings often collapse to their triad.
+// the video plays. We run a chromagram over it, score weighted chord
+// templates, and decode the frame sequence with an online Viterbi smoother
+// (an HMM-lite cousin of the CRF decoding real chord models use): chords are
+// states, staying in a chord is cheap, switching costs — so one noisy frame
+// can't flip the label. It's still a rough ear, not ground truth: clear mixes
+// work well, dense voicings often collapse to their triad.
 
 let ctx = null, analyser = null, stream = null, timer = null, freqData = null;
 
+// weighted templates: the root counts extra (it's usually the bass), the
+// quality-defining third/seventh a bit more than the fifth
 const TEMPLATES = [
-  { quality: '',     iv: [0, 4, 7] },
-  { quality: 'm',    iv: [0, 3, 7] },
-  { quality: '7',    iv: [0, 4, 7, 10] },
-  { quality: 'maj7', iv: [0, 4, 7, 11] },
-  { quality: 'm7',   iv: [0, 3, 7, 10] },
+  { quality: '',     iv: [[0, 1.6], [4, 1.2], [7, 1.0]] },
+  { quality: 'm',    iv: [[0, 1.6], [3, 1.2], [7, 1.0]] },
+  { quality: '7',    iv: [[0, 1.6], [4, 1.2], [7, 0.9], [10, 1.1]] },
+  { quality: 'maj7', iv: [[0, 1.6], [4, 1.2], [7, 0.9], [11, 1.1]] },
+  { quality: 'm7',   iv: [[0, 1.6], [3, 1.2], [7, 0.9], [10, 1.1]] },
 ];
 
 const FRAME_MS = 250;
-const STABLE_FRAMES = 3;    // ~0.75s of agreement before a chord is reported
-const MIN_SCORE = 0.12;     // template contrast gate
+const MIN_SCORE = 0.1;      // template contrast gate (per frame)
 const MIN_ENERGY = 1e-4;    // silence gate
+
+// score every (root, quality) template against one normalized chroma frame:
+// weighted mean of the chord tones minus mean of everything else
+function matchScores(chroma) {
+  const out = [];
+  for (let root = 0; root < 12; root++) {
+    for (const t of TEMPLATES) {
+      let sOn = 0, wOn = 0, on = 0;
+      for (const [iv, w] of t.iv) { sOn += w * chroma[(root + iv) % 12]; wOn += w; on |= 1 << ((root + iv) % 12); }
+      let sOff = 0, nOff = 0;
+      for (let pc = 0; pc < 12; pc++) if (!(on & (1 << pc))) { sOff += chroma[pc]; nOff++; }
+      out.push({ root, quality: t.quality, score: sOn / wOn - sOff / nOff });
+    }
+  }
+  return out;
+}
+
+// Online Viterbi over the chord states. Each frame: a state either keeps its
+// own accumulated path (staying is free) or takes over the best other path at
+// a switch penalty — then everything is renormalized so the accumulator can't
+// drift. A chord is reported once it has been the best path for `report`
+// consecutive frames and differs from the last announced one.
+function makeDecoder({ switchPenalty = 0.22, report = 2 } = {}) {
+  let path = null;      // accumulated per-state path scores
+  let announced = null; // last reported state key
+  let bestKey = null, run = 0;
+
+  const reset = () => { path = null; bestKey = null; run = 0; };
+
+  return {
+    reset,
+    // chroma: normalized 12-vector or null (silence) -> {root, quality} | null
+    push(chroma) {
+      if (!chroma) { reset(); return null; }
+      const frame = matchScores(chroma);
+      if (Math.max(...frame.map(f => f.score)) < MIN_SCORE) { reset(); return null; }
+      if (!path) path = frame.map(f => f.score);
+      else {
+        const bestPrev = Math.max(...path);
+        path = frame.map((f, i) => f.score + Math.max(path[i], bestPrev - switchPenalty));
+        const m = Math.max(...path);
+        path = path.map(v => v - m); // renormalize
+      }
+      let bi = 0;
+      for (let i = 1; i < path.length; i++) if (path[i] > path[bi]) bi = i;
+      const f = frame[bi];
+      const key = f.root + ':' + f.quality;
+      run = key === bestKey ? run + 1 : 1;
+      bestKey = key;
+      if (run >= report && key !== announced) {
+        announced = key;
+        return { root: f.root, quality: f.quality };
+      }
+      return null;
+    },
+  };
+}
 
 function computeChroma() {
   analyser.getFloatFrequencyData(freqData);
@@ -31,26 +92,15 @@ function computeChroma() {
     if (f > 1200) break;    // fundamentals region; cuts overtone confusion
     const mag = Math.pow(10, freqData[i] / 20);
     energy += mag;
+    // log-compress so one loud partial can't dominate the vector, and weight
+    // the bass octaves up — the fundamental usually lives there
+    const w = f < 260 ? 1.35 : 1.0;
     const pc = (((Math.round(12 * Math.log2(f / 440)) + 69) % 12) + 12) % 12;
-    c[pc] += mag;
+    c[pc] += w * Math.log1p(mag * 1e4);
   }
   const max = Math.max(...c);
   if (max <= 0) return { chroma: null, energy: 0 };
   return { chroma: c.map(v => v / max), energy };
-}
-
-function matchTemplate(chroma) {
-  let best = null;
-  for (let root = 0; root < 12; root++) {
-    for (const t of TEMPLATES) {
-      const on = new Set(t.iv.map(iv => (root + iv) % 12));
-      let sOn = 0, sOff = 0;
-      for (let pc = 0; pc < 12; pc++) (on.has(pc) ? (sOn += chroma[pc]) : (sOff += chroma[pc]));
-      const score = sOn / on.size - sOff / (12 - on.size);
-      if (!best || score > best.score) best = { root, quality: t.quality, score };
-    }
-  }
-  return best;
 }
 
 function isListening() { return !!timer; }
@@ -78,22 +128,14 @@ async function startListen(onChord, onStop) {
   src.connect(analyser);
   freqData = new Float32Array(analyser.frequencyBinCount);
 
-  let lastKey = null, run = 0, announced = null;
+  const decoder = makeDecoder();
   timer = setInterval(() => {
     const { chroma, energy } = computeChroma();
-    if (!chroma || energy < MIN_ENERGY) { lastKey = null; run = 0; return; }
-    const det = matchTemplate(chroma);
-    if (!det || det.score < MIN_SCORE) { lastKey = null; run = 0; return; }
-    const key = det.root + ':' + det.quality;
-    run = key === lastKey ? run + 1 : 1;
-    lastKey = key;
-    if (run === STABLE_FRAMES && key !== announced) {
-      announced = key;
-      onChord(det);
-    }
+    const det = decoder.push(energy < MIN_ENERGY ? null : chroma);
+    if (det) onChord(det);
   }, FRAME_MS);
 
   stream.getAudioTracks()[0].addEventListener('ended', () => { stopListen(); onStop(); });
 }
 
-export { startListen, stopListen, isListening };
+export { startListen, stopListen, isListening, matchScores, makeDecoder };

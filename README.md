@@ -75,7 +75,7 @@ The diatonic palette still exists as a one-click row of chips (with a second
 ## Checking yourself against "real" chords
 
 There's no free, legal chord API (Ultimate Guitar and Chordify are closed),
-so the **check** section gives you two routes:
+so the **check** section gives you three routes:
 
 - **Paste a reference** from any chord site — `Fmaj7 | Dm7 G7 | Em7b5 A7`,
   bars optional, jazz shorthand welcome (`D-7`, `Bø7`, `C△7`). **grade me**
@@ -87,9 +87,19 @@ so the **check** section gives you two routes:
   cross-origin and untouchable, but Chrome will capture *tab audio* you
   explicitly share. Hit the button, pick this tab, tick "also share tab
   audio", and play the song: a chromagram + template matcher suggests chords
-  as it hears them (triads and sevenths). It's a rough ear, not ground truth —
-  use **→ use as reference** and then grade against it, deleting obvious
-  misfires first.
+  as it hears them (triads and sevenths), smoothed by an online Viterbi
+  decoder so one noisy frame can't flip the label. It's a rough ear, not
+  ground truth — use **→ use as reference** and then grade against it,
+  deleting obvious misfires first.
+- **tools/chordrec** — the heavy ear, offline. A Python CLI running real
+  MIR models (madmom's deep-chroma CNN + CRF for chords, RNN/DBN beat and
+  downbeat tracking, optional demucs drum-stripping): point it at a wav/mp3
+  or a YouTube link and it writes `<song>.otolab.json` — beat-snapped chords,
+  estimated key, tempo/meter grid, and a bar-by-bar reference string. Load
+  the video in the lab, hit **import**, and grade yourself against it. It's
+  a 25-class maj/min model, so jazz extensions flatten to triads — a strong
+  first draft to correct by ear, which is the whole game anyway. Setup and
+  usage live in the script's docstring (`python tools/chordrec/chordrec.py -h`).
 
 ## Bars instead of timestamps
 
