@@ -1,0 +1,67 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>wick · fire report</title><style>
+:root{--soot:#17150F;--wax:#EDEAE0;--mut:#6E6A5E;--line:#2E2B22;--flame:#E8A13D}
+*{box-sizing:border-box;margin:0}
+body{background:var(--soot);color:var(--wax);font:15px/1.5 -apple-system,'Segoe UI',sans-serif;padding:48px 24px;max-width:1128px;margin:0 auto}
+.mono{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums}
+header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:14px}
+h1{font-size:15px;font-weight:600;letter-spacing:.02em}
+h1 b{color:var(--flame);font-weight:600}
+.when{color:var(--mut);font-size:12.5px}
+.stats{display:flex;gap:40px;padding:26px 0 8px;flex-wrap:wrap}
+.stat .n{font-family:ui-monospace,Menlo,monospace;font-size:34px;font-weight:500;letter-spacing:-.01em}
+.stat .l{color:var(--mut);font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;margin-top:2px}
+section{margin-top:36px}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--mut);font-weight:600;margin-bottom:14px}
+svg{width:100%;height:auto;display:block}
+.lanes{color:var(--mut);font-size:11px;display:flex;gap:18px;margin-top:6px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;display:flex;gap:8px;align-items:center}
+.chip b{font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.mut{color:var(--mut)}
+.tokrow{display:grid;grid-template-columns:280px 1fr 110px;gap:14px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.toklabel{font-size:13px;display:flex;gap:8px;align-items:center}
+.scope{color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+.bar{display:flex;height:12px;border-radius:2px;overflow:hidden;background:#1E1C15}
+.toknum{text-align:right;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.cost{color:var(--mut);margin-left:8px;font-size:11.5px}
+.legend{display:flex;gap:16px;color:var(--mut);font-size:11px;margin-top:10px}
+.legend span{display:flex;gap:6px;align-items:center}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+footer{margin-top:44px;color:var(--mut);font-size:11.5px;border-top:1px solid var(--line);padding-top:12px;line-height:1.7}
+@media(max-width:640px){.tokrow{grid-template-columns:1fr};.toknum{text-align:left}}
+</style></head><body>
+<header><h1>wick <b>/</b> fire report</h1>
+<div class="when mono">2026-07-16 06:33</div></header>
+<div class="stats"><div class="stat"><div class="n">11.8</div><div class="l">min wall</div></div><div class="stat"><div class="n">33</div><div class="l">tool calls</div></div><div class="stat"><div class="n">0</div><div class="l">dispatches</div></div><div class="stat"><div class="n">572</div><div class="l">model turns</div></div><div class="stat"><div class="n">$230.29</div><div class="l">est. api-rate</div></div></div>
+<section><h2>Burn timeline</h2>
+<svg viewBox="0 0 1080 118" role="img" aria-label="run timeline"><rect x="40.0" y="66" width="5.6" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 3.96s</title></rect><rect x="64.2" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.51s</title></rect><rect x="74.4" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Read · 0.06s</title></rect><rect x="86.9" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.5s</title></rect><rect x="113.5" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.53s</title></rect><rect x="114.6" y="66" width="41.9" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 29.7s</title></rect><rect x="168.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>TaskCreate · 0.05s</title></rect><rect x="168.3" y="66" width="95.9" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 68.07s</title></rect><rect x="274.3" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>TaskUpdate · 0.06s</title></rect><rect x="275.3" y="66" width="76.0" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 53.94s</title></rect><rect x="378.5" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 1.58s</title></rect><rect x="432.1" y="66" width="25.6" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 18.19s</title></rect><rect x="565.1" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Write · 0.1s</title></rect><rect x="580.5" y="66" width="6.7" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 4.75s</title></rect><rect x="611.8" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Edit · 0.09s</title></rect><rect x="623.4" y="66" width="6.6" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 4.71s</title></rect><rect x="654.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Write · 0.08s</title></rect><rect x="667.6" y="66" width="3.1" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 2.17s</title></rect><rect x="689.5" y="66" width="7.0" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 4.94s</title></rect><rect x="714.7" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Read · 0.06s</title></rect><rect x="788.8" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Write · 0.1s</title></rect><rect x="820.8" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Write · 0.08s</title></rect><rect x="835.1" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 1.27s</title></rect><rect x="859.4" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Edit · 0.08s</title></rect><rect x="869.2" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 1.08s</title></rect><rect x="886.4" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.44s</title></rect><rect x="899.2" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Read · 0.05s</title></rect><rect x="920.5" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Edit · 0.1s</title></rect><rect x="930.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Edit · 0.09s</title></rect><rect x="955.7" y="66" width="2.6" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 1.87s</title></rect><rect x="989.4" y="66" width="2.7" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>mcp__github__create_pull_request · 1.9s</title></rect><rect x="1003.1" y="66" width="3.0" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>mcp__github__merge_pull_request · 2.12s</title></rect><rect x="1006.1" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>TaskUpdate · 0.05s</title></rect><line x1="40" y1="90" x2="40" y2="96" stroke="#3B382E"/><text x="40" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">0s</text><line x1="290.0" y1="90" x2="290.0" y2="96" stroke="#3B382E"/><text x="290.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">177s</text><line x1="540.0" y1="90" x2="540.0" y2="96" stroke="#3B382E"/><text x="540.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">355s</text><line x1="790.0" y1="90" x2="790.0" y2="96" stroke="#3B382E"/><text x="790.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">532s</text><line x1="1040.0" y1="90" x2="1040.0" y2="96" stroke="#3B382E"/><text x="1040.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">710s</text>
+<line x1="40" y1="90" x2="1040" y2="90" stroke="#2E2B22"/></svg>
+<div class="lanes"><span>▮ upper lane — subagent dispatches (hover for brief)</span><span>▪ lower lane — orchestrator tool calls</span></div>
+</section>
+<section><h2>Subagents</h2><div class="chips"><div class="mut">no subagents — orchestrator ran everything</div></div></section>
+<section><h2>Tokens by model</h2>
+        <div class="tokrow">
+          <div class="toklabel"><span class="dot" style="background:#E8A13D"></span>claude-fable-5<span class="scope">main</span></div>
+          <div class="bar"><div style="width:99.2%;background:#2E2B22"></div><div style="width:0.0%;background:#4A473E"></div><div style="width:0.8%;background:#E8A13D"></div></div>
+          <div class="toknum">40381.8k<span class="cost">$119.30</span></div>
+        </div>
+        <div class="tokrow">
+          <div class="toklabel"><span class="dot" style="background:#E8A13D"></span>claude-opus-4-8<span class="scope">main</span></div>
+          <div class="bar"><div style="width:92.4%;background:#2E2B22"></div><div style="width:0.2%;background:#4A473E"></div><div style="width:0.7%;background:#E8A13D"></div></div>
+          <div class="toknum">37698.6k<span class="cost">$110.99</span></div>
+        </div>
+        <div class="tokrow">
+          <div class="toklabel"><span class="dot" style="background:#4A473E"></span><synthetic><span class="scope">main</span></div>
+          <div class="bar"></div>
+          <div class="toknum">0<span class="cost">$0.00</span></div>
+        </div>
+<div class="legend"><span><i class="sw" style="background:#2E2B22"></i>cache read</span>
+<span><i class="sw" style="background:#4A473E"></i>input</span>
+<span><i class="sw" style="background:var(--flame)"></i>output (tier color)</span></div></section>
+<footer>Latencies from FIFO pre/post pairing — approximate when calls interleave.
+Dollar figures are API list-rate references; subscription auth bills your plan.
+On the programmatic-credit lane this approximates real draw. Source: wick/telemetry/events.jsonl + session transcript.</footer>
+</body></html>
