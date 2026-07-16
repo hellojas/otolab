@@ -1,4 +1,7 @@
 # ephemeral extraction / QA scratch (see HANDOFF.md — the standards pipeline)
 scratchpad/
 wick/.active_globs
+# live tool-call log — rewritten on every action, so committing it can never
+# converge; the durable artifacts are the REPORT.* snapshots
+wick/telemetry/
 __pycache__/
