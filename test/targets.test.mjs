@@ -39,7 +39,8 @@ test('pentatonic and upper-structure sets fit the chord family', () => {
   assert.deepEqual(pcs(targetsFor('pent', { root: 0, quality: 'm7' })), [0, 3, 5, 7, 10]);
   assert.deepEqual(labels(targetsFor('upper', { root: 0, quality: 'maj7' })), ['9', '♯11', '13']);
   assert.deepEqual(labels(targetsFor('upper', { root: 0, quality: 'm7' })), ['9', '11', '13']);
-  assert.deepEqual(labels(targetsFor('upper', { root: 0, quality: '7b9' })), ['♭9', '♯11', '♭13']);
+  assert.deepEqual(labels(targetsFor('upper', { root: 0, quality: '7b9' })), ['♭9', '♯9', '♯11', '13']); // diminished colours
+  assert.deepEqual(labels(targetsFor('upper', { root: 0, quality: '7#9' })), ['♭9', '♯9', '♯11', '♭13']); // altered colours
   // tensions are never chord tones
   for (const q of ['maj7', 'm7', '7', 'm7b5', 'dim7', '7b9']) {
     const chordPcs = new Set(targetsFor('arp', { root: 0, quality: q }).map(t => t.pc));

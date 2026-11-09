@@ -672,6 +672,80 @@ kbd {
   font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums;
 }
 
+/* ---------- blow: play over the changes ---------- */
+.blow-focus { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.blow-now, .blow-next {
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel2); padding: 14px 16px;
+}
+.blow-now { border-color: var(--accent); }
+.blow-chord-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.blow-chord { font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: -0.5px; }
+.blow-roman { color: var(--muted); font-size: 16px; }
+.blow-targets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: flex-end; min-height: 44px; }
+.bt {
+  display: inline-flex; flex-direction: column; align-items: center; min-width: 50px; padding: 6px 10px;
+  border-radius: 10px; border: 1.5px solid var(--border); background: var(--panel); color: var(--text);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.bt b { font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.bt small { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+.bt.next { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.bt.hit { background: var(--good); border-color: var(--good); color: var(--accent-ink); }
+.bt.hit small { color: inherit; opacity: 0.8; }
+.bt.miss { background: var(--bad); border-color: var(--bad); color: var(--accent-ink); animation: blow-shake 0.25s; }
+.bt.miss small { color: inherit; opacity: 0.8; }
+@keyframes blow-shake {
+  0% { transform: translateX(0); } 25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); } 100% { transform: translateX(0); }
+}
+.blow-next { opacity: 0.72; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 16px; }
+.blow-next .blow-chord { font-size: 26px; }
+.blow-next .blow-targets { margin-top: 0; min-height: 0; gap: 5px; }
+.blow-next .bt { padding: 3px 8px; min-width: 36px; }
+.blow-next .bt b { font-size: 15px; }
+.blow-next .bt small { font-size: 10px; }
+.blow-next-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.blow-heard { margin-top: 10px; font-size: 14px; color: var(--muted); min-height: 1.3em; }
+.blow-heard.hit { color: var(--good); }
+.blow-heard.miss { color: var(--bad); }
+/* the staff view: hollow heads until hit */
+.blow-staff { display: block; max-width: 100%; height: auto; }
+.blow-staff .sl { stroke: var(--muted); stroke-width: 1; opacity: 0.7; }
+.blow-staff .nh { fill: var(--panel2); stroke: var(--text); stroke-width: 1.6; }
+.blow-staff .nh.hit { fill: var(--good); stroke: var(--good); }
+.blow-staff .nh.miss { fill: var(--bad); stroke: var(--bad); }
+.blow-staff .nh.next { stroke: var(--accent); stroke-width: 2.6; }
+.blow-staff text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+.blow-staff .acc { fill: var(--text); font-size: 14px; }
+.blow-staff .clef { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; }
+.blow-next .blow-staff { height: 80px; width: auto; }
+/* big: readable from across the room (EarBop's focus mode) */
+.blow-focus.big .blow-chord { font-size: 104px; }
+.blow-focus.big .blow-roman { font-size: 24px; }
+.blow-focus.big .bt { min-width: 80px; padding: 10px 16px; border-radius: 14px; }
+.blow-focus.big .bt b { font-size: 44px; }
+.blow-focus.big .bt small { font-size: 16px; }
+.blow-focus.big .blow-heard { font-size: 22px; }
+.blow-focus.big .blow-now .blow-staff { height: 220px; width: auto; }
+.blow-focus.big .blow-next .blow-chord { font-size: 44px; }
+.blow-focus.big .blow-next .bt b { font-size: 24px; }
+.blow-focus.big .blow-next .bt small { font-size: 12px; }
+#blow-mic.on, #blow-new.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+#blow-tempo { width: 110px; accent-color: var(--accent); }
+#blow-bpm { font-variant-numeric: tabular-nums; }
+#blow-source { max-width: 320px; }
+#panel-blow select { max-width: 100%; }
+#panel-blow .std-quiz-group { flex-wrap: wrap; }
+#blow-paste-row[hidden] { display: none; }
+#blow-paste-row textarea { flex: 1; min-width: 240px; }
+#panel-blow .std-bar { cursor: pointer; }
+@media (max-width: 640px) {
+  #panel-blow .std-quiz-group { margin-left: 0; padding-left: 0; border-left: none; }
+  .blow-chord { font-size: 36px; }
+  .blow-focus.big .blow-chord { font-size: 64px; }
+  .blow-focus.big .bt b { font-size: 30px; }
+}
+
 /* ---------- rhythm drill ---------- */
 .rhy-pad {
   width: 100%; margin: 12px 0 4px; padding: 22px; font-size: 16px;

@@ -288,6 +288,7 @@
           <span class="tab-group-label">produce</span>
           <div class="tab-group-btns">
             <button data-tab="sing">sing</button>
+            <button data-tab="blow">blow</button>
             <button data-tab="voicing">voicings</button>
             <button data-tab="echo">echo</button>
             <button data-tab="licks">licks</button>
@@ -588,6 +589,79 @@
       </div>
     </section>
 
+    <section id="panel-blow" class="dj-panel">
+      <p class="blurb">Play over the changes. Pick a tune or an exercise and
+        <i>what</i> to play on every chord — <b>guide tones</b> first, then
+        arpeggios, scales, upper structures, a walking bass. The app writes the
+        targets under each chord two bars at a time, the current bar big. Hit a
+        target on your instrument (MIDI, the <kbd>A</kbd>–<kbd>'</kbd> keys, the
+        on-screen piano) or sing it into the mic and it turns green; a stray
+        note flashes red and shows what it heard. <b>wait for me</b> holds each
+        chord until you've found every tone; <b>in time</b> comps the form and
+        moves on with the beat. Click any bar in the chart to start there.
+        Headphones if you sing.</p>
+      <div class="dj-row">
+        <select id="blow-source" title="a tune from the library, a built-in exercise, or your own changes"></select>
+        <select id="blow-key" title="transpose — random key is the real workout"></select>
+        <select id="blow-drill" title="what to play on each chord"></select>
+        <select id="blow-mode" title="hold each chord until you find the notes, or move with the beat">
+          <option value="wait">wait for me</option>
+          <option value="time">in time · comp plays</option>
+        </select>
+        <label class="vol-label" title="tempo (in time mode)">
+          <input id="blow-tempo" type="range" min="40" max="240" value="100">
+          <span id="blow-bpm">100 bpm</span>
+        </label>
+      </div>
+      <div id="blow-paste-row" class="dj-row" hidden>
+        <textarea id="blow-paste" rows="2" spellcheck="false"
+          placeholder="your changes, bars split with |  —  Dm7 G7 | Cmaj7 | Em7 A7 | Dm7 G7"></textarea>
+        <button id="blow-paste-use">use these changes</button>
+      </div>
+      <div class="dj-row">
+        <button id="blow-new" class="primary">▶ start</button>
+        <button id="blow-stop" title="stop">⏹</button>
+        <button id="blow-skip" title="give up on this chord and move on">skip →</button>
+        <button id="blow-hear" title="hear the chord with its targets played for you">♪ hear it</button>
+        <button id="blow-mic" title="sing the targets instead of playing them">enable mic</button>
+        <span id="blow-mic-read" class="dj-meta"></span>
+        <span class="std-quiz-group">
+          <select id="blow-view" title="how the targets are drawn">
+            <option value="pills">note names</option>
+            <option value="staff">staff</option>
+          </select>
+          <select id="blow-instrument" title="show written pitch for a transposing instrument (grading is always what sounds)">
+            <option value="0">concert · piano, guitar, voice</option>
+            <option value="2">B♭ · tenor, soprano, trumpet, clarinet</option>
+            <option value="9">E♭ · alto, bari</option>
+          </select>
+          <label class="check" title="read it from across the room"><input type="checkbox" id="blow-big"> big</label>
+        </span>
+        <span id="blow-status" class="std-status"></span>
+      </div>
+      <p class="drill-hint" id="blow-info"></p>
+      <div id="blow-focus" class="blow-focus">
+        <div class="blow-now">
+          <div class="blow-chord-row">
+            <span id="blow-chord" class="blow-chord">—</span>
+            <span id="blow-roman" class="blow-roman"></span>
+          </div>
+          <div id="blow-targets" class="blow-targets"></div>
+          <div id="blow-heard" class="blow-heard"></div>
+        </div>
+        <div class="blow-next">
+          <span class="blow-next-label">next</span>
+          <span id="blow-next-chord" class="blow-chord"></span>
+          <div id="blow-next-targets" class="blow-targets"></div>
+        </div>
+      </div>
+      <div id="blow-chart" class="std-chart"></div>
+      <div class="dj-row">
+        <span id="blow-result" class="dj-result"></span>
+        <span id="blow-score" class="dj-score"></span>
+      </div>
+    </section>
+
     <section id="panel-echo" class="dj-panel">
       <p class="blurb">Call &amp; response — the productive half of ear training.
         An idiomatic line plays over a light comp; reproduce it on your
@@ -829,6 +903,12 @@
         ears tire. When a tune beats you, don't reveal — replay at 0.5× and
         hunt the bass line degree by degree. Met a song in the wild? Grab its
         chords from a tab site and feed them to <b>changes → paste a tab</b>.</p>
+      <p class="blurb"><b>Then play.</b> Naming is half of it. The <b>blow</b> tab
+        puts a tune in front of you and writes what to play on every chord —
+        guide tones, then arpeggios, scales, upper structures, a walking bass —
+        and grades each note you play or sing against them. Start with guide
+        tones on a ii–V–I in <i>wait for me</i>; move to <i>in time</i> once the
+        notes come without thinking; then do it in a random key.</p>
       <hr class="guide-sep">
       <p class="blurb"><b>Guide-tone drill.</b> The 3rd and 7th are what your ear
         latches onto — they carry the chord quality and voice-lead the changes. A

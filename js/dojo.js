@@ -14,6 +14,7 @@ import { generatePhrase, transposePhrase } from './phrases.js';
 import { record, pickWeighted, stats as progressStats, reset as resetProgress } from './progress.js';
 import { initCurriculum, renderPath as currRenderPath } from './curriculum.js';
 import { initRepertoire, renderRepertoire } from './repertoire.js';
+import { initBlow, stopBlow, stopBlowMic } from './blow.js';
 import { SONGS } from '../groundtruth/songs.js';
 import { BASSLINES } from '../groundtruth/basslines.js';
 import { SONGS as STD_CORE } from './standards-data.js';
@@ -73,6 +74,7 @@ const DRILL_TABS = {
   bass:      { tab: 'bass',      start: 'bass-new' },
   inversion: { tab: 'inversion', start: 'inv-new' },
   voicing:   { tab: 'voicing',   start: 'vc-new' },
+  blow:      { tab: 'blow',      start: 'blow-new' },
   time:      { tab: 'time',      start: 'time-new' },
   guide:     { tab: 'guide',     start: 'guide-new' },
 };
@@ -106,6 +108,7 @@ function runAssignment(drill, config = {}) {
 // the synth plays the target, so the mic must survive playSequence().
 function stopDojoMic() {
   if (isMicOn()) stopMic();
+  stopBlowMic();
   for (const id of ['sing-mic', 'prog-mic']) {
     const mic = document.getElementById(id);
     if (mic) { mic.textContent = 'enable mic'; mic.classList.remove('on'); }
@@ -322,6 +325,7 @@ function stopDojo() {
   seqActive = false;
   clearTimeout(seqTimer);
   clearTimeout(phraseTimer);
+  stopBlow();       // the blow room's comp is a dojo playing surface too
   allNotesOff();
 }
 
@@ -728,6 +732,11 @@ function initDojo(opts = {}) {
 
   // ---- repertoire: the tune-study track (drives standards + voicing) ----
   initRepertoire({ tuneById: id => STD_SONGS.find(s => s.id === id) });
+
+  // ---- blow: play / sing over the changes (its own module) ----
+  // Its onStart runs BEFORE it schedules anything, so stopDojo → stopBlow here
+  // only silences what was already playing.
+  initBlow({ onStart: () => { stopDojo(); opts.stopStandards?.(); if (onStartCb) onStartCb(); } });
 
   // ---- changes: the unified progression quiz (built-in collection + paste) ----
   const changesQuiz = makeQuiz('changes', 'session');

@@ -488,4 +488,5 @@ function stopStandards() {
   stopEcho();
 }
 
-export { initStandards, stopStandards };
+// flatBars + addComp are shared with the blow room, which comps the same charts
+export { initStandards, stopStandards, flatBars, addComp };

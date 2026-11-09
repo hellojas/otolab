@@ -140,6 +140,20 @@ const UNITS = [
     blurb: 'Hear an idiomatic line and play it straight back — the productive loop.',
   },
   {
+    id: 'blow-guides', title: 'Blow · guide tones over the changes',
+    drill: 'blow', cat: 'blow', config: { 'blow-drill': 'guide', 'blow-source': 'ex-251', 'blow-mode': 'wait' },
+    goalItems: ['guide:minor', 'guide:dom', 'guide:major'], goalPct: 75, goalCount: 15, fluentMs: 6000,
+    requires: ['qual-sevenths'],
+    blurb: 'Find the 3rd and 7th of every chord as a ii–V–I goes by — the line that makes a solo sound like the tune.',
+  },
+  {
+    id: 'blow-arps', title: 'Blow · arpeggios in time',
+    drill: 'blow', cat: 'blow', config: { 'blow-drill': 'arp', 'blow-source': 'ex-251-cycle', 'blow-mode': 'time' },
+    goalItems: ['arp:minor', 'arp:dom', 'arp:major'], goalPct: 70, goalCount: 15, fluentMs: 12000,
+    requires: ['blow-guides'],
+    blurb: 'Spell 1-3-5-7 of each chord with the comp going, around the cycle — no stopping.',
+  },
+  {
     id: 'cadence-id', title: 'Harmony · name the cadence',
     drill: 'cadence', cat: 'cadence', config: {},
     goalItems: ['ii-V-I', 'backdoor', 'tritone-sub', 'deceptive'], goalPct: 65, goalCount: 16,

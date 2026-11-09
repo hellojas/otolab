@@ -10,22 +10,11 @@
 //   enclosure — approach each chord's target tone from above and below
 
 import { qualityIntervals, guideTones, pcName, useFlats } from './theory.js';
+import { scaleFor } from './targets.js'; // chord scales live with the target-tone engine
 
 const rand = n => Math.floor(Math.random() * n);
 const pick = a => a[rand(a.length)];
 
-// chord-scale for a quality (pitch-class intervals from the root)
-const SCALES = {
-  '':      [0, 2, 4, 5, 7, 9, 11], 'maj7': [0, 2, 4, 5, 7, 9, 11], '6': [0, 2, 4, 5, 7, 9, 11],
-  'maj9':  [0, 2, 4, 5, 7, 9, 11], 'maj7#11': [0, 2, 4, 6, 7, 9, 11],
-  'm':     [0, 2, 3, 5, 7, 9, 10], 'm7': [0, 2, 3, 5, 7, 9, 10], 'm9': [0, 2, 3, 5, 7, 9, 10],
-  'm6':    [0, 2, 3, 5, 7, 9, 11], 'm11': [0, 2, 3, 5, 7, 9, 10],
-  '7':     [0, 2, 4, 5, 7, 9, 10], '9': [0, 2, 4, 5, 7, 9, 10], '13': [0, 2, 4, 5, 7, 9, 10],
-  '7b9':   [0, 1, 3, 4, 6, 7, 10], '7#9': [0, 1, 3, 4, 6, 8, 10], '7#11': [0, 2, 4, 6, 7, 9, 10],
-  '7b5':   [0, 2, 4, 6, 8, 10],    '7#5': [0, 2, 4, 6, 8, 10],
-  'm7b5':  [0, 2, 3, 5, 6, 8, 10], 'dim7': [0, 2, 3, 5, 6, 8, 9, 11],
-};
-const scaleFor = q => SCALES[q] || SCALES[''];
 
 // nearest midi of a pitch class to a reference midi (within a tritone)
 function nearestMidi(pc, ref) {

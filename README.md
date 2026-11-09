@@ -228,6 +228,26 @@ Naming a progression by ear decomposes into three skills, trained in order:
 - **licks** — your lick bank. Phrases banked from the echo tab can be played,
   echoed, or cycled through **all 12 keys** — transposing a line into every key
   is how it becomes yours, and each echo is graded and logged.
+- **blow** — play over the changes, the bandstand half of production (in the
+  spirit of [EarBop](https://earbop.app/)). Pick a tune from the standards
+  library, a built-in exercise (ii–V–I slow and fast, minor ii–V–i, the whole
+  cycle in 12 keys, a turnaround, an F blues, rhythm-changes A), or paste your
+  own changes; pick *what* to play on every chord — **root**, **guide tones**
+  (3 & 7), a voice-led **target-tone line**, **arpeggio** 1-3-5-7, the **chord
+  scale**, a **pentatonic**, the **upper structure** (9 · 11 · 13, chord-aware:
+  ♯11 on major, the diminished colours on a 7♭9, altered on a 7♯9), or a
+  **walking bass** (root · 3rd · 5th · chromatic approach into the next root).
+  The app writes the targets under each chord two bars at a time, the current
+  bar big — as note names or on a small staff, with the interval under every
+  note, and a **big** switch to read it from across the room. Hit a target on
+  MIDI, computer keys or the on-screen piano, or sing it into the mic, and it
+  turns green; a stray note flashes red and names what it heard. **wait for
+  me** holds each chord until every tone is found (ordered drills — arpeggio,
+  scale, pentatonic, bass — want them in order); **in time** comps the form
+  with bass and stabs and moves on with the beat, lap after lap. Transposing
+  instruments can show written pitch (B♭ / E♭); grading is always what sounds.
+  Every chord logs to progress under `blow`, and the path has two units on it
+  (guide tones in wait mode, then arpeggios in time around the cycle).
 
 ### color + time
 
