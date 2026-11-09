@@ -1,0 +1,57 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>wick · fire report</title><style>
+:root{--soot:#17150F;--wax:#EDEAE0;--mut:#6E6A5E;--line:#2E2B22;--flame:#E8A13D}
+*{box-sizing:border-box;margin:0}
+body{background:var(--soot);color:var(--wax);font:15px/1.5 -apple-system,'Segoe UI',sans-serif;padding:48px 24px;max-width:1128px;margin:0 auto}
+.mono{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums}
+header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:14px}
+h1{font-size:15px;font-weight:600;letter-spacing:.02em}
+h1 b{color:var(--flame);font-weight:600}
+.when{color:var(--mut);font-size:12.5px}
+.stats{display:flex;gap:40px;padding:26px 0 8px;flex-wrap:wrap}
+.stat .n{font-family:ui-monospace,Menlo,monospace;font-size:34px;font-weight:500;letter-spacing:-.01em}
+.stat .l{color:var(--mut);font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;margin-top:2px}
+section{margin-top:36px}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--mut);font-weight:600;margin-bottom:14px}
+svg{width:100%;height:auto;display:block}
+.lanes{color:var(--mut);font-size:11px;display:flex;gap:18px;margin-top:6px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;display:flex;gap:8px;align-items:center}
+.chip b{font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.mut{color:var(--mut)}
+.tokrow{display:grid;grid-template-columns:280px 1fr 110px;gap:14px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.toklabel{font-size:13px;display:flex;gap:8px;align-items:center}
+.scope{color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+.bar{display:flex;height:12px;border-radius:2px;overflow:hidden;background:#1E1C15}
+.toknum{text-align:right;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.cost{color:var(--mut);margin-left:8px;font-size:11.5px}
+.legend{display:flex;gap:16px;color:var(--mut);font-size:11px;margin-top:10px}
+.legend span{display:flex;gap:6px;align-items:center}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+footer{margin-top:44px;color:var(--mut);font-size:11.5px;border-top:1px solid var(--line);padding-top:12px;line-height:1.7}
+@media(max-width:640px){.tokrow{grid-template-columns:1fr};.toknum{text-align:left}}
+</style></head><body>
+<header><h1>wick <b>/</b> fire report</h1>
+<div class="when mono">2026-11-09 05:36</div></header>
+<div class="stats"><div class="stat"><div class="n">18.6</div><div class="l">min wall</div></div><div class="stat"><div class="n">45</div><div class="l">tool calls</div></div><div class="stat"><div class="n">0</div><div class="l">dispatches</div></div><div class="stat"><div class="n">77</div><div class="l">model turns</div></div><div class="stat"><div class="n">$47.90</div><div class="l">est. api-rate</div></div></div>
+<section><h2>Burn timeline</h2>
+<svg viewBox="0 0 1080 118" role="img" aria-label="run timeline"><rect x="40.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.17s</title></rect><rect x="40.4" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>ToolSearch · 0.04s</title></rect><rect x="45.9" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.46s</title></rect><rect x="44.3" y="66" width="7.4" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>WebFetch · 8.25s</title></rect><rect x="64.5" y="66" width="4.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 5.05s</title></rect><rect x="66.1" y="66" width="2.9" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 3.19s</title></rect><rect x="67.4" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 1.78s</title></rect><rect x="68.9" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.17s</title></rect><rect x="76.7" y="66" width="8.0" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 8.93s</title></rect><rect x="78.5" y="66" width="6.2" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 6.93s</title></rect><rect x="84.8" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.14s</title></rect><rect x="85.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.12s</title></rect><rect x="85.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.12s</title></rect><rect x="85.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.12s</title></rect><rect x="91.3" y="66" width="6.4" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 7.12s</title></rect><rect x="92.4" y="66" width="5.3" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 5.92s</title></rect><rect x="93.8" y="66" width="3.9" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 4.38s</title></rect><rect x="95.7" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 2.21s</title></rect><rect x="97.7" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.12s</title></rect><rect x="183.0" y="66" width="5.7" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 6.41s</title></rect><rect x="188.8" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.23s</title></rect><rect x="188.9" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 0.24s</title></rect><rect x="189.0" y="66" width="124.9" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 139.44s</title></rect><rect x="313.3" y="66" width="32.8" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 36.62s</title></rect><rect x="345.9" y="66" width="165.3" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 184.5s</title></rect><rect x="511.1" y="66" width="6.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 7.27s</title></rect><rect x="517.5" y="66" width="55.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 61.89s</title></rect><rect x="572.4" y="66" width="4.1" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 4.61s</title></rect><rect x="576.1" y="66" width="12.8" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 14.28s</title></rect><rect x="588.5" y="66" width="113.6" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 126.73s</title></rect><rect x="701.8" y="66" width="51.2" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 57.11s</title></rect><rect x="752.5" y="66" width="10.3" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 11.48s</title></rect><rect x="760.6" y="66" width="3.2" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 3.55s</title></rect><rect x="762.8" y="66" width="103.4" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 115.44s</title></rect><rect x="874.4" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Read · 0.04s</title></rect><rect x="875.1" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Read · 0.04s</title></rect><rect x="875.8" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Read · 0.04s</title></rect><rect x="788.6" y="66" width="131.7" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 146.95s</title></rect><rect x="823.0" y="66" width="102.3" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 114.22s</title></rect><rect x="855.9" y="66" width="77.3" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 86.29s</title></rect><rect x="910.6" y="66" width="69.7" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 77.78s</title></rect><rect x="983.0" y="66" width="2.5" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Read · 0.04s</title></rect><rect x="924.9" y="66" width="64.8" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 72.27s</title></rect><rect x="933.0" y="66" width="77.2" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 86.13s</title></rect><rect x="943.9" y="66" width="79.2" height="14" rx="2" fill="#3B382E" opacity="0.9"><title>Bash · 88.42s</title></rect><line x1="40" y1="90" x2="40" y2="96" stroke="#3B382E"/><text x="40" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">0s</text><line x1="290.0" y1="90" x2="290.0" y2="96" stroke="#3B382E"/><text x="290.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">279s</text><line x1="540.0" y1="90" x2="540.0" y2="96" stroke="#3B382E"/><text x="540.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">558s</text><line x1="790.0" y1="90" x2="790.0" y2="96" stroke="#3B382E"/><text x="790.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">837s</text><line x1="1040.0" y1="90" x2="1040.0" y2="96" stroke="#3B382E"/><text x="1040.0" y="110" fill="#6E6A5E" font-size="11" text-anchor="middle">1116s</text>
+<line x1="40" y1="90" x2="1040" y2="90" stroke="#2E2B22"/></svg>
+<div class="lanes"><span>▮ upper lane — subagent dispatches (hover for brief)</span><span>▪ lower lane — orchestrator tool calls</span></div>
+</section>
+<section><h2>Subagents</h2><div class="chips"><div class="mut">no subagents — orchestrator ran everything</div></div></section>
+<section><h2>Tokens by model</h2>
+        <div class="tokrow">
+          <div class="toklabel"><span class="dot" style="background:#E8A13D"></span>claude-fable-5-1<span class="scope">main</span></div>
+          <div class="bar"><div style="width:98.5%;background:#2E2B22"></div><div style="width:0.0%;background:#4A473E"></div><div style="width:1.4%;background:#E8A13D"></div></div>
+          <div class="toknum">13637.6k<span class="cost">$47.90</span></div>
+        </div>
+<div class="legend"><span><i class="sw" style="background:#2E2B22"></i>cache read</span>
+<span><i class="sw" style="background:#4A473E"></i>input</span>
+<span><i class="sw" style="background:var(--flame)"></i>output (tier color)</span></div></section>
+<footer>Latencies from FIFO pre/post pairing — approximate when calls interleave.
+Dollar figures are API list-rate references; subscription auth bills your plan.
+On the programmatic-credit lane this approximates real draw. Source: wick/telemetry/events.jsonl + session transcript.</footer>
+</body></html>
